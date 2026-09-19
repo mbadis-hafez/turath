@@ -1,0 +1,32 @@
+{
+  "title": "سجل التغييرات",
+  "filterByType": "تصفية حسب النوع",
+  "filterByUser": "تصفية حسب المستخدم",
+  "filterByEvent": "تصفية حسب الحدث",
+  "allTypes": "كل الأنواع",
+  "allUsers": "كل المستخدمين",
+  "allEvents": "كل الأحداث",
+  "dateFrom": "من تاريخ",
+  "dateTo": "إلى تاريخ",
+  "event": {
+    "created": "إنشاء",
+    "updated": "تعديل",
+    "deleted": "حذف",
+    "restored": "استرجاع"
+  },
+  "noEntries": "لا توجد تغييرات مسجلة",
+  "changedFrom": "من",
+  "changedTo": "إلى",
+  "editSummary": "سبب التعديل",
+  "system": "النظام",
+  "subjectType": {
+    "artist": "فنان",
+    "artwork": "عمل فني",
+    "other": "أخرى"
+  },
+  "field": "الحقل",
+  "oldValue": "القيمة السابقة",
+  "newValue": "القيمة الجديدة",
+  "showChanges": "عرض التفاصيل",
+  "hideChanges": "إخفاء التفاصيل"
+}

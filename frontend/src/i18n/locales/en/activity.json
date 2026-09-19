@@ -1,0 +1,32 @@
+{
+  "title": "Activity log",
+  "filterByType": "Filter by type",
+  "filterByUser": "Filter by user",
+  "filterByEvent": "Filter by event",
+  "allTypes": "All types",
+  "allUsers": "All users",
+  "allEvents": "All events",
+  "dateFrom": "From date",
+  "dateTo": "To date",
+  "event": {
+    "created": "Created",
+    "updated": "Updated",
+    "deleted": "Deleted",
+    "restored": "Restored"
+  },
+  "noEntries": "No changes recorded",
+  "changedFrom": "from",
+  "changedTo": "to",
+  "editSummary": "Reason for change",
+  "system": "System",
+  "subjectType": {
+    "artist": "Artist",
+    "artwork": "Artwork",
+    "other": "Other"
+  },
+  "field": "Field",
+  "oldValue": "Old value",
+  "newValue": "New value",
+  "showChanges": "Show details",
+  "hideChanges": "Hide details"
+}
