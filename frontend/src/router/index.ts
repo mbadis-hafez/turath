@@ -28,6 +28,18 @@ const routes: RouteRecordRaw[] = [
     meta: { titleKey: "nav.login", guestOnly: true, bare: true },
   },
   {
+    path: "/:locale/artists",
+    name: "artists.index",
+    component: () => import("@/pages/ArtistsPage.vue"),
+    meta: { titleKey: "artists.title" },
+  },
+  {
+    path: "/:locale/artists/:slug",
+    name: "artists.show",
+    component: () => import("@/pages/ArtistPage.vue"),
+    meta: { titleFromData: true },
+  },
+  {
     path: "/:locale/admin/activity",
     name: "admin.activity",
     component: () => import("@/pages/admin/ActivityPage.vue"),
