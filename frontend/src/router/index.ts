@@ -25,7 +25,7 @@ const routes: RouteRecordRaw[] = [
     path: "/:locale/login",
     name: "login",
     component: () => import("@/pages/LoginPage.vue"),
-    meta: { titleKey: "nav.login", guestOnly: true },
+    meta: { titleKey: "nav.login", guestOnly: true, bare: true },
   },
   {
     path: "/:locale/admin/activity",
