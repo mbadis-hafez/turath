@@ -1,0 +1,34 @@
+{
+  "title": "Artworks",
+  "untitled": "Untitled",
+  "searchPlaceholder": "Search artworks…",
+  "filterByArtist": "Filter by artist",
+  "filterByCategory": "Filter by category",
+  "category": {
+    "painting": "Painting",
+    "drawing": "Drawing",
+    "printmaking": "Printmaking",
+    "sculpture": "Sculpture",
+    "mixed_media": "Mixed media",
+    "paper_work": "Paper work",
+    "photography": "Photography",
+    "installation": "Installation",
+    "other": "Other"
+  },
+  "medium": "Medium",
+  "dimensions": "Dimensions",
+  "frame": "Frame",
+  "edition": "Edition",
+  "signed": "Signed",
+  "unsigned": "Unsigned",
+  "signedUnknown": "Unknown",
+  "holder": "Held by",
+  "attribution": {
+    "attributed": "Attributed",
+    "disputed": "Disputed attribution",
+    "unattributed": "Unattributed"
+  },
+  "attributionHelp": "This artwork's attribution has not been fully confirmed",
+  "noResults": "No matching artworks",
+  "noneForArtist": "No artworks recorded yet"
+}

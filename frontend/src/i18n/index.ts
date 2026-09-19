@@ -2,6 +2,7 @@ import { createI18n } from "vue-i18n";
 
 import arActivity from "./locales/ar/activity.json";
 import arArtists from "./locales/ar/artists.json";
+import arArtworks from "./locales/ar/artworks.json";
 import arAuth from "./locales/ar/auth.json";
 import arCommon from "./locales/ar/common.json";
 import arDates from "./locales/ar/dates.json";
@@ -11,6 +12,7 @@ import arNav from "./locales/ar/nav.json";
 import arSearch from "./locales/ar/search.json";
 import enActivity from "./locales/en/activity.json";
 import enArtists from "./locales/en/artists.json";
+import enArtworks from "./locales/en/artworks.json";
 import enAuth from "./locales/en/auth.json";
 import enCommon from "./locales/en/common.json";
 import enDates from "./locales/en/dates.json";
@@ -70,6 +72,7 @@ export const i18n = createI18n({
       home: arHome,
       activity: arActivity,
       artists: arArtists,
+      artworks: arArtworks,
       dates: arDates,
       search: arSearch,
     },
@@ -81,6 +84,7 @@ export const i18n = createI18n({
       home: enHome,
       activity: enActivity,
       artists: enArtists,
+      artworks: enArtworks,
       dates: enDates,
       search: enSearch,
     },

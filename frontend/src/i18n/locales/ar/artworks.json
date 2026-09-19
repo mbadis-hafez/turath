@@ -1,0 +1,34 @@
+{
+  "title": "الأعمال الفنية",
+  "untitled": "دون عنوان",
+  "searchPlaceholder": "ابحث عن عمل فني…",
+  "filterByArtist": "تصفية حسب الفنان",
+  "filterByCategory": "تصفية حسب النوع",
+  "category": {
+    "painting": "لوحة زيتية/تصوير",
+    "drawing": "رسم",
+    "printmaking": "طباعة فنية",
+    "sculpture": "نحت",
+    "mixed_media": "خامات مختلفة",
+    "paper_work": "عمل ورقي",
+    "photography": "تصوير فوتوغرافي",
+    "installation": "عمل تركيبي",
+    "other": "أخرى"
+  },
+  "medium": "الخامة",
+  "dimensions": "الأبعاد",
+  "frame": "الإطار",
+  "edition": "النسخة",
+  "signed": "موقّعة",
+  "unsigned": "غير موقّعة",
+  "signedUnknown": "غير معروف",
+  "holder": "الجهة الحائزة",
+  "attribution": {
+    "attributed": "نسب احتمالي",
+    "disputed": "نسب محل خلاف",
+    "unattributed": "فنان غير معروف"
+  },
+  "attributionHelp": "لم يتم تأكيد نسبة هذا العمل بشكل كامل",
+  "noResults": "لا توجد أعمال مطابقة",
+  "noneForArtist": "لا توجد أعمال مسجلة بعد"
+}
