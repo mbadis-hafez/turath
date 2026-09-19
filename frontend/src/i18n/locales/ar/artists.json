@@ -1,0 +1,22 @@
+{
+  "title": "الفنانون",
+  "searchPlaceholder": "ابحث عن فنان بالاسم…",
+  "sortBy": "ترتيب حسب",
+  "sort": {
+    "name": "الاسم",
+    "recent": "الأحدث إضافة"
+  },
+  "verifiedOnly": "الموثّقون فقط",
+  "verified": "موثّق",
+  "unverified": "غير موثّق",
+  "disputed": "محل خلاف",
+  "verifiedHelp": "راجع باحث معتمد بيانات هذا الفنان",
+  "noResults": "لا توجد نتائج مطابقة",
+  "clearFilters": "مسح عوامل التصفية",
+  "born": "وُلد",
+  "died": "توفي",
+  "alsoKnownAs": "يُعرف أيضًا بـ",
+  "biography": "السيرة",
+  "noBio": "لا توجد سيرة مكتوبة بعد",
+  "overview": "نظرة عامة"
+}

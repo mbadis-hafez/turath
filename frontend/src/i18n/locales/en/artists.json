@@ -1,0 +1,22 @@
+{
+  "title": "Artists",
+  "searchPlaceholder": "Search artists by name…",
+  "sortBy": "Sort by",
+  "sort": {
+    "name": "Name",
+    "recent": "Recently added"
+  },
+  "verifiedOnly": "Verified only",
+  "verified": "Verified",
+  "unverified": "Unverified",
+  "disputed": "Disputed",
+  "verifiedHelp": "This artist's details were reviewed by an approved researcher",
+  "noResults": "No matching artists",
+  "clearFilters": "Clear filters",
+  "born": "Born",
+  "died": "Died",
+  "alsoKnownAs": "Also known as",
+  "biography": "Biography",
+  "noBio": "No biography yet",
+  "overview": "Overview"
+}

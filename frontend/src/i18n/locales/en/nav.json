@@ -2,5 +2,9 @@
   "home": "Home",
   "login": "Log in",
   "logout": "Log out",
-  "activity": "Activity log"
+  "activity": "Activity log",
+  "artists": "Artists",
+  "artworks": "Artworks",
+  "archive": "Archive",
+  "events": "Events"
 }

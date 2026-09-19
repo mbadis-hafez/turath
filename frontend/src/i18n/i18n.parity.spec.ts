@@ -15,8 +15,10 @@ function loadLocales(name: string): [unknown, unknown] {
 
 const namespaces = {
   activity: loadLocales("activity"),
+  artists: loadLocales("artists"),
   auth: loadLocales("auth"),
   common: loadLocales("common"),
+  dates: loadLocales("dates"),
   errors: loadLocales("errors"),
   home: loadLocales("home"),
   nav: loadLocales("nav"),
@@ -50,7 +52,7 @@ describe("i18n locale parity", () => {
 
   it("contains the exact starter keys required by the spec", () => {
     const required: Record<string, string[]> = {
-      nav: ["home", "login", "logout", "activity"],
+      nav: ["home", "login", "logout", "artists", "activity"],
       common: [
         "language",
         "search",
@@ -76,6 +78,27 @@ describe("i18n locale parity", () => {
         "event.deleted",
         "event.restored",
       ],
+      artists: [
+        "title",
+        "searchPlaceholder",
+        "sortBy",
+        "sort.name",
+        "sort.recent",
+        "verifiedOnly",
+        "verified",
+        "unverified",
+        "disputed",
+        "verifiedHelp",
+        "noResults",
+        "clearFilters",
+        "born",
+        "died",
+        "alsoKnownAs",
+        "biography",
+        "noBio",
+        "overview",
+      ],
+      dates: ["circa", "hijri", "asRecorded"],
     };
 
     for (const [namespace, [ar, en]] of Object.entries(namespaces)) {
