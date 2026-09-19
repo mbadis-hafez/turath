@@ -24,11 +24,17 @@ trait LogsChanges
 
     public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
+        $options = LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->dontLogIfAttributesChangedOnly(['updated_at']);
+
+        if (method_exists($this, 'excludedFromActivityLog')) {
+            $options = $options->logExcept($this->excludedFromActivityLog());
+        }
+
+        return $options;
     }
 
     /**

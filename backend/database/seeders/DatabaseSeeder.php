@@ -11,10 +11,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(RolesAndPermissionsSeeder::class);
+        $this->call(ArtistSeeder::class);
 
         if (! app()->environment('local')) {
             return;
         }
+
+        $this->call(DemoArtistSeeder::class);
 
         $admin = User::firstOrCreate(
             ['email' => 'admin@bidayaat.test'],
