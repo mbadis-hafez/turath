@@ -5,11 +5,14 @@ import { useI18n } from "vue-i18n";
 
 import AlsoKnownAs from "@/components/artists/AlsoKnownAs.vue";
 import ArtistHeader from "@/components/artists/ArtistHeader.vue";
+import ArtworkCard from "@/components/artworks/ArtworkCard.vue";
+import EmptyState from "@/components/common/EmptyState.vue";
 import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import NotFoundPage from "@/pages/NotFoundPage.vue";
 import Tabs from "@/components/common/Tabs.vue";
 import { useArtist } from "@/composables/useArtist";
+import { useArtistArtworks } from "@/composables/useArtistArtworks";
 import { useDocumentTitle } from "@/composables/useDocumentTitle";
 import { useLocalized } from "@/composables/useLocalized";
 import { ApiError } from "@/types/api";
@@ -52,10 +55,22 @@ watch(
   { immediate: true },
 );
 
-// Tab structure is ready for F2/F3/F7 (Artworks / Archive / History).
+// Tab structure is ready for F3/F7 (Archive / History).
 const activeTab = ref("overview");
+const artistId = computed(() => artist.value?.id ?? 0);
+const {
+  items: artworks,
+  loading: artworksLoading,
+  error: artworksError,
+  retry: retryArtworks,
+  count: artworksCount,
+} = useArtistArtworks(artistId);
 const tabs = computed(() => [
   { key: "overview", label: t("artists.overview") },
+  {
+    key: "artworks",
+    label: `${t("artists.tabArtworks")} (${artworksCount.value})`,
+  },
 ]);
 </script>
 
@@ -92,6 +107,48 @@ const tabs = computed(() => [
           </p>
           <p v-else class="mt-2 text-ink-muted">{{ t("artists.noBio") }}</p>
         </section>
+      </template>
+
+      <template #artworks>
+        <ErrorState
+          v-if="artworksError"
+          :error="artworksError"
+          @retry="retryArtworks"
+        />
+
+        <div
+          v-else-if="artworksLoading && artworks.length === 0"
+          class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          aria-hidden="true"
+        >
+          <div
+            v-for="n in 3"
+            :key="n"
+            class="animate-pulse overflow-hidden rounded-lg border border-line bg-surface"
+          >
+            <div class="aspect-[4/3] bg-neutral-soft" />
+            <div class="p-4">
+              <div class="h-5 w-2/3 rounded bg-neutral-soft" />
+              <div class="mt-2 h-4 w-1/3 rounded bg-neutral-soft" />
+            </div>
+          </div>
+        </div>
+
+        <EmptyState
+          v-else-if="artworks.length === 0"
+          :title="t('artworks.noneForArtist')"
+        />
+
+        <div
+          v-else
+          class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          <ArtworkCard
+            v-for="artwork in artworks"
+            :key="artwork.id"
+            :artwork="artwork"
+          />
+        </div>
       </template>
     </Tabs>
   </article>
