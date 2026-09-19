@@ -20,7 +20,7 @@ class Artist extends Model
     public $guarded = [];
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, string>
      */
     protected function casts(): array
     {

@@ -6,6 +6,7 @@ use App\Http\Requests\Artist\ArtistIndexRequest;
 use App\Http\Resources\ArtistListResource;
 use App\Models\Artist;
 use App\Support\ArabicNormalizer;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 
 class ArtistIndexController
@@ -41,7 +42,7 @@ class ArtistIndexController
         return ArtistListResource::collection($query->paginate($perPage))->response();
     }
 
-    private function applySearch(\Illuminate\Database\Eloquent\Builder $query, string $q): void
+    private function applySearch(Builder $query, string $q): void
     {
         $normalized = ArabicNormalizer::normalize(mb_substr($q, 0, 100));
         $compact = ArabicNormalizer::compact($normalized);
@@ -65,7 +66,7 @@ class ArtistIndexController
         });
     }
 
-    private function applySort(\Illuminate\Database\Eloquent\Builder $query, string $sort): void
+    private function applySort(Builder $query, string $sort): void
     {
         [$column, $direction] = match ($sort) {
             '-name_ar' => ['COALESCE(name_ar, name_en)', 'desc'],

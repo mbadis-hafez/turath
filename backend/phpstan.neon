@@ -5,7 +5,7 @@ parameters:
     level: 5
     paths:
         - app
-    ignoreErrors:
-        -
-            identifier: trait.unused
-            path: app/Concerns/LogsChanges.php
+    # Laravel 13 merges method-based casts() in initializeHasAttributes(), which
+    # larastan's constructor-less model reflection skips; parse the method AST
+    # instead so cast types (Carbon, custom casts) are visible to analysis.
+    parseModelCastsMethod: true

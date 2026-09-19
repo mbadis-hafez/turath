@@ -45,7 +45,7 @@ class ArtistPolicy
         return $user->can('artists.manage');
     }
 
-    public function restore(User $user, Artist $artist): bool
+    public function restore(User $user, ?Artist $artist = null): bool
     {
         return $user->can('artists.manage');
     }

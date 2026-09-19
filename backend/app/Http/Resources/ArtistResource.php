@@ -16,7 +16,7 @@ class ArtistResource extends ArtistListResource
         /** @var Artist $artist */
         $artist = $this->resource;
 
-        return array_merge(parent::toArray($request), [
+        $data = array_merge(parent::toArray($request), [
             'legacy_code' => $artist->legacy_code,
             'bio' => [
                 'ar' => $artist->bio_ar,
@@ -39,13 +39,17 @@ class ArtistResource extends ArtistListResource
             'publication_status' => $artist->publication_status,
             'created_at' => $artist->created_at?->toIso8601String(),
             'updated_at' => $artist->updated_at?->toIso8601String(),
-            $this->when($request->user()?->can('artists.manage') ?? false, [
-                'verified_by' => $artist->verifiedBy ? [
-                    'id' => $artist->verifiedBy->id,
-                    'name' => $artist->verifiedBy->name,
-                ] : null,
-            ]),
         ]);
+
+        // Verifier details are manager-only; safe for guests.
+        if ($request->user()?->can('artists.manage') ?? false) {
+            $data['verified_by'] = $artist->verifiedBy ? [
+                'id' => $artist->verifiedBy->id,
+                'name' => $artist->verifiedBy->name,
+            ] : null;
+        }
+
+        return $data;
     }
 
     /**

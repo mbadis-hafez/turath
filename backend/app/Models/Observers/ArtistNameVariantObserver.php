@@ -19,7 +19,7 @@ class ArtistNameVariantObserver
 
     private function rebuildParent(ArtistNameVariant $variant): void
     {
-        $artist = $variant->artist;
+        $artist = $variant->artist()->first();
 
         if ($artist !== null) {
             ArtistSearchTextBuilder::rebuildQuietly($artist);

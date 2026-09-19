@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\NameVariantType;
 use App\Enums\PublicationStatus;
 use App\Enums\VerifiedStatus;
 use App\Models\Artist;

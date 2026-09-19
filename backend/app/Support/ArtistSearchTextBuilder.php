@@ -15,7 +15,10 @@ class ArtistSearchTextBuilder
      */
     public static function build(Artist $artist): array
     {
-        $artist->loadMissing('variants');
+        // Always reload: callers may hold instances whose variants relation
+        // was loaded before a change (e.g. the variant observer's cached
+        // artist during a delete).
+        $artist->load('variants');
 
         $parts = array_filter([
             $artist->name_ar,

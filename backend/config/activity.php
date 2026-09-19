@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Artist;
+use App\Models\ArtistNameVariant;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -17,9 +20,9 @@ return [
 
     'resources' => [
         'artists' => [
-            'model' => App\Models\Artist::class,
+            'model' => Artist::class,
             'children' => [
-                ['class' => App\Models\ArtistNameVariant::class, 'fk' => 'artist_id'],
+                ['class' => ArtistNameVariant::class, 'fk' => 'artist_id'],
             ],
         ],
     ],
