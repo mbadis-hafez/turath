@@ -40,6 +40,18 @@ const routes: RouteRecordRaw[] = [
     meta: { titleFromData: true },
   },
   {
+    path: "/:locale/artworks",
+    name: "artworks.index",
+    component: () => import("@/pages/ComingSoonPage.vue"),
+    meta: { titleKey: "nav.artworks" },
+  },
+  {
+    path: "/:locale/archive",
+    name: "archive.records",
+    component: () => import("@/pages/ComingSoonPage.vue"),
+    meta: { titleKey: "nav.archive" },
+  },
+  {
     path: "/:locale/admin/activity",
     name: "admin.activity",
     component: () => import("@/pages/admin/ActivityPage.vue"),

@@ -1,0 +1,74 @@
+{
+  "searchLabel": "ابحث في الأرشيف",
+  "placeholder": "ابحث في الفنانين والأعمال والمواد الأرشيفية والفعاليات…",
+  "clear": "مسح البحث",
+  "resultsCount": "{count} نتيجة",
+  "seconds": "{seconds} ثانية",
+  "viewAll": "عرض الكل",
+  "filters": {
+    "title": "المرشحات",
+    "clearAll": "مسح الكل",
+    "bestMatch": "أفضل تطابق",
+    "type": "النوع",
+    "medium": "الوسيط",
+    "city": "المدينة / المنطقة",
+    "holding": "الجهة الحائزة",
+    "materialType": "نوع المادة الأرشيفية",
+    "period": "الفترة الزمنية",
+    "periodStart": "1950",
+    "periodEnd": "1995",
+    "verifiedOnly": "الموثّقون فقط",
+    "remove": "إزالة المرشح {label}"
+  },
+  "types": {
+    "artists": "فنانون",
+    "artworks": "أعمال فنية",
+    "materials": "مواد أرشيفية",
+    "events": "فعاليات"
+  },
+  "mediums": {
+    "oil": "زيت على قماش",
+    "watercolor": "ألوان مائية",
+    "mixed": "وسائط مختلطة"
+  },
+  "cities": {
+    "jeddah": "جدة",
+    "riyadh": "الرياض",
+    "dammam": "الدمام"
+  },
+  "holdings": {
+    "moc": "مجموعة وزارة الثقافة",
+    "athr": "مؤسسة أثر",
+    "private": "مجموعات خاصة"
+  },
+  "materialTypes": {
+    "articles": "مقالات صحفية",
+    "photos": "صور فوتوغرافية",
+    "catalogs": "كتالوجات",
+    "av": "فيديو وصوت"
+  },
+  "empty": {
+    "title": "لم نعثر على نتائج مطابقة",
+    "body": "لا توجد نتائج لهذا البحث في الفنانين أو الأعمال أو مواد الأرشيف أو الفعاليات. جرّب تهجئة أخرى، أو ابدأ من إحدى المجموعات.",
+    "suggestionLead": "هل تقصد",
+    "suggestionMeta": "{artists} فناناً · {results} نتيجة",
+    "browseArtists": "تصفّح جميع الفنانين",
+    "browseArchive": "تصفّح الأرشيف",
+    "suggested": "مداخل مقترحة"
+  },
+  "suggestions": {
+    "founders": "الجيل المؤسّس 1950–1980",
+    "jeddahExhibitions": "معارض جدة",
+    "mocCollection": "مجموعة وزارة الثقافة",
+    "seventiesPress": "الصحافة الفنية السبعينيات",
+    "biennales": "بيناليات وجوائز"
+  },
+  "featured": {
+    "verified": "موثّق",
+    "works": "{count} عملاً فنياً",
+    "materials": "{count} مادة أرشيفية",
+    "events": "{count} فعاليات",
+    "viewProfile": "عرض ملف الفنانة"
+  },
+  "restricted": "وصول مقيّد"
+}

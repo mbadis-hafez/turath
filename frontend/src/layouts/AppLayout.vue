@@ -14,6 +14,9 @@ const auth = useAuthStore();
 const { localePath } = useLocalePath();
 
 const homeLink = computed(() => localePath("home"));
+const artistsLink = computed(() => localePath("artists.index"));
+const artworksLink = computed(() => localePath("artworks.index"));
+const archiveLink = computed(() => localePath("archive.records"));
 const activityLink = computed(() => localePath("admin.activity"));
 const loginLink = computed(() => localePath("login"));
 
@@ -43,52 +46,104 @@ async function logout(): Promise<void> {
       {{ t("common.skipToContent") }}
     </a>
 
-    <header class="border-b border-line bg-surface">
+    <header class="border-b-2 border-ink bg-paper">
       <div
-        class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-4 sm:px-6"
+        class="mx-auto grid max-w-[90rem] grid-cols-[1fr_auto_1fr] items-center px-6 py-4 sm:px-12"
       >
         <RouterLink
           :to="homeLink"
-          class="text-lg font-semibold tracking-tight text-ink hover:text-accent-strong"
+          class="flex w-fit items-baseline gap-2 text-ink hover:text-accent-strong"
         >
-          {{ $t("home.heading") }}
+          <span class="text-xl font-semibold">{{ $t("home.heading") }}</span>
+          <span
+            v-if="otherLocale === 'en'"
+            class="hidden text-xs text-ink-muted uppercase sm:inline"
+            >Bidayaat</span
+          >
         </RouterLink>
-        <nav aria-label="Main" class="flex items-center gap-1">
-          <RouterLink
-            :to="homeLink"
-            class="rounded-md px-3 py-1.5 text-sm text-ink-muted hover:bg-neutral-soft hover:text-ink"
-            active-class="!text-accent-strong font-medium"
-          >
-            {{ $t("nav.home") }}
-          </RouterLink>
-          <RouterLink
-            v-if="auth.can('activity.view')"
-            :to="activityLink"
-            class="rounded-md px-3 py-1.5 text-sm text-ink-muted hover:bg-neutral-soft hover:text-ink"
-            active-class="!text-accent-strong font-medium"
-          >
-            {{ $t("nav.activity") }}
-          </RouterLink>
+        <nav
+          aria-label="Main"
+          class="hidden items-center gap-7 text-sm font-medium md:flex"
+        >
+          <!-- Contributors navigate to working backend pages. -->
+          <template v-if="auth.isAuthenticated">
+            <RouterLink
+              :to="artistsLink"
+              class="text-ink transition-colors hover:text-accent"
+              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
+              >{{ $t("nav.artists") }}</RouterLink
+            >
+            <RouterLink
+              :to="artworksLink"
+              class="text-ink transition-colors hover:text-accent"
+              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
+              >{{ $t("nav.artworks") }}</RouterLink
+            >
+            <RouterLink
+              :to="archiveLink"
+              class="text-ink transition-colors hover:text-accent"
+              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
+              >{{ $t("nav.archive") }}</RouterLink
+            >
+            <RouterLink
+              v-if="auth.can('activity.view')"
+              :to="activityLink"
+              class="text-ink-muted transition-colors hover:text-ink"
+              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
+            >
+              {{ $t("nav.activity") }}
+            </RouterLink>
+          </template>
+          <!-- Visitors browse the landing-page sections. -->
+          <template v-else>
+            <RouterLink
+              :to="artistsLink"
+              class="text-ink transition-colors hover:text-accent"
+              active-class="!text-accent-strong font-medium"
+              >{{ $t("nav.artists") }}</RouterLink
+            >
+            <a
+              href="#works"
+              class="text-ink transition-colors hover:text-accent"
+              >{{ $t("nav.artworks") }}</a
+            >
+            <a
+              href="#materials"
+              class="text-accent underline decoration-accent decoration-2 underline-offset-8"
+              aria-current="page"
+              >{{ $t("nav.archive") }}</a
+            >
+            <a
+              href="#events"
+              class="text-ink transition-colors hover:text-accent"
+              >{{ $t("nav.events") }}</a
+            >
+            <a
+              href="#themes"
+              class="text-ink transition-colors hover:text-accent"
+              >{{ $t("nav.themes") }}</a
+            >
+          </template>
         </nav>
-        <div class="ms-auto flex items-center gap-2">
+        <div class="flex items-center justify-self-end gap-3">
           <RouterLink
             :to="otherLocaleLink"
-            class="rounded-md border border-line px-3 py-1.5 text-sm text-ink hover:bg-neutral-soft"
+            class="border border-ink px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
             :lang="otherLocale"
           >
-            {{ otherLocale === "en" ? "English" : "العربية" }}
+            {{ otherLocale === "en" ? "EN" : "عربي" }}
           </RouterLink>
           <RouterLink
             v-if="!auth.isAuthenticated"
             :to="loginLink"
-            class="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-surface hover:bg-accent-strong"
+            class="bg-ink px-5 py-1.5 text-sm font-semibold text-paper transition-colors hover:bg-ink/85"
           >
             {{ $t("nav.login") }}
           </RouterLink>
           <button
             v-else
             type="button"
-            class="rounded-md border border-line px-3 py-1.5 text-sm text-ink hover:bg-neutral-soft"
+            class="border border-ink px-5 py-1.5 text-sm font-semibold text-ink transition-colors hover:bg-ink hover:text-paper"
             @click="logout"
           >
             {{ $t("nav.logout") }}
@@ -99,14 +154,78 @@ async function logout(): Promise<void> {
 
     <main
       id="content"
-      class="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6"
+      class="mx-auto w-full max-w-[90rem] flex-1 px-6 py-8 sm:px-12"
     >
       <slot />
     </main>
 
-    <footer class="border-t border-line bg-surface">
-      <div class="mx-auto max-w-5xl px-4 py-6 text-sm text-ink-muted sm:px-6">
-        {{ $t("home.heading") }} — Bidayaat
+    <footer class="mt-16 border-t-2 border-ink bg-paper">
+      <div
+        class="mx-auto flex max-w-[90rem] flex-wrap items-start justify-between gap-10 px-6 py-10 sm:px-12"
+      >
+        <p class="flex items-baseline gap-3">
+          <span class="text-[26px] font-bold text-ink font-display">{{
+            $t("home.heading")
+          }}</span>
+          <span
+            v-if="otherLocale === 'en'"
+            class="text-[11px] tracking-widest text-ink-faint uppercase font-latin"
+            >Bidayaat</span
+          >
+        </p>
+        <nav
+          aria-label="Footer"
+          class="flex flex-wrap gap-11 text-[13.5px] text-ink-muted"
+        >
+          <div class="flex flex-col gap-2.25">
+            <h2
+              class="text-[10.5px] tracking-widest text-ink-faint uppercase font-latin"
+            >
+              {{ $t("home.footer.browse") }}
+            </h2>
+            <a href="#artists" class="transition-colors hover:text-ink">{{
+              $t("home.footer.artists")
+            }}</a>
+            <a href="#works" class="transition-colors hover:text-ink">{{
+              $t("home.footer.artworks")
+            }}</a>
+            <a href="#archive" class="transition-colors hover:text-ink">{{
+              $t("home.footer.archive")
+            }}</a>
+          </div>
+          <div class="flex flex-col gap-2.25">
+            <h2
+              class="text-[10.5px] tracking-widest text-ink-faint uppercase font-latin"
+            >
+              {{ $t("home.footer.about") }}
+            </h2>
+            <a href="#" class="transition-colors hover:text-ink" @click.prevent>{{
+              $t("home.footer.methodology")
+            }}</a>
+            <a href="#" class="transition-colors hover:text-ink" @click.prevent>{{
+              $t("home.footer.rights")
+            }}</a>
+            <a href="#" class="transition-colors hover:text-ink" @click.prevent>{{
+              $t("home.footer.partners")
+            }}</a>
+          </div>
+          <div class="flex flex-col gap-2.25">
+            <h2
+              class="text-[10.5px] tracking-widest text-ink-faint uppercase font-latin"
+            >
+              {{ $t("home.footer.contact") }}
+            </h2>
+            <a href="#" class="transition-colors hover:text-ink" @click.prevent>{{
+              $t("home.footer.researchers")
+            }}</a>
+            <a href="#" class="transition-colors hover:text-ink" @click.prevent>{{
+              $t("home.footer.owners")
+            }}</a>
+            <a href="#" class="transition-colors hover:text-ink" @click.prevent>{{
+              $t("home.footer.institutions")
+            }}</a>
+          </div>
+        </nav>
       </div>
     </footer>
   </div>

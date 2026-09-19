@@ -1,5 +1,54 @@
 {
   "heading": "Bidayaat",
-  "intro": "A platform for documenting and managing art heritage: works, artists and sources in one place, with a recorded history of every change.",
-  "loginLink": "Log in to manage content"
+  "eyebrow": "Archive of Saudi art history",
+  "heroTitle": "What remains of the beginnings of the Saudi art movement, in one place",
+  "heroBody": "Press articles, photographs, documents, and catalogues gathered from artists, their families, and community associations — digitised, with their sources documented. Search across all of it from a single field.",
+  "stats": {
+    "materials": "Archival materials",
+    "artists": "Artists",
+    "artworks": "Artworks referenced",
+    "sources": "Cities and sources"
+  },
+  "lastUpdate": "Last update of batch {batch} · {date}",
+  "searchLabel": "Search the archive",
+  "searchPlaceholder": "Search for an artist, artwork, article, photograph…",
+  "searchButton": "Search",
+  "popular": "Popular searches",
+  "themes": {
+    "title": "Thematic axes",
+    "viewAll": "All axes",
+    "materials": "{count} materials"
+  },
+  "archive": {
+    "title": "From the archive",
+    "browse": "Browse the archive"
+  },
+  "artistsSection": {
+    "title": "Artists in the archive",
+    "viewAll": "All artists",
+    "items": "{count} materials"
+  },
+  "cities": {
+    "title": "Cities and collections"
+  },
+  "contribute": {
+    "title": "Have material from this period?",
+    "body": "The archive is gathered from artists, their families, associations, and private collections. Ownership stays with the holder, the source is recorded with every item, and the owner sets the access level.",
+    "submit": "Submit material",
+    "methodology": "How we document sources"
+  },
+  "footer": {
+    "browse": "Browse",
+    "about": "About the platform",
+    "contact": "Contact",
+    "artists": "Artists",
+    "artworks": "Artworks",
+    "archive": "Archive",
+    "methodology": "Methodology",
+    "rights": "Rights policy",
+    "partners": "Partners",
+    "researchers": "For researchers",
+    "owners": "For owners",
+    "institutions": "For institutions"
+  }
 }

@@ -1,17 +1,23 @@
 import { createI18n } from "vue-i18n";
 
 import arActivity from "./locales/ar/activity.json";
+import arArtists from "./locales/ar/artists.json";
 import arAuth from "./locales/ar/auth.json";
 import arCommon from "./locales/ar/common.json";
+import arDates from "./locales/ar/dates.json";
 import arErrors from "./locales/ar/errors.json";
 import arHome from "./locales/ar/home.json";
 import arNav from "./locales/ar/nav.json";
+import arSearch from "./locales/ar/search.json";
 import enActivity from "./locales/en/activity.json";
+import enArtists from "./locales/en/artists.json";
 import enAuth from "./locales/en/auth.json";
 import enCommon from "./locales/en/common.json";
+import enDates from "./locales/en/dates.json";
 import enErrors from "./locales/en/errors.json";
 import enHome from "./locales/en/home.json";
 import enNav from "./locales/en/nav.json";
+import enSearch from "./locales/en/search.json";
 
 export const SUPPORTED_LOCALES = ["ar", "en"] as const;
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number];
@@ -63,6 +69,9 @@ export const i18n = createI18n({
       errors: arErrors,
       home: arHome,
       activity: arActivity,
+      artists: arArtists,
+      dates: arDates,
+      search: arSearch,
     },
     en: {
       common: enCommon,
@@ -71,6 +80,9 @@ export const i18n = createI18n({
       errors: enErrors,
       home: enHome,
       activity: enActivity,
+      artists: enArtists,
+      dates: enDates,
+      search: enSearch,
     },
   },
 });

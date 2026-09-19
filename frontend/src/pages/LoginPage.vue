@@ -5,6 +5,8 @@ import { useI18n } from "vue-i18n";
 
 import { useAuthStore } from "@/stores/auth";
 import { useLocalePath } from "@/composables/useLocalePath";
+import { formatNumber } from "@/utils/format";
+import type { AppLocale } from "@/i18n";
 import { ApiError } from "@/types/api";
 
 const { t, locale } = useI18n();
@@ -20,13 +22,11 @@ const fieldErrors = reactive<Record<string, string[]>>({});
 const passwordVisible = ref(false);
 
 const stats = computed(() => {
-  const format = new Intl.NumberFormat(
-    locale.value === "ar" ? "ar-SA" : locale.value,
-  );
+  const format = (value: number) => formatNumber(value, locale.value as AppLocale);
   return [
-    { value: format.format(8765), label: t("auth.brand.works") },
-    { value: format.format(1402), label: t("auth.brand.artists") },
-    { value: format.format(21240), label: t("auth.brand.archiveItems") },
+    { value: format(8765), label: t("auth.brand.works") },
+    { value: format(1402), label: t("auth.brand.artists") },
+    { value: format(21240), label: t("auth.brand.archiveItems") },
   ];
 });
 
@@ -76,7 +76,7 @@ async function submit(): Promise<void> {
 
       <div class="max-w-lg">
         <h2
-          class="text-4xl leading-snug font-semibold text-balance xl:text-5xl"
+          class="text-4xl leading-snug font-semibold text-balance font-display xl:text-5xl"
         >
           {{ t("auth.brand.heading") }}
         </h2>
@@ -106,7 +106,9 @@ async function submit(): Promise<void> {
         </p>
 
         <p class="text-sm text-ink-muted">{{ t("auth.title") }}</p>
-        <h1 class="mt-2 text-3xl font-semibold text-balance text-ink">
+        <h1
+          class="mt-2 text-3xl font-semibold text-balance font-display text-ink"
+        >
           {{ t("auth.heading") }}
         </h1>
 

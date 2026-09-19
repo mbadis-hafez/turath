@@ -5,32 +5,38 @@
 /* Components must reference Tailwind theme utilities, never raw hex.  */
 /* ------------------------------------------------------------------ */
 :root {
-  --color-ink: #1c1917;
-  --color-ink-muted: #57534e;
-  --color-paper: #fafaf9;
+  --color-ink: #1a1a18;
+  --color-ink-muted: #54524b;
+  --color-ink-faint: #7d7a70;
+  --color-paper: #fbfaf6;
   --color-surface: #ffffff;
-  --color-line: #e7e5e4;
-  --color-accent: #0f766e;
-  --color-accent-strong: #115e59;
-  --color-accent-soft: #ccfbf1;
+  --color-line: #ddd9cd;
+  --color-accent: #1f4e79;
+  --color-accent-strong: #163a5c;
+  --color-accent-soft: #dbe4ee;
+  --color-sand: #ece7db;
+  --color-sand-ink: #5d5445;
   --color-danger: #b91c1c;
   --color-danger-soft: #fee2e2;
   --color-warn: #92400e;
   --color-warn-soft: #fef3c7;
   --color-info: #1d4ed8;
   --color-info-soft: #dbeafe;
-  --color-neutral-soft: #e7e5e4;
+  --color-neutral-soft: #e9e5d8;
 }
 
 @theme inline {
   --color-ink: var(--color-ink);
   --color-ink-muted: var(--color-ink-muted);
+  --color-ink-faint: var(--color-ink-faint);
   --color-paper: var(--color-paper);
   --color-surface: var(--color-surface);
   --color-line: var(--color-line);
   --color-accent: var(--color-accent);
   --color-accent-strong: var(--color-accent-strong);
   --color-accent-soft: var(--color-accent-soft);
+  --color-sand: var(--color-sand);
+  --color-sand-ink: var(--color-sand-ink);
   --color-danger: var(--color-danger);
   --color-danger-soft: var(--color-danger-soft);
   --color-warn: var(--color-warn);
@@ -42,6 +48,8 @@
   --font-sans:
     "IBM Plex Sans Arabic", "IBM Plex Sans", ui-sans-serif, system-ui,
     sans-serif;
+  --font-display: "Amiri", "IBM Plex Sans Arabic", serif;
+  --font-latin: "Libre Baskerville", "IBM Plex Sans", serif;
 }
 
 html[dir="ltr"] body {

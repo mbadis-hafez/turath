@@ -1,0 +1,74 @@
+{
+  "searchLabel": "Search the archive",
+  "placeholder": "Search artists, artworks, archival materials, and events…",
+  "clear": "Clear search",
+  "resultsCount": "{count} results",
+  "seconds": "{seconds} s",
+  "viewAll": "View all",
+  "filters": {
+    "title": "Filters",
+    "clearAll": "Clear all",
+    "bestMatch": "Best match",
+    "type": "Type",
+    "medium": "Medium",
+    "city": "City / region",
+    "holding": "Holding institution",
+    "materialType": "Material type",
+    "period": "Time period",
+    "periodStart": "1950",
+    "periodEnd": "1995",
+    "verifiedOnly": "Verified only",
+    "remove": "Remove filter {label}"
+  },
+  "types": {
+    "artists": "Artists",
+    "artworks": "Artworks",
+    "materials": "Archival materials",
+    "events": "Events"
+  },
+  "mediums": {
+    "oil": "Oil on canvas",
+    "watercolor": "Watercolor",
+    "mixed": "Mixed media"
+  },
+  "cities": {
+    "jeddah": "Jeddah",
+    "riyadh": "Riyadh",
+    "dammam": "Dammam"
+  },
+  "holdings": {
+    "moc": "Ministry of Culture Collection",
+    "athr": "Athr Foundation",
+    "private": "Private collections"
+  },
+  "materialTypes": {
+    "articles": "Press articles",
+    "photos": "Photographs",
+    "catalogs": "Catalogues",
+    "av": "Video and audio"
+  },
+  "empty": {
+    "title": "No matching results",
+    "body": "This search returned no results in artists, artworks, archival materials, or events. Try another spelling, or start from one of the collections.",
+    "suggestionLead": "Did you mean",
+    "suggestionMeta": "{artists} artists · {results} results",
+    "browseArtists": "Browse all artists",
+    "browseArchive": "Browse the archive",
+    "suggested": "Suggested starting points"
+  },
+  "suggestions": {
+    "founders": "The founding generation 1950–1980",
+    "jeddahExhibitions": "Jeddah exhibitions",
+    "mocCollection": "Ministry of Culture collection",
+    "seventiesPress": "1970s art press",
+    "biennales": "Biennales and awards"
+  },
+  "featured": {
+    "verified": "Verified",
+    "works": "{count} artworks",
+    "materials": "{count} archival materials",
+    "events": "{count} events",
+    "viewProfile": "View artist profile"
+  },
+  "restricted": "Restricted access"
+}

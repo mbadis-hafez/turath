@@ -47,3 +47,10 @@ export function formatFieldValue(value: unknown): string | null {
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 }
+
+/** Both locales render with Western digits for consistency. */
+export function formatNumber(value: number, locale: AppLocale): string {
+  return new Intl.NumberFormat(locale, {
+    numberingSystem: NUMBERING_SYSTEM,
+  }).format(value);
+}
