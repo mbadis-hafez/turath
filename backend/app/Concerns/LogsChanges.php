@@ -40,17 +40,21 @@ trait LogsChanges
     {
         $activity->log_name = $this->getTable();
 
-        $properties = $activity->properties?->toArray() ?? [];
+        $changes = $activity->attribute_changes?->toArray() ?? [];
 
         foreach (['attributes', 'old'] as $key) {
-            if (isset($properties[$key]) && is_array($properties[$key])) {
+            if (isset($changes[$key]) && is_array($changes[$key])) {
                 unset(
-                    $properties[$key]['created_at'],
-                    $properties[$key]['updated_at'],
-                    $properties[$key]['deleted_at'],
+                    $changes[$key]['created_at'],
+                    $changes[$key]['updated_at'],
+                    $changes[$key]['deleted_at'],
                 );
             }
         }
+
+        $activity->attribute_changes = $changes;
+
+        $properties = $activity->properties?->toArray() ?? [];
 
         $summary = request()->input('edit_summary');
 

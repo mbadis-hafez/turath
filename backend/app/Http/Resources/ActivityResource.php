@@ -80,10 +80,10 @@ class ActivityResource extends JsonResource
      */
     private function changes(Activity $activity): array
     {
-        $properties = $activity->properties?->toArray() ?? [];
+        $changes = $activity->attribute_changes?->toArray() ?? [];
 
-        $attributes = $properties['attributes'] ?? [];
-        $old = $properties['old'] ?? [];
+        $attributes = $changes['attributes'] ?? [];
+        $old = $changes['old'] ?? [];
 
         if (! is_array($attributes) || ! is_array($old)) {
             return [];

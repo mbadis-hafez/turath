@@ -20,7 +20,7 @@ class ActivityFeedController
 
             $query->where(function ($q) use ($type) {
                 $q->where('subject_type', $type)
-                    ->orWhere('subject_type', '\\'.$type);
+                    ->orWhere('subject_type', 'like', '%\\'.$type);
             });
         }
 
