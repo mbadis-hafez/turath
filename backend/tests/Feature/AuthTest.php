@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -22,7 +23,7 @@ function seedAuthUser(string $email, string $role): User
 }
 
 it('logs in and returns the user resource with roles', function () {
-    $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+    $this->seed(RolesAndPermissionsSeeder::class);
     seedAuthUser('admin@bidayaat.test', 'admin');
 
     $response = $this->postJson('/api/v1/auth/login', [
@@ -37,7 +38,7 @@ it('logs in and returns the user resource with roles', function () {
 });
 
 it('returns 422 for wrong credentials', function () {
-    $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+    $this->seed(RolesAndPermissionsSeeder::class);
     seedAuthUser('editor@bidayaat.test', 'editor');
 
     $response = $this->postJson('/api/v1/auth/login', [
@@ -50,7 +51,7 @@ it('returns 422 for wrong credentials', function () {
 });
 
 it('returns 401 from auth user when logged out and 200 when logged in', function () {
-    $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+    $this->seed(RolesAndPermissionsSeeder::class);
     seedAuthUser('editor@bidayaat.test', 'editor');
 
     $this->getJson('/api/v1/auth/user', apiHeaders())->assertUnauthorized();
@@ -66,7 +67,7 @@ it('returns 401 from auth user when logged out and 200 when logged in', function
 });
 
 it('logs out and invalidates the session', function () {
-    $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+    $this->seed(RolesAndPermissionsSeeder::class);
     seedAuthUser('editor@bidayaat.test', 'editor');
 
     $this->postJson('/api/v1/auth/login', [
@@ -83,7 +84,7 @@ it('logs out and invalidates the session', function () {
 
 it('rate limits login after 5 failed attempts per email and ip', function () {
     $email = 'throttle-'.uniqid().'@bidayaat.test';
-    $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+    $this->seed(RolesAndPermissionsSeeder::class);
     seedAuthUser($email, 'reader');
 
     foreach (range(1, 5) as $attempt) {

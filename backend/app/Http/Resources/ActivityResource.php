@@ -25,7 +25,7 @@ class ActivityResource extends JsonResource
             'subject_id' => $activity->subject_id,
             'subject_label' => $this->subjectLabel($activity),
             'causer' => $activity->causer !== null
-                ? ['id' => $activity->causer->getKey(), 'name' => $activity->causer->name]
+                ? ['id' => $activity->causer->getKey(), 'name' => $activity->causer->getAttribute('name')]
                 : null,
             'edit_summary' => $activity->properties['edit_summary'] ?? null,
             'changes' => $this->changes($activity),

@@ -52,7 +52,7 @@ trait LogsChanges
             }
         }
 
-        $activity->attribute_changes = $changes;
+        $activity->attribute_changes = collect($changes);
 
         $properties = $activity->properties?->toArray() ?? [];
 
@@ -62,6 +62,6 @@ trait LogsChanges
             $properties['edit_summary'] = $summary;
         }
 
-        $activity->properties = $properties;
+        $activity->properties = collect($properties);
     }
 }
