@@ -61,8 +61,8 @@ const hasLifeDates = computed(
           {{ secondary.text }}
         </p>
         <p v-if="hasLifeDates" class="mt-2 text-sm text-ink-muted">
-          <LifeDates :date="artist.birth" />
-          <span v-if="artist.death.display || artist.death.year_from !== null">
+          <LifeDates v-if="artist.birth" :date="artist.birth" />
+          <span v-if="artist.death && (artist.death.display || artist.death.year_from !== null)">
             <span aria-hidden="true">–</span>
             <LifeDates :date="artist.death" />
           </span>

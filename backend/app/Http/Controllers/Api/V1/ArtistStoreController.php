@@ -12,6 +12,7 @@ class ArtistStoreController
     public function __invoke(StoreArtistRequest $request): JsonResponse
     {
         $artist = Artist::create($request->mappedAttributes());
+        $artist->refresh();
         $artist->load('variants');
 
         return response()->json(['data' => new ArtistResource($artist)], 201);

@@ -24,8 +24,8 @@ export interface ArtistListItem {
   id: number;
   slug: string;
   name: Bilingual;
-  birth: PartialDate;
-  death: PartialDate;
+  birth: PartialDate | null;
+  death: PartialDate | null;
   living_status: LivingStatus;
   verified_status: VerifiedStatus;
 }
@@ -50,8 +50,8 @@ export interface NameVariant {
 export interface Artist extends ArtistListItem {
   legacy_code: string | null;
   bio: Bilingual;
-  birth: PartialDate & { place: Bilingual };
-  death: PartialDate & { place: Bilingual };
+  birth: (PartialDate & { place: Bilingual }) | null;
+  death: (PartialDate & { place: Bilingual }) | null;
   also_known_as: NameVariant[];
   verified_at: string | null;
   publication_status: "draft" | "published" | "hidden";

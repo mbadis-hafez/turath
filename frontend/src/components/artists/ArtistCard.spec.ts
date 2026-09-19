@@ -105,6 +105,17 @@ describe("ArtistCard", () => {
     expect(wrapper.text()).toContain("1989");
   });
 
+  it("renders without crashing when birth and death are null", () => {
+    const wrapper = mountWithPlugins(ArtistCard, {
+      locale: "ar",
+      router,
+      props: { artist: makeArtist({ birth: null, death: null }) },
+    });
+
+    expect(wrapper.get("h3").text()).toContain("إنجي أفلاطون");
+    expect(wrapper.find("p.mt-2").exists()).toBe(false);
+  });
+
   it("shows the verified badge only for verified or disputed artists", () => {
     const verified = mountWithPlugins(ArtistCard, {
       locale: "ar",

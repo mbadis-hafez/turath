@@ -20,11 +20,12 @@ function hasAnyText(value: Bilingual | null | undefined): boolean {
   return Boolean(value?.ar?.trim() || value?.en?.trim());
 }
 
-function hasDateInfo(date: Artist["birth"]): boolean {
-  return (
-    formatLifeDates(date, locale.value as "ar" | "en") !== null ||
+function dateInfo(date: Artist["birth"] | null): Artist["birth"] | null {
+  if (!date) return null;
+  return formatLifeDates(date, locale.value as "ar" | "en") !== null ||
     hasAnyText(date.place)
-  );
+    ? date
+    : null;
 }
 
 /** Other-language name, shown as a subtitle when it differs. */
@@ -41,8 +42,8 @@ const secondary = computed(() => {
   };
 });
 
-const hasBirth = computed(() => hasDateInfo(props.artist.birth));
-const hasDeath = computed(() => hasDateInfo(props.artist.death));
+const birthInfo = computed(() => dateInfo(props.artist.birth));
+const deathInfo = computed(() => dateInfo(props.artist.death));
 </script>
 
 <template>
@@ -65,23 +66,23 @@ const hasDeath = computed(() => hasDateInfo(props.artist.death));
     </div>
 
     <dl class="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-sm text-ink-muted">
-      <div v-if="hasBirth" class="flex gap-1">
+      <div v-if="birthInfo" class="flex gap-1">
         <dt class="sr-only">{{ t("artists.born") }}</dt>
         <dd>
-          <LifeDates :date="artist.birth" :label="t('artists.born')" />
-          <template v-if="hasAnyText(artist.birth.place)">
+          <LifeDates :date="birthInfo" :label="t('artists.born')" />
+          <template v-if="hasAnyText(birthInfo.place)">
             <span aria-hidden="true"> · </span>
-            <LocalizedText :text="artist.birth.place" />
+            <LocalizedText :text="birthInfo.place" />
           </template>
         </dd>
       </div>
-      <div v-if="hasDeath" class="flex gap-1">
+      <div v-if="deathInfo" class="flex gap-1">
         <dt class="sr-only">{{ t("artists.died") }}</dt>
         <dd>
-          <LifeDates :date="artist.death" :label="t('artists.died')" />
-          <template v-if="hasAnyText(artist.death.place)">
+          <LifeDates :date="deathInfo" :label="t('artists.died')" />
+          <template v-if="hasAnyText(deathInfo.place)">
             <span aria-hidden="true"> · </span>
-            <LocalizedText :text="artist.death.place" />
+            <LocalizedText :text="deathInfo.place" />
           </template>
         </dd>
       </div>
