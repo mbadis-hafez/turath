@@ -1,7 +1,7 @@
 import { request } from "@/api/http";
 import type { PaginationMeta } from "@/types/api";
 import type { Localized } from "@/types/artistCuration";
-import type { AdminArtworkRow, AdminArtworksQuery, ArtworkCuration, PipelineStatus } from "@/types/artworkCuration";
+import type { AdminArtworkRow, AdminArtworksQuery, ArtworkCuration, ArtworkImage, ImageRights, PipelineStatus } from "@/types/artworkCuration";
 
 export async function listAdminArtworks(
   params: AdminArtworksQuery,
@@ -51,4 +51,23 @@ export function mergeArtworks(payload: {
   field_resolution: Record<string, "survivor" | "duplicate">;
 }): Promise<unknown> {
   return request({ method: "POST", url: "/api/v1/artworks/merge", data: payload });
+}
+
+export function uploadArtworkImage(id: number, file: File, rights: ImageRights): Promise<{ data: ArtworkImage[] }> {
+  const data = new FormData();
+  data.append("image", file);
+  data.append("rights_status", rights);
+  return request({ method: "POST", url: `/api/v1/artworks/${id}/images`, data });
+}
+
+export function updateArtworkImage(
+  id: number,
+  imageId: number,
+  patch: { rights_status?: ImageRights; is_final?: boolean },
+): Promise<{ data: ArtworkImage[] }> {
+  return request({ method: "PATCH", url: `/api/v1/artworks/${id}/images/${imageId}`, data: patch });
+}
+
+export function deleteArtworkImage(id: number, imageId: number): Promise<{ data: ArtworkImage[] }> {
+  return request({ method: "DELETE", url: `/api/v1/artworks/${id}/images/${imageId}` });
 }

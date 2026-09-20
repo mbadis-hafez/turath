@@ -13,7 +13,7 @@ class ArtworkCurationShowController
 {
     public function __invoke(Artwork $artwork): JsonResponse
     {
-        $artwork->load(['artist', 'holder']);
+        $artwork->load(['artist', 'holder', 'images']);
         $pipeline = new PipelineService;
         $stages = $pipeline->stages($artwork);
         $evaluation = (new CompletenessCalculator)->evaluate($artwork);
@@ -43,7 +43,7 @@ class ArtworkCurationShowController
             ['dimensions', 'important', ! in_array('dimensions', $evaluation['minor'], true)],
             ['medium', 'important', ! in_array('medium', $evaluation['minor'], true)],
             ['condition_report', 'important', $artwork->getAttribute('condition_report_status') === 'available'],
-            ['hr_image', 'important', $artwork->getAttribute('final_selected_hr_image_file_id') !== null],
+            ['hr_image', 'important', $artwork->images->contains('is_final', true)],
             ['holder', 'core', $artwork->holder_id !== null],
             ['authorization_letter', 'core', in_array($artistLetter, ['signed', 'not_applicable'], true)],
         ]);
@@ -71,7 +71,8 @@ class ArtworkCurationShowController
             'condition_report_status' => $artwork->getAttribute('condition_report_status'),
             'image_quality' => $artwork->getAttribute('image_quality'),
             'editing_status' => $artwork->getAttribute('editing_status'),
-            'has_final_hr_image' => $artwork->getAttribute('final_selected_hr_image_file_id') !== null,
+            'has_final_hr_image' => $artwork->images->contains('is_final', true),
+            'images' => ArtworkImageController::present($artwork),
             'publication_status' => $artwork->publication_status,
             'completeness' => [
                 'pct' => $evaluation['completeness_pct'],

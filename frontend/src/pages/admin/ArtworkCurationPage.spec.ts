@@ -9,7 +9,7 @@ import { mountWithPlugins } from "@/test/utils";
 import type { ArtworkCuration } from "@/types/artworkCuration";
 
 const api = vi.hoisted(() => ({
-  getArtworkCuration: vi.fn(), updateArtwork: vi.fn(), updateArtworkStage: vi.fn(), approveArtwork: vi.fn(),
+  getArtworkCuration: vi.fn(), updateArtwork: vi.fn(), uploadArtworkImage: vi.fn(), updateArtworkImage: vi.fn(), deleteArtworkImage: vi.fn(), updateArtworkStage: vi.fn(), approveArtwork: vi.fn(),
 }));
 vi.mock("@/api/artworkCuration", () => api);
 
@@ -22,7 +22,7 @@ function bundle(patch: Partial<ArtworkCuration> = {}): ArtworkCuration {
     medium: { ar: null, en: null }, creation: { display: "1990", year_from: 1990, year_to: 1990, calendar: "gregorian", certainty: "exact" },
     signed: "unknown", notes: { ar: null, en: null }, edition: { number: null, size: null }, dimensions: dims, frame_dimensions: dims,
     weight_kg: null, holder: null, holder_inventory_no: null, inventory_by_owner: null, condition_report_link: null,
-    condition_report_status: null, image_quality: null, editing_status: null, has_final_hr_image: false, publication_status: "draft",
+    condition_report_status: null, image_quality: null, editing_status: null, has_final_hr_image: false, images: [], publication_status: "draft",
     completeness: { pct: 33, severity: "blocking", blocking: ["holder"], minor: ["dimensions", "medium"] },
     checklist: [
       { key: "code", tier: "core", met: true }, { key: "dimensions", tier: "important", met: false }, { key: "holder", tier: "core", met: false },
@@ -98,5 +98,24 @@ describe("ArtworkCurationPage", () => {
     await wrapper.get("[data-testid=pipeline] select").setValue("done");
 
     expect(api.updateArtworkStage).toHaveBeenCalledWith(7, "work_category", "done");
+  });
+
+  it("uploads an image with the chosen rights and can mark another one final", async () => {
+    api.uploadArtworkImage.mockResolvedValue({ data: [] });
+    api.updateArtworkImage.mockResolvedValue({ data: [] });
+    const image = { id: 5, url: "/i/5", filename: "a.jpg", width_px: 3000, height_px: 2000, size_bytes: 10, rights_status: "licensed", is_final: false };
+    api.getArtworkCuration.mockResolvedValue({ data: bundle({ images: [image as never] }) });
+    const wrapper = await mountPage();
+
+    const file = new File(["x"], "b.jpg", { type: "image/jpeg" });
+    const input = wrapper.get("[data-testid=image-input]");
+    Object.defineProperty(input.element, "files", { value: [file] });
+    await input.trigger("change");
+    await flushPromises();
+    expect(api.uploadArtworkImage).toHaveBeenCalledWith(7, file, "unknown");
+
+    await wrapper.get("[data-testid=make-final]").trigger("click");
+    await flushPromises();
+    expect(api.updateArtworkImage).toHaveBeenCalledWith(7, 5, { is_final: true });
   });
 });

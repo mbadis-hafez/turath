@@ -10,6 +10,7 @@ export interface AdminArtworkRow {
   is_untitled: boolean;
   artist: { id: number; name: Localized } | null;
   holder_id: number | null;
+  thumbnail_url: string | null;
   holder: { id: number; name: Localized } | null;
   year: string | null;
   flags: ArtworkFlag[];
@@ -70,10 +71,24 @@ export interface ArtworkCuration {
   image_quality: ImageQuality | null;
   editing_status: string | null;
   has_final_hr_image: boolean;
+  images: ArtworkImage[];
   publication_status: ArtworkStatus;
   completeness: { pct: number; severity: CompletenessSeverity; blocking: string[]; minor: string[] };
   checklist: { key: string; tier: "core" | "important"; met: boolean }[];
   approve_blockers: Record<string, string[]>;
   pipeline: { stage_key: string; status: PipelineStatus; note: string | null }[];
   linked_materials: { id: number; legacy_ref: string | null; item_type: string; title: Localized; completeness_pct: number }[];
+}
+
+export type ImageRights = "unknown" | "licensed" | "public_domain" | "all_rights_reserved";
+
+export interface ArtworkImage {
+  id: number;
+  url: string;
+  filename: string | null;
+  width_px: number | null;
+  height_px: number | null;
+  size_bytes: number;
+  rights_status: ImageRights;
+  is_final: boolean;
 }

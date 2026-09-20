@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Controllers\Api\V1\ArtworkImageController;
 use App\Models\Artwork;
 use Illuminate\Http\Request;
 
@@ -34,9 +35,20 @@ class ArtworkResource extends ArtworkListResource
                 'ar' => $artwork->notes_ar,
                 'en' => $artwork->notes_en,
             ],
+            'image_url' => $this->publicImageUrl($artwork),
             'publication_status' => $artwork->publication_status,
             'created_at' => $artwork->created_at?->toIso8601String(),
             'updated_at' => $artwork->updated_at?->toIso8601String(),
         ]);
+    }
+
+    private function publicImageUrl(Artwork $artwork): ?string
+    {
+        if ($artwork->publication_status !== 'published') {
+            return null;
+        }
+        $image = ArtworkImageController::primary($artwork);
+
+        return $image !== null && $image->isClearForPublic() ? ArtworkImageController::urlFor($image) : null;
     }
 }

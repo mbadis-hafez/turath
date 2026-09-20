@@ -145,4 +145,5 @@ Numbering continues locally (D43+); the F10 spec's own D47–D57 are cross-refer
 - The year is only sent on save when edited, so circa/range creation dates are never overwritten.
 - Artist and holder are chosen with a shared search picker (`EntityPicker`); holders are searched through `GET /admin/holders` (artworks.manage), artists through the existing admin artists list. The registry filters by both via the URL.
 - Add-artwork creates a draft (no artist means `unattributed`) and opens the detail page; the merge modal reuses `POST /artworks/merge` with per-field survivor/duplicate choice.
-- Not built yet: artwork image display and HR-image picking (needs F3 file uploads and artwork-file linkage).
+- Artwork images live in their own `artwork_images` table (private disk, streamed via the API, rights per image, one `is_final`), because `files` is tied to archive items; the unused `final_selected_hr_image_file_id` column was dropped. An image is public only when its rights are licensed/public_domain and the artwork is published. The card/main image is the final image, else the first upload. Merging moves images to the survivor and clears their final flag.
+- Not built: thumbnails/resizing (originals are served), tus/resumable uploads, and F3 archive-item file uploads.

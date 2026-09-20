@@ -15,7 +15,7 @@ class AdminArtworkIndexController
 {
     public function __invoke(Request $request): JsonResponse
     {
-        $query = Artwork::query()->with(['artist', 'holder', 'pipelineStages']);
+        $query = Artwork::query()->with(['artist', 'holder', 'pipelineStages', 'images']);
 
         if ($status = $request->input('status')) {
             $query->where('publication_status', $status);
@@ -58,6 +58,7 @@ class AdminArtworkIndexController
                 'is_untitled' => $a->is_untitled,
                 'artist' => $a->artist ? ['id' => $a->artist->id, 'name' => ['ar' => $a->artist->name_ar, 'en' => $a->artist->name_en]] : null,
                 'holder_id' => $a->holder_id,
+                'thumbnail_url' => ($primary = ArtworkImageController::primary($a)) ? ArtworkImageController::urlFor($primary) : null,
                 'holder' => $a->holder ? ['id' => $a->holder->id, 'name' => ['ar' => $a->holder->name_ar, 'en' => $a->holder->name_en]] : null,
                 'year' => $a->creation_date_display ?? ($yearFrom !== null ? (string) $yearFrom : null),
                 'flags' => array_values(array_filter([

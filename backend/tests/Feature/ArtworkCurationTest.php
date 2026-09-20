@@ -3,12 +3,15 @@
 use App\Models\ArchiveItem;
 use App\Models\ArchiveItemLink;
 use App\Models\Artwork;
+use App\Models\ArtworkImage;
 use App\Models\ArtworkMerge;
 use App\Models\ArtworkPipelineStage;
 use App\Models\CandidateArtwork;
 use App\Models\FieldCitation;
 use App\Models\Holder;
 use App\Models\PipelineNoteSuggestion;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
 
 it('seeds all six pipeline stages when an artwork is created', function () {
@@ -146,4 +149,35 @@ it('searches holders for the pickers and blocks non-editors', function () {
 
     $this->actingAs(editorUser())->getJson('/api/v1/admin/holders?q=Funun')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.name.en', 'Dar Al-Funun');
     $this->actingAs(makeUser('reader'))->getJson('/api/v1/admin/holders')->assertForbidden();
+});
+
+it('uploads artwork images privately, marks one final, and only serves publicly when rights are clear and published', function () {
+    Storage::fake('local');
+    $editor = editorUser();
+    $artwork = Artwork::factory()->create(['publication_status' => 'draft']);
+    $upload = fn () => UploadedFile::fake()->image('a.jpg', 3000, 2000);
+
+    $first = $this->actingAs($editor)->post("/api/v1/artworks/{$artwork->id}/images", ['image' => $upload(), 'rights_status' => 'licensed'], ['Accept' => 'application/json'])
+        ->assertCreated()->assertJsonPath('data.0.width_px', 3000)->json('data.0');
+    $this->actingAs($editor)->post("/api/v1/artworks/{$artwork->id}/images", ['image' => $upload()], ['Accept' => 'application/json'])->assertCreated();
+    $second = ArtworkImage::where('artwork_id', $artwork->id)->where('id', '!=', $first['id'])->firstOrFail();
+
+    $this->actingAs($editor)->patchJson("/api/v1/artworks/{$artwork->id}/images/{$second->id}", ['is_final' => true])->assertOk();
+    $this->actingAs($editor)->patchJson("/api/v1/artworks/{$artwork->id}/images/{$first['id']}", ['is_final' => true])->assertOk();
+    expect(ArtworkImage::where('artwork_id', $artwork->id)->where('is_final', true)->pluck('id')->all())->toBe([$first['id']]);
+
+    $bundle = $this->actingAs($editor)->getJson("/api/v1/artworks/{$artwork->id}/curation")->json('data');
+    expect($bundle['has_final_hr_image'])->toBeTrue()->and($bundle['images'])->toHaveCount(2);
+
+    Auth::forgetGuards();
+    $this->getJson($first['url'])->assertNotFound();
+    $this->actingAs($editor)->get($first['url'])->assertOk();
+
+    $artwork->update(['publication_status' => 'published']);
+    Auth::forgetGuards();
+    $this->getJson($first['url'])->assertOk();
+    $this->getJson("/api/v1/artworks/{$artwork->id}/images/{$second->id}/file")->assertNotFound();
+
+    $this->actingAs($editor)->deleteJson("/api/v1/artworks/{$artwork->id}/images/{$first['id']}")->assertOk()->assertJsonCount(1, 'data');
+    $this->actingAs($editor)->post("/api/v1/artworks/{$artwork->id}/images", ['image' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf')], ['Accept' => 'application/json'])->assertUnprocessable();
 });

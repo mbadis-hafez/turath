@@ -3,7 +3,10 @@ import { computed, reactive, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 
-import { approveArtwork, updateArtwork, updateArtworkStage } from "@/api/artworkCuration";
+import {
+  approveArtwork, deleteArtworkImage, updateArtwork, updateArtworkImage, updateArtworkStage, uploadArtworkImage,
+} from "@/api/artworkCuration";
+import ArtworkImagesPanel from "@/components/curation/ArtworkImagesPanel.vue";
 import EntityPicker, { type PickerOption } from "@/components/curation/EntityPicker.vue";
 import { labelOf, searchArtistOptions, searchHolderOptions } from "@/components/curation/ArtworkPickers";
 import ErrorState from "@/components/common/ErrorState.vue";
@@ -15,7 +18,7 @@ import { useLocalized } from "@/composables/useLocalized";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
 import {
-  PIPELINE_STATUSES, type ArtworkStatus, type ConditionStatus, type ImageQuality, type PipelineStatus, type SignedState,
+  PIPELINE_STATUSES, type ArtworkStatus, type ImageRights, type ConditionStatus, type ImageQuality, type PipelineStatus, type SignedState,
 } from "@/types/artworkCuration";
 
 const route = useRoute();
@@ -116,6 +119,26 @@ async function save(): Promise<void> {
   }
 }
 
+const imageBusy = ref(false);
+
+async function imageAction(action: () => Promise<unknown>): Promise<void> {
+  imageBusy.value = true;
+  actionError.value = null;
+  try {
+    await action();
+    await retry();
+  } catch (err) {
+    actionError.value = messageOf(err);
+  } finally {
+    imageBusy.value = false;
+  }
+}
+
+const onUpload = (file: File, rights: ImageRights) => imageAction(() => uploadArtworkImage(id.value, file, rights));
+const onMakeFinal = (imageId: number) => imageAction(() => updateArtworkImage(id.value, imageId, { is_final: true }));
+const onRights = (imageId: number, rights: ImageRights) => imageAction(() => updateArtworkImage(id.value, imageId, { rights_status: rights }));
+const onRemove = (imageId: number) => imageAction(() => deleteArtworkImage(id.value, imageId));
+
 async function setStage(key: string, status: PipelineStatus): Promise<void> {
   actionError.value = null;
   try {
@@ -200,7 +223,7 @@ const gapInput = (key: string) => (gap(key) ? "!border-danger !bg-danger-soft" :
 
       <div class="mt-8 grid gap-10 lg:grid-cols-[20rem_1fr]">
         <aside class="space-y-6">
-          <div class="aspect-[4/3] rounded-lg border border-line bg-neutral-soft" aria-hidden="true" />
+          <ArtworkImagesPanel :images="curation.images" :busy="imageBusy" @upload="onUpload" @final="onMakeFinal" @rights="onRights" @remove="onRemove" />
 
           <section class="rounded-lg border p-4" :class="blockerCount === 0 ? 'border-line bg-surface' : 'border-danger bg-danger-soft'">
             <h2 class="text-base font-semibold" :class="blockerCount === 0 ? 'text-ink' : 'text-danger'">{{ t("curation.artworkDetail.checklist") }}</h2>
@@ -280,7 +303,7 @@ const gapInput = (key: string) => (gap(key) ? "!border-danger !bg-danger-soft" :
                 <select v-model="form.imageQuality" :class="input"><option value="">—</option><option v-for="q in QUALITY" :key="q" :value="q">{{ t(`curation.artworkDetail.qualities.${q}`) }}</option></select>
               </label>
               <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.editingStatus") }}<input v-model="form.editingStatus" type="text" dir="ltr" maxlength="20" :class="input" /></label>
-              <div class="text-xs text-ink-muted">{{ t("curation.artworkDetail.finalImage") }}<p class="mt-1 rounded-md border px-3 py-2 text-sm text-ink" :class="curation.has_final_hr_image ? 'border-line bg-neutral-soft' : 'border-danger bg-danger-soft'">{{ curation.has_final_hr_image ? t("curation.detail.yes") : t("curation.artworkDetail.noFinalImage") }}</p></div>
+              <div class="text-xs text-ink-muted">{{ t("curation.artworkDetail.finalImage") }}<p class="mt-1 rounded-md border px-3 py-2 text-sm text-ink" :class="curation.has_final_hr_image ? 'border-line bg-neutral-soft' : 'border-danger bg-danger-soft'">{{ curation.has_final_hr_image ? curation.images.find((i) => i.is_final)?.filename : t("curation.artworkDetail.noFinalImage") }}</p></div>
             </div>
           </section>
 

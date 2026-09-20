@@ -123,7 +123,8 @@ const field = "rounded-md border border-line bg-surface px-3 py-2 text-sm text-i
         <template v-else>
           <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <li v-for="a in items" :key="a.id" data-testid="artwork-card">
-              <div class="relative aspect-[4/3] bg-neutral-soft">
+              <div class="relative aspect-[4/3] overflow-hidden bg-neutral-soft">
+                <img v-if="a.thumbnail_url" :src="a.thumbnail_url" alt="" loading="lazy" class="size-full object-cover" />
                 <span class="absolute end-3 top-3 flex flex-wrap gap-1">
                   <span class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="STATUS_CLASS[a.publication_status]">{{ t(`curation.artworkRegistry.statuses.${a.publication_status}`) }}</span>
                   <span v-for="f in a.flags" :key="f" class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="FLAG_CLASS[f]">{{ t(`curation.artworkRegistry.flags.${f}`) }}</span>

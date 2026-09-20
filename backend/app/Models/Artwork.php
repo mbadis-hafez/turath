@@ -55,6 +55,14 @@ class Artwork extends Model
     }
 
     /**
+     * @return HasMany<ArtworkImage, $this>
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(ArtworkImage::class)->orderByDesc('is_final')->orderBy('id');
+    }
+
+    /**
      * @return HasMany<ArtworkPipelineStage, $this>
      */
     public function pipelineStages(): HasMany

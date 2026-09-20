@@ -36,6 +36,7 @@ use App\Http\Controllers\Api\V1\ArtworkApproveController;
 use App\Http\Controllers\Api\V1\ArtworkArchiveItemsController;
 use App\Http\Controllers\Api\V1\ArtworkCurationShowController;
 use App\Http\Controllers\Api\V1\ArtworkDestroyController;
+use App\Http\Controllers\Api\V1\ArtworkImageController;
 use App\Http\Controllers\Api\V1\ArtworkIndexController;
 use App\Http\Controllers\Api\V1\ArtworkMergeController;
 use App\Http\Controllers\Api\V1\ArtworkPipelineShowController;
@@ -95,6 +96,7 @@ Route::prefix('v1')->group(function () {
         Route::get('artworks/{artwork}', ArtworkShowController::class)->whereNumber('artwork');
         Route::get('artworks/{artwork}/archive-items', ArtworkArchiveItemsController::class)->whereNumber('artwork');
 
+        Route::get('artworks/{artwork}/images/{image}/file', [ArtworkImageController::class, 'show'])->whereNumber(['artwork', 'image']);
         Route::get('holders/{holder}', HolderShowController::class)->whereNumber('holder');
 
         Route::get('archive-items', ArchiveItemIndexController::class);
@@ -186,6 +188,9 @@ Route::prefix('v1')->group(function () {
         Route::middleware('can:artworks.manage')->group(function () {
             Route::get('admin/artworks', AdminArtworkIndexController::class);
             Route::get('admin/holders', AdminHolderIndexController::class);
+            Route::post('artworks/{artwork}/images', [ArtworkImageController::class, 'store'])->whereNumber('artwork');
+            Route::patch('artworks/{artwork}/images/{image}', [ArtworkImageController::class, 'update'])->whereNumber(['artwork', 'image']);
+            Route::delete('artworks/{artwork}/images/{image}', [ArtworkImageController::class, 'destroy'])->whereNumber(['artwork', 'image']);
             Route::post('artworks/merge', ArtworkMergeController::class);
             Route::post('artworks/{artwork}/approve', ArtworkApproveController::class)->whereNumber('artwork');
             Route::get('candidate-artworks', CandidateArtworkIndexController::class);

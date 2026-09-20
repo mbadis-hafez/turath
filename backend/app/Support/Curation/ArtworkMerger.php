@@ -4,6 +4,7 @@ namespace App\Support\Curation;
 
 use App\Models\ArchiveItemLink;
 use App\Models\Artwork;
+use App\Models\ArtworkImage;
 use App\Models\ArtworkMerge;
 use App\Models\FieldCitation;
 use App\Support\Completeness\CompletenessCalculator;
@@ -39,6 +40,8 @@ class ArtworkMerger
                     ->where('role', $link->role)->exists();
                 $clash ? $link->delete() : $link->update(['linkable_id' => $survivor->id]);
             }
+
+            ArtworkImage::where('artwork_id', $duplicate->id)->update(['artwork_id' => $survivor->id, 'is_final' => false]);
 
             FieldCitation::where('citable_type', Artwork::class)->where('citable_id', $duplicate->id)
                 ->update(['citable_id' => $survivor->id]);

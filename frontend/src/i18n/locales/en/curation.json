@@ -359,5 +359,14 @@
     "title": "Merge duplicate artworks",
     "help": "Pick the record to keep and the duplicate to fold into it. Archive links move to the survivor and the duplicate redirects to it.",
     "search": "Search artworks…"
+  },
+  "artworkImages": {
+    "finalCaption": "Approved final image. Only the image marked final is used as the work's main image.",
+    "noFinalCaption": "No approved image yet. Upload one and mark it as the final high-resolution image.",
+    "final": "Final image",
+    "makeFinal": "Make final",
+    "remove": "Remove",
+    "upload": "Upload image",
+    "uploading": "Uploading…"
   }
 }
