@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\V1\ActivityFeedController;
+use App\Http\Controllers\Api\V1\AdminArchiveItemIndexController;
 use App\Http\Controllers\Api\V1\AdminArtistIndexController;
 use App\Http\Controllers\Api\V1\AdminArtworkIndexController;
 use App\Http\Controllers\Api\V1\AdminHolderIndexController;
+use App\Http\Controllers\Api\V1\ArchiveItemBulkController;
 use App\Http\Controllers\Api\V1\ArchiveItemDestroyController;
 use App\Http\Controllers\Api\V1\ArchiveItemIndexController;
 use App\Http\Controllers\Api\V1\ArchiveItemLinkDestroyController;
@@ -183,6 +185,11 @@ Route::prefix('v1')->group(function () {
             Route::patch('artists/{artist}/themes', [ThemeController::class, 'sync'])->whereNumber('artist');
             Route::get('themes', [ThemeController::class, 'index']);
             Route::post('themes', [ThemeController::class, 'store']);
+        });
+
+        Route::middleware('can:archive.manage')->group(function () {
+            Route::get('admin/archive-items', AdminArchiveItemIndexController::class);
+            Route::post('admin/archive-items/bulk', ArchiveItemBulkController::class);
         });
 
         Route::middleware('can:artworks.manage')->group(function () {

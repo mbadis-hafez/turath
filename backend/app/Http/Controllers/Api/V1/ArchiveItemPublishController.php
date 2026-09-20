@@ -16,7 +16,7 @@ class ArchiveItemPublishController
 {
     public function __invoke(PublishArchiveItemRequest $request, ArchiveItem $archiveItem): JsonResponse
     {
-        $this->assertPublishable($archiveItem);
+        self::assertPublishable($archiveItem);
 
         $archiveItem->publication_status = PublicationStatus::Published->value;
         $archiveItem->save();
@@ -29,7 +29,7 @@ class ArchiveItemPublishController
      * Concrete enforcement of "no auto-publish without review": legally
      * unclear rights can never go public, and an embargo needs a lift date.
      */
-    private function assertPublishable(ArchiveItem $archiveItem): void
+    public static function assertPublishable(ArchiveItem $archiveItem): void
     {
         $errors = [];
 
