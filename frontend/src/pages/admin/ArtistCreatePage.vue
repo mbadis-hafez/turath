@@ -3,12 +3,19 @@ import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 
-import { createArtist, updateArtistCuration } from "@/api/artistCuration";
+import {
+  createArtist, syncArtistEntries, syncArtistSocialLinks, updateArtistCuration, uploadArtistPortrait,
+} from "@/api/artistCuration";
+import ContactsEditor from "@/components/curation/ContactsEditor.vue";
+import EntryListEditor from "@/components/curation/EntryListEditor.vue";
+import PortraitPicker from "@/components/curation/PortraitPicker.vue";
+import SocialLinksEditor from "@/components/curation/SocialLinksEditor.vue";
+import { useArtistProfileForm } from "@/composables/useArtistProfileForm";
 import ErrorState from "@/components/common/ErrorState.vue";
 import { useLocalePath } from "@/composables/useLocalePath";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
-import type { AuthLetterStatus, OwnerType, PreAgreementStatus } from "@/types/artistCuration";
+import type { AuthLetterStatus, OwnerType, PortraitRights, PreAgreementStatus } from "@/types/artistCuration";
 
 const router = useRouter();
 const { t } = useI18n();
@@ -25,9 +32,13 @@ const AGREEMENT: PreAgreementStatus[] = ["not_started", "pending", "yes", "no", 
 const form = reactive({
   legacy_code: "", identified_through_note: "", name_ar: "", name_en: "", living_status: "unknown" as "unknown" | "living" | "deceased",
   city_ar: "", city_en: "", bio_ar: "", bio_en: "",
-  key_contact_name: "", owner_type: "" as OwnerType | "", contact_email: "", contact_phone: "", ref_supervisor_note: "",
+  owner_type: "" as OwnerType | "", ref_supervisor_note: "",
   authorization_letter_status: "not_started" as AuthLetterStatus, owner_pre_agreement_status: "not_started" as PreAgreementStatus,
 });
+
+const profile = useArtistProfileForm();
+const portraitFile = ref<File | null>(null);
+const portraitRights = ref<PortraitRights>("unknown");
 
 const submitting = ref(false);
 const error = ref<unknown>(null);
@@ -41,11 +52,11 @@ const checklist = computed(() => [
   { key: "name", met: filled(form.name_ar) && filled(form.name_en) },
   { key: "artist_code", met: filled(form.legacy_code) },
   { key: "city", met: filled(form.city_ar) || filled(form.city_en) },
-  { key: "contact", met: filled(form.key_contact_name) && (filled(form.contact_email) || filled(form.contact_phone)) },
+  { key: "contact", met: profile.form.contacts.some((c) => filled(c.name ?? "") && (filled(c.email ?? "") || filled(c.phone ?? ""))) },
   { key: "authorization_letter", met: ["signed", "not_applicable"].includes(form.authorization_letter_status) },
   { key: "name_verified", met: false },
-  { key: "life_dates", met: form.living_status === "living" },
-  { key: "portrait", met: false },
+  { key: "life_dates", met: form.living_status === "living" || filled(profile.form.deathDate) },
+  { key: "portrait", met: portraitFile.value !== null && portraitRights.value !== "unknown" },
 ]);
 const metCount = computed(() => checklist.value.filter((c) => c.met).length);
 
@@ -67,9 +78,9 @@ async function submit(): Promise<void> {
       await createArtist({
         name: { ar: blank(form.name_ar), en: blank(form.name_en) },
         bio: { ar: blank(form.bio_ar), en: blank(form.bio_en) },
-        birth: { place: { ar: blank(form.city_ar), en: blank(form.city_en) } },
         living_status: form.living_status,
         legacy_code: blank(form.legacy_code) ?? undefined,
+        ...profile.profilePayload({ ar: blank(form.city_ar), en: blank(form.city_en) }),
       })
     ).data.id;
   } catch (err) {
@@ -78,19 +89,31 @@ async function submit(): Promise<void> {
     return;
   }
 
-  try {
-    await updateArtistCuration(id, {
-      identified_through_note: blank(form.identified_through_note),
-      key_contact_name: blank(form.key_contact_name),
-      owner_type: form.owner_type || null,
-      contact_email: blank(form.contact_email),
-      contact_phone: blank(form.contact_phone),
-      ref_supervisor_note: blank(form.ref_supervisor_note),
-      authorization_letter_status: form.authorization_letter_status,
-      owner_pre_agreement_status: form.owner_pre_agreement_status,
-    });
-  } catch {
-    notice.value = t("curation.create.followUp");
+  // The record exists now; follow-up saves are best-effort and reported together.
+  const steps: Array<() => Promise<unknown>> = [
+    () =>
+      updateArtistCuration(id, {
+        identified_through_note: blank(form.identified_through_note),
+        owner_type: form.owner_type || null,
+        contacts: profile.contactsPayload(),
+        ref_supervisor_note: blank(form.ref_supervisor_note),
+        authorization_letter_status: form.authorization_letter_status,
+        owner_pre_agreement_status: form.owner_pre_agreement_status,
+      }),
+    () => syncArtistEntries(id, profile.entriesPayload()),
+    () => syncArtistSocialLinks(id, profile.socialPayload()),
+  ];
+  if (portraitFile.value) {
+    const file = portraitFile.value;
+    steps.push(() => uploadArtistPortrait(id, file, portraitRights.value));
+  }
+
+  for (const step of steps) {
+    try {
+      await step();
+    } catch {
+      notice.value = t("curation.create.followUp");
+    }
   }
 
   submitting.value = false;
@@ -129,8 +152,7 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
         <div class="mt-8 grid gap-10 lg:grid-cols-[20rem_1fr]">
           <aside class="space-y-6">
             <section class="rounded-lg border border-line bg-surface p-4">
-              <div class="aspect-[4/3] rounded-md bg-neutral-soft" aria-hidden="true" />
-              <p class="mt-3 text-pretty text-xs text-ink-muted">{{ t("curation.detail.portraitCaption") }}</p>
+              <PortraitPicker v-model:rights="portraitRights" :url="null" @select="portraitFile = $event" @remove="portraitFile = null" />
             </section>
             <section class="rounded-lg border border-danger bg-danger-soft p-4">
               <h2 class="text-base font-semibold text-danger">{{ t("curation.detail.checklist") }}</h2>
@@ -171,6 +193,12 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
                     <option value="deceased">{{ t("curation.create.living_deceased") }}</option>
                   </select>
                 </label>
+                <label class="text-xs text-ink-muted">{{ t("curation.profileForm.birthDate") }}<input v-model="profile.form.birthDate" type="date" dir="ltr" :class="input" /></label>
+                <label class="text-xs text-ink-muted">{{ t("curation.profileForm.deathDate") }}<input v-model="profile.form.deathDate" type="date" dir="ltr" :class="input" /></label>
+                <label class="text-xs text-ink-muted">{{ t("curation.profileForm.nationalityAr") }}<input v-model="profile.form.nationality.ar" type="text" dir="rtl" :class="input" /></label>
+                <label class="text-xs text-ink-muted">{{ t("curation.profileForm.nationalityEn") }}<input v-model="profile.form.nationality.en" type="text" dir="ltr" :class="input" /></label>
+                <label class="text-xs text-ink-muted">{{ t("curation.profileForm.classificationAr") }}<input v-model="profile.form.classification.ar" type="text" dir="rtl" :class="input" /></label>
+                <label class="text-xs text-ink-muted">{{ t("curation.profileForm.classificationEn") }}<input v-model="profile.form.classification.en" type="text" dir="ltr" :class="input" /></label>
               </div>
             </section>
 
@@ -182,16 +210,24 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
               </div>
             </section>
 
+            <section v-for="g in ([['educations', 'addEducation', true], ['awards', 'addAward', false], ['exhibitions', 'addExhibition', false]] as const)" :key="g[0]" :data-testid="`${g[0]}-section`">
+              <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t(`curation.profileForm.${g[0]}`) }}</h2>
+              <div class="mt-4"><EntryListEditor v-model="profile.form.entries[g[0]]" :add-label="t(`curation.profileForm.${g[1]}`)" :range="g[2]" /></div>
+            </section>
+
+            <section data-testid="socials-section">
+              <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t("curation.profileForm.socials") }}</h2>
+              <div class="mt-4"><SocialLinksEditor v-model="profile.form.socialLinks" /></div>
+            </section>
+
             <section data-testid="contact-section">
               <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t("curation.detail.contact") }}</h2>
               <p class="mt-2 text-xs text-ink-muted">{{ t("curation.detail.contactHelp") }}</p>
-              <div class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
-                <label class="text-xs text-ink-muted">{{ t("curation.detail.keyContact") }}<input v-model="form.key_contact_name" type="text" :class="input" /></label>
+              <div class="mt-4"><ContactsEditor v-model="profile.form.contacts" /></div>
+              <div class="mt-6 grid gap-4 text-sm sm:grid-cols-2">
                 <label class="text-xs text-ink-muted">{{ t("curation.detail.ownerType") }}
                   <select v-model="form.owner_type" :class="input"><option value="">—</option><option v-for="o in OWNER_TYPES" :key="o" :value="o">{{ t(`curation.ownerTypes.${o}`) }}</option></select>
                 </label>
-                <label class="text-xs text-ink-muted">{{ t("curation.detail.email") }}<input v-model="form.contact_email" type="email" dir="ltr" :class="input" /></label>
-                <label class="text-xs text-ink-muted">{{ t("curation.detail.phone") }}<input v-model="form.contact_phone" type="tel" dir="ltr" :class="input" /></label>
                 <label class="text-xs text-ink-muted">{{ t("curation.detail.authorizationLetter") }}
                   <select v-model="form.authorization_letter_status" :class="input"><option v-for="s in LETTER" :key="s" :value="s">{{ t(`curation.docStatus.${s}`) }}</option></select>
                 </label>

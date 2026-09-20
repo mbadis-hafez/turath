@@ -9,7 +9,7 @@ vi.mock("@/api/artistCuration", () => api);
 
 const row = (id: number, en: string) => ({ id, slug: en, legacy_code: `AR${id}`, name: { ar: null, en }, verified_status: "unverified", city: { ar: null, en: null }, owner_type: null, linked_material_count: 0, gap_count: 0, severity: "clear", themes: [] });
 const curation = (id: number, bioEn: string | null) => ({
-  data: { id, name: { ar: null, en: "Same Name" }, bio: { ar: null, en: bioEn, source_type: "unspecified" }, contact: { key_contact_name: null, owner_type: null } },
+  data: { id, name: { ar: null, en: "Same Name" }, bio: { ar: null, en: bioEn, source_type: "unspecified" }, nationality: { ar: null, en: null }, contact: { owner_type: null } },
 });
 
 beforeEach(() => {

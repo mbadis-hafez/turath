@@ -18,7 +18,10 @@ function bundle(patch: Partial<ArtistCuration> = {}): ArtistCuration {
     name_as_in_sources: null, identified_through: { note: "Site visit", date: null },
     bio: { ar: null, en: "Saudi artist.", source_type: "derived_from_linked_materials" },
     verified_status: "unverified",
-    contact: { key_contact_name: "Ahmad", owner_type: "artist", contact_email: "a@b.co", contact_phone: null, ref_supervisor_note: null },
+    nationality: { ar: null, en: null }, classification: { ar: null, en: null }, birth: null, death: null, living_status: "unknown",
+    entries: { educations: [], awards: [], exhibitions: [] }, social_links: [], portrait: { has_portrait: false, rights_status: "unknown", url: null },
+    contact: { owner_type: "artist", ref_supervisor_note: null },
+    contacts: [{ id: 1, name: "Ahmad", role_note: null, email: "a@b.co", phone: null }],
     pipeline: { authorization_letter: { status: "not_started", file_id: null, file_name: null }, owner_pre_agreement: { status: "not_started" } },
     checklist: [
       { key: "name", tier: "core", met: true, supported: true },

@@ -15,7 +15,7 @@ const { t } = useI18n();
 const { pick } = useLocalized();
 
 /** Fields the bundle exposes for a per-field choice (ArtistMerger::MERGEABLE subset). */
-const FIELDS = ["name_ar", "name_en", "bio_ar", "bio_en", "key_contact_name", "owner_type"] as const;
+const FIELDS = ["name_ar", "name_en", "bio_ar", "bio_en", "nationality_en", "owner_type"] as const;
 type Field = (typeof FIELDS)[number];
 
 const survivor = ref<AdminArtistRow | null>(null);
@@ -48,7 +48,7 @@ function fieldValue(data: ArtistCuration | null, field: Field): string {
     case "name_en": return data.name.en ?? "";
     case "bio_ar": return data.bio.ar ?? "";
     case "bio_en": return data.bio.en ?? "";
-    case "key_contact_name": return data.contact.key_contact_name ?? "";
+    case "nationality_en": return data.nationality.en ?? "";
     default: return data.contact.owner_type ?? "";
   }
 }

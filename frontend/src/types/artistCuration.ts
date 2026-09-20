@@ -16,6 +16,51 @@ export interface Theme {
   label: Localized;
 }
 
+export interface DateValue {
+  display: string | null;
+  year_from: number | null;
+  year_to: number | null;
+  calendar: string | null;
+  certainty: string | null;
+}
+
+export interface ProfileEntry {
+  id?: number;
+  title: Localized;
+  place: Localized;
+  year_from: number | null;
+  year_to: number | null;
+  note: Localized;
+}
+
+export type EntryGroup = "educations" | "awards" | "exhibitions";
+export type EntryGroups = Record<EntryGroup, ProfileEntry[]>;
+
+export interface ArtistContact {
+  id?: number;
+  name: string | null;
+  role_note: string | null;
+  email: string | null;
+  phone: string | null;
+}
+
+export type SocialPlatform = "website" | "instagram" | "x" | "facebook" | "youtube" | "tiktok" | "linkedin" | "snapchat" | "other";
+
+export interface SocialLink {
+  id?: number;
+  platform: SocialPlatform;
+  url: string;
+  is_public: boolean;
+}
+
+export type PortraitRights = "unknown" | "licensed" | "public_domain" | "all_rights_reserved";
+
+export interface PortraitInfo {
+  has_portrait: boolean;
+  rights_status: PortraitRights;
+  url: string | null;
+}
+
 export interface AdminArtistRow {
   id: number;
   slug: string;
@@ -68,13 +113,16 @@ export interface ArtistCuration {
   identified_through: { note: string | null; date: string | null };
   bio: { ar: string | null; en: string | null; source_type: BioSourceType };
   verified_status: VerifiedStatus;
-  contact: {
-    key_contact_name: string | null;
-    owner_type: OwnerType | null;
-    contact_email: string | null;
-    contact_phone: string | null;
-    ref_supervisor_note: string | null;
-  };
+  nationality: Localized;
+  classification: Localized;
+  birth: DateValue | null;
+  death: DateValue | null;
+  living_status: "unknown" | "living" | "deceased";
+  entries: EntryGroups;
+  social_links: SocialLink[];
+  portrait: PortraitInfo;
+  contact: { owner_type: OwnerType | null; ref_supervisor_note: string | null };
+  contacts: ArtistContact[];
   pipeline: {
     authorization_letter: { status: AuthLetterStatus; file_id: number | null; file_name: string | null };
     owner_pre_agreement: { status: PreAgreementStatus };
@@ -88,10 +136,8 @@ export interface ArtistCuration {
 
 export interface CurationUpdate {
   identified_through_note?: string | null;
-  key_contact_name?: string | null;
   owner_type?: OwnerType | null;
-  contact_email?: string | null;
-  contact_phone?: string | null;
+  contacts?: ArtistContact[];
   authorization_letter_status?: AuthLetterStatus;
   owner_pre_agreement_status?: PreAgreementStatus;
   bio_source_type?: BioSourceType;

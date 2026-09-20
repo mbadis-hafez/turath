@@ -7,7 +7,7 @@ import ArtistCreatePage from "@/pages/admin/ArtistCreatePage.vue";
 import { useAuthStore } from "@/stores/auth";
 import { mountWithPlugins } from "@/test/utils";
 
-const api = vi.hoisted(() => ({ createArtist: vi.fn(), updateArtistCuration: vi.fn() }));
+const api = vi.hoisted(() => ({ createArtist: vi.fn(), updateArtistCuration: vi.fn(), syncArtistEntries: vi.fn(), syncArtistSocialLinks: vi.fn(), uploadArtistPortrait: vi.fn() }));
 vi.mock("@/api/artistCuration", () => api);
 
 let router: Router;
@@ -25,6 +25,9 @@ async function mountPage() {
 beforeEach(() => {
   api.createArtist.mockReset().mockResolvedValue({ data: { id: 77 } });
   api.updateArtistCuration.mockReset().mockResolvedValue({ data: {} });
+  api.syncArtistEntries.mockReset().mockResolvedValue({});
+  api.syncArtistSocialLinks.mockReset().mockResolvedValue({});
+  api.uploadArtistPortrait.mockReset().mockResolvedValue({ data: {} });
   router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -52,12 +55,13 @@ describe("ArtistCreatePage", () => {
   it("creates the artist, saves the internal fields, and opens the new record", async () => {
     const wrapper = await mountPage();
     await wrapper.get("input[lang=en]").setValue("New Artist");
-    await wrapper.get("input[type=email]").setValue("a@b.co");
+    await wrapper.get("[data-testid=contact-section] [data-testid=list-add]").trigger("click");
+    await wrapper.get("[data-testid=contact-section] input[type=email]").setValue("a@b.co");
     await wrapper.get("form").trigger("submit");
     await flushPromises();
 
     expect(api.createArtist).toHaveBeenCalledWith(expect.objectContaining({ name: { ar: null, en: "New Artist" }, living_status: "unknown" }));
-    expect(api.updateArtistCuration).toHaveBeenCalledWith(77, expect.objectContaining({ contact_email: "a@b.co" }));
+    expect(api.updateArtistCuration).toHaveBeenCalledWith(77, expect.objectContaining({ contacts: [expect.objectContaining({ email: "a@b.co" })] }));
     expect(router.currentRoute.value.path).toBe("/en/admin/artists/77");
   });
 

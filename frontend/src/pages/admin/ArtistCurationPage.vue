@@ -3,7 +3,15 @@ import { computed, reactive, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 
-import { updateArtistCuration, verifyArtist } from "@/api/artistCuration";
+import {
+  deleteArtistPortrait, setArtistPortraitRights, syncArtistEntries, syncArtistSocialLinks,
+  updateArtist, updateArtistCuration, uploadArtistPortrait, verifyArtist,
+} from "@/api/artistCuration";
+import ContactsEditor from "@/components/curation/ContactsEditor.vue";
+import EntryListEditor from "@/components/curation/EntryListEditor.vue";
+import PortraitPicker from "@/components/curation/PortraitPicker.vue";
+import SocialLinksEditor from "@/components/curation/SocialLinksEditor.vue";
+import { useArtistProfileForm } from "@/composables/useArtistProfileForm";
 import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import Spinner from "@/components/common/Spinner.vue";
@@ -13,7 +21,7 @@ import { useLocalized } from "@/composables/useLocalized";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
 import type {
-  AuthLetterStatus, BioSourceType, CurationUpdate, OwnerType, PreAgreementStatus,
+  AuthLetterStatus, BioSourceType, CurationUpdate, OwnerType, PortraitRights, PreAgreementStatus,
 } from "@/types/artistCuration";
 import { SEVERITY_BADGE_CLASS } from "@/utils/severity";
 import { firstBlockReason } from "@/utils/verifyBlocker";
@@ -35,12 +43,13 @@ const LETTER: AuthLetterStatus[] = ["not_started", "pending", "signed", "not_app
 const AGREEMENT: PreAgreementStatus[] = ["not_started", "pending", "yes", "no", "not_applicable"];
 const BIO_SOURCES: BioSourceType[] = ["citation", "derived_from_linked_materials", "unspecified"];
 
+const profile = useArtistProfileForm();
+const portraitRights = ref<PortraitRights>("unknown");
+const portraitBusy = ref(false);
+
 const form = reactive({
   identified_through_note: "",
-  key_contact_name: "",
   owner_type: "" as OwnerType | "",
-  contact_email: "",
-  contact_phone: "",
   ref_supervisor_note: "",
   authorization_letter_status: "not_started" as AuthLetterStatus,
   owner_pre_agreement_status: "not_started" as PreAgreementStatus,
@@ -50,14 +59,13 @@ const form = reactive({
 watch(curation, (c) => {
   if (!c) return;
   form.identified_through_note = c.identified_through.note ?? "";
-  form.key_contact_name = c.contact.key_contact_name ?? "";
   form.owner_type = c.contact.owner_type ?? "";
-  form.contact_email = c.contact.contact_email ?? "";
-  form.contact_phone = c.contact.contact_phone ?? "";
   form.ref_supervisor_note = c.contact.ref_supervisor_note ?? "";
   form.authorization_letter_status = c.pipeline.authorization_letter.status;
   form.owner_pre_agreement_status = c.pipeline.owner_pre_agreement.status;
   form.bio_source_type = c.bio.source_type;
+  profile.load(c);
+  portraitRights.value = c.portrait.rights_status;
 }, { immediate: true });
 
 const saving = ref(false);
@@ -85,10 +93,8 @@ function payload(): CurationUpdate {
   const blank = (v: string): string | null => (v.trim() === "" ? null : v.trim());
   return {
     identified_through_note: blank(form.identified_through_note),
-    key_contact_name: blank(form.key_contact_name),
     owner_type: form.owner_type || null,
-    contact_email: blank(form.contact_email),
-    contact_phone: blank(form.contact_phone),
+    contacts: profile.contactsPayload(),
     ref_supervisor_note: blank(form.ref_supervisor_note),
     authorization_letter_status: form.authorization_letter_status,
     owner_pre_agreement_status: form.owner_pre_agreement_status,
@@ -101,6 +107,10 @@ async function save(): Promise<void> {
   saved.value = false;
   actionError.value = null;
   try {
+    const current = curation.value;
+    await updateArtist(id.value, profile.profilePayload(current?.city, true));
+    await syncArtistEntries(id.value, profile.entriesPayload());
+    await syncArtistSocialLinks(id.value, profile.socialPayload());
     set((await updateArtistCuration(id.value, payload())).data);
     saved.value = true;
   } catch (err) {
@@ -120,6 +130,42 @@ async function verify(): Promise<void> {
     actionError.value = err instanceof Error ? err.message : t("errors.generic");
   } finally {
     verifying.value = false;
+  }
+}
+
+async function onPortraitSelect(file: File): Promise<void> {
+  portraitBusy.value = true;
+  actionError.value = null;
+  try {
+    await uploadArtistPortrait(id.value, file, portraitRights.value);
+    await retry();
+  } catch (err) {
+    actionError.value = err instanceof Error ? err.message : t("errors.generic");
+  } finally {
+    portraitBusy.value = false;
+  }
+}
+
+async function onPortraitRemove(): Promise<void> {
+  portraitBusy.value = true;
+  try {
+    await deleteArtistPortrait(id.value);
+    await retry();
+  } finally {
+    portraitBusy.value = false;
+  }
+}
+
+async function onRightsChange(value: PortraitRights): Promise<void> {
+  portraitRights.value = value;
+  if (curation.value?.portrait.has_portrait) {
+    portraitBusy.value = true;
+    try {
+      await setArtistPortraitRights(id.value, value);
+      await retry();
+    } finally {
+      portraitBusy.value = false;
+    }
   }
 }
 
@@ -173,8 +219,14 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
       <div class="mt-8 grid gap-10 lg:grid-cols-[20rem_1fr]">
         <aside class="space-y-6">
           <section class="rounded-lg border border-line bg-surface p-4">
-            <div class="aspect-[4/3] rounded-md bg-neutral-soft" aria-hidden="true" />
-            <p class="mt-3 text-pretty text-xs text-ink-muted">{{ t("curation.detail.portraitCaption") }}</p>
+            <PortraitPicker
+              :rights="portraitRights"
+              :url="curation.portrait.url"
+              :busy="portraitBusy"
+              @update:rights="onRightsChange"
+              @select="onPortraitSelect"
+              @remove="onPortraitRemove"
+            />
           </section>
 
           <section class="rounded-lg border p-4" :class="curation.public_visibility === 'visible' ? 'border-line bg-surface' : 'border-danger bg-danger-soft'">
@@ -236,6 +288,14 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
                 </dd>
               </div>
             </dl>
+            <div class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+              <label class="text-xs text-ink-muted">{{ t("curation.profileForm.birthDate") }}<input v-model="profile.form.birthDate" type="date" dir="ltr" :class="input" /></label>
+              <label class="text-xs text-ink-muted">{{ t("curation.profileForm.deathDate") }}<input v-model="profile.form.deathDate" type="date" dir="ltr" :class="input" /></label>
+              <label class="text-xs text-ink-muted">{{ t("curation.profileForm.nationalityAr") }}<input v-model="profile.form.nationality.ar" type="text" dir="rtl" :class="input" /></label>
+              <label class="text-xs text-ink-muted">{{ t("curation.profileForm.nationalityEn") }}<input v-model="profile.form.nationality.en" type="text" dir="ltr" :class="input" /></label>
+              <label class="text-xs text-ink-muted">{{ t("curation.profileForm.classificationAr") }}<input v-model="profile.form.classification.ar" type="text" dir="rtl" :class="input" /></label>
+              <label class="text-xs text-ink-muted">{{ t("curation.profileForm.classificationEn") }}<input v-model="profile.form.classification.en" type="text" dir="ltr" :class="input" /></label>
+            </div>
           </section>
 
           <section>
@@ -255,22 +315,30 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
             </label>
           </section>
 
+          <section v-for="g in ([['educations', 'addEducation', true], ['awards', 'addAward', false], ['exhibitions', 'addExhibition', false]] as const)" :key="g[0]" :data-testid="`${g[0]}-section`">
+            <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t(`curation.profileForm.${g[0]}`) }}</h2>
+            <div class="mt-4"><EntryListEditor v-model="profile.form.entries[g[0]]" :add-label="t(`curation.profileForm.${g[1]}`)" :range="g[2]" /></div>
+          </section>
+
+          <section data-testid="socials-section">
+            <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t("curation.profileForm.socials") }}</h2>
+            <div class="mt-4"><SocialLinksEditor v-model="profile.form.socialLinks" /></div>
+          </section>
+
           <section data-testid="contact-section">
             <div class="flex items-baseline justify-between border-b-2 border-ink pb-2">
               <h2 class="text-sm font-semibold uppercase text-ink">{{ t("curation.detail.contact") }}</h2>
               <span v-if="contactComplete" class="text-xs text-accent">{{ t("curation.detail.complete") }}</span>
             </div>
             <p class="mt-2 text-xs text-ink-muted">{{ t("curation.detail.contactHelp") }}</p>
-            <div class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
-              <label class="text-xs text-ink-muted">{{ t("curation.detail.keyContact") }}<input v-model="form.key_contact_name" type="text" :class="input" /></label>
+            <div class="mt-4"><ContactsEditor v-model="profile.form.contacts" /></div>
+            <div class="mt-6 grid gap-4 text-sm sm:grid-cols-2">
               <label class="text-xs text-ink-muted">{{ t("curation.detail.ownerType") }}
                 <select v-model="form.owner_type" :class="input">
                   <option value="">—</option>
                   <option v-for="o in OWNER_TYPES" :key="o" :value="o">{{ t(`curation.ownerTypes.${o}`) }}</option>
                 </select>
               </label>
-              <label class="text-xs text-ink-muted">{{ t("curation.detail.email") }}<input v-model="form.contact_email" type="email" dir="ltr" :class="input" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.detail.phone") }}<input v-model="form.contact_phone" type="tel" dir="ltr" :class="input" /></label>
               <label class="text-xs text-ink-muted">{{ t("curation.detail.authorizationLetter") }}
                 <select v-model="form.authorization_letter_status" :class="input" :aria-label="t('curation.detail.authorizationLetter')">
                   <option v-for="s in LETTER" :key="s" :value="s">{{ t(`curation.docStatus.${s}`) }}</option>
