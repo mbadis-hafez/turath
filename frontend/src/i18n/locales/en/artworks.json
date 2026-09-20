@@ -4,6 +4,9 @@
   "searchPlaceholder": "Search artworks…",
   "filterByArtist": "Filter by artist",
   "filterByCategory": "Filter by category",
+  "allCategories": "All categories",
+  "yearFrom": "From year",
+  "yearTo": "To year",
   "category": {
     "painting": "Painting",
     "drawing": "Drawing",
@@ -16,6 +19,8 @@
     "other": "Other"
   },
   "medium": "Medium",
+  "creation": "Date",
+  "notes": "Notes",
   "dimensions": "Dimensions",
   "frame": "Frame",
   "edition": "Edition",

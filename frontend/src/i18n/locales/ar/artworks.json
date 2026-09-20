@@ -4,6 +4,9 @@
   "searchPlaceholder": "ابحث عن عمل فني…",
   "filterByArtist": "تصفية حسب الفنان",
   "filterByCategory": "تصفية حسب النوع",
+  "allCategories": "كل الأنواع",
+  "yearFrom": "من عام",
+  "yearTo": "إلى عام",
   "category": {
     "painting": "لوحة زيتية/تصوير",
     "drawing": "رسم",
@@ -16,6 +19,8 @@
     "other": "أخرى"
   },
   "medium": "الخامة",
+  "creation": "تاريخ الإنجاز",
+  "notes": "ملاحظات",
   "dimensions": "الأبعاد",
   "frame": "الإطار",
   "edition": "النسخة",

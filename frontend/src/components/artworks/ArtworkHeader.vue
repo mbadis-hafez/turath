@@ -6,7 +6,7 @@ import LocalizedText from "@/components/common/LocalizedText.vue";
 import { useLocalePath } from "@/composables/useLocalePath";
 import type { ArtworkListItem } from "@/types/artwork";
 
-const props = defineProps<{
+defineProps<{
   artwork: ArtworkListItem;
 }>();
 
