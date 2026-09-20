@@ -54,8 +54,8 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/:locale/archive",
     name: "archive.records",
-    component: () => import("@/pages/ComingSoonPage.vue"),
-    meta: { titleKey: "nav.archive" },
+    component: () => import("@/pages/ArchivePage.vue"),
+    meta: { titleKey: "archive.title" },
   },
   {
     path: "/:locale/dashboard",

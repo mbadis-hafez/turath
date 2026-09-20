@@ -1,0 +1,30 @@
+{
+  "title": "الأرشيف",
+  "subtitle": "{count} مادة أرشيفية",
+  "searchPlaceholder": "ابحث في العناوين والأوصاف والمنشئين…",
+  "type": "النوع",
+  "allTypes": "كل الأنواع",
+  "includeUnpublished": "تضمين غير المنشور",
+  "empty": "لا توجد مواد أرشيفية",
+  "emptyHelp": "جرّب بحثًا مختلفًا أو أزل عوامل التصفية.",
+  "clear": "إزالة عوامل التصفية",
+  "restricted": "وصول مقيّد",
+  "types": {
+    "article": "مقال",
+    "image": "صورة",
+    "video": "فيديو",
+    "audio": "صوت",
+    "catalogue": "كتالوج",
+    "certificate": "شهادة",
+    "invitation": "دعوة",
+    "poster": "ملصق",
+    "document": "وثيقة",
+    "portfolio": "ملف أعمال",
+    "other": "أخرى"
+  },
+  "statuses": {
+    "draft": "مسودة",
+    "published": "منشور",
+    "hidden": "مخفي"
+  }
+}

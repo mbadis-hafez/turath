@@ -1,0 +1,30 @@
+{
+  "title": "Archive",
+  "subtitle": "{count} archival items",
+  "searchPlaceholder": "Search titles, descriptions, creators…",
+  "type": "Type",
+  "allTypes": "All types",
+  "includeUnpublished": "Include unpublished",
+  "empty": "No archival items found",
+  "emptyHelp": "Try a different search or clear the filters.",
+  "clear": "Clear filters",
+  "restricted": "Restricted access",
+  "types": {
+    "article": "Article",
+    "image": "Image",
+    "video": "Video",
+    "audio": "Audio",
+    "catalogue": "Catalogue",
+    "certificate": "Certificate",
+    "invitation": "Invitation",
+    "poster": "Poster",
+    "document": "Document",
+    "portfolio": "Portfolio",
+    "other": "Other"
+  },
+  "statuses": {
+    "draft": "Draft",
+    "published": "Published",
+    "hidden": "Hidden"
+  }
+}
