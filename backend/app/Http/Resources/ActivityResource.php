@@ -22,7 +22,7 @@ class ActivityResource extends JsonResource
             'id' => $activity->id,
             'event' => $activity->event,
             'subject_type' => $activity->subject_type !== null ? class_basename($activity->subject_type) : null,
-            'subject_id' => $activity->subject_id,
+            'subject_id' => $this->normalizeId($activity->subject_id),
             'subject_label' => $this->subjectLabel($activity),
             'causer' => $activity->causer !== null
                 ? ['id' => $activity->causer->getKey(), 'name' => $activity->causer->getAttribute('name')]
@@ -31,6 +31,20 @@ class ActivityResource extends JsonResource
             'changes' => $this->changes($activity),
             'created_at' => $activity->created_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * activity_log.subject_id/causer_id are VARCHAR (F4: widened to hold
+     * both bigint ids and UUID ids), so bigint-keyed subjects must be cast
+     * back to int to keep the API response shape unchanged for them.
+     */
+    private function normalizeId(int|string|null $id): int|string|null
+    {
+        if ($id === null || is_int($id)) {
+            return $id;
+        }
+
+        return ctype_digit($id) ? (int) $id : $id;
     }
 
     private function subjectLabel(Activity $activity): string

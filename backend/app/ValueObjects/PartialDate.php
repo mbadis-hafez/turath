@@ -37,6 +37,71 @@ readonly class PartialDate
     }
 
     /**
+     * Parses a free-text date-ish spreadsheet cell (e.g. "1975", "c. 1939",
+     * "1970-1975", "1409 hijri; 1984/1985", "tbc") into a structured
+     * PartialDate. Used by F4's importers only — F1 editors fill the
+     * structured fields directly rather than typing a string to be parsed.
+     * Never throws; unparseable input keeps the raw text as `display` with
+     * null years and certainty `unknown`, exactly like DimensionParser's
+     * "never guess" rule for dimensions.
+     */
+    public static function fromString(string $raw): ?self
+    {
+        $trimmed = trim($raw);
+
+        if ($trimmed === '') {
+            return null;
+        }
+
+        $isCirca = (bool) preg_match('/\b(circa|ca\.?|c\.)\s*\d/i', $trimmed) || str_contains($trimmed, 'نحو');
+
+        if (preg_match('/(\d{3,4})\s*(?:hijri|h\b|هـ)/iu', $trimmed, $m)) {
+            $year = (int) $m[1];
+
+            return new self(
+                display: $trimmed,
+                yearFrom: $year,
+                yearTo: $year,
+                calendar: CalendarType::Hijri,
+                certainty: $isCirca ? DateCertainty::Circa : DateCertainty::Exact,
+            );
+        }
+
+        if (preg_match('/(\d{4})\s*[-–\/]\s*(\d{4})/u', $trimmed, $m)) {
+            $from = (int) $m[1];
+            $to = (int) $m[2];
+
+            if ($from <= $to) {
+                return new self(
+                    display: $trimmed,
+                    yearFrom: $from,
+                    yearTo: $to,
+                    calendar: CalendarType::Gregorian,
+                    certainty: DateCertainty::Range,
+                );
+            }
+        }
+
+        if (preg_match('/\b(\d{4})\b/', $trimmed, $m)) {
+            $year = (int) $m[1];
+
+            return new self(
+                display: $trimmed,
+                yearFrom: $year,
+                yearTo: $year,
+                calendar: CalendarType::Gregorian,
+                certainty: $isCirca ? DateCertainty::Circa : DateCertainty::Exact,
+            );
+        }
+
+        return new self(
+            display: $trimmed,
+            calendar: CalendarType::Gregorian,
+            certainty: DateCertainty::Unknown,
+        );
+    }
+
+    /**
      * @param  array<string, mixed>|null  $data
      */
     public static function fromArray(?array $data): ?self

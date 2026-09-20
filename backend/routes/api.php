@@ -39,6 +39,16 @@ use App\Http\Controllers\Api\V1\HolderRestoreController;
 use App\Http\Controllers\Api\V1\HolderShowController;
 use App\Http\Controllers\Api\V1\HolderStoreController;
 use App\Http\Controllers\Api\V1\HolderUpdateController;
+use App\Http\Controllers\Api\V1\ImportBatchCancelController;
+use App\Http\Controllers\Api\V1\ImportBatchCommitController;
+use App\Http\Controllers\Api\V1\ImportBatchIndexController;
+use App\Http\Controllers\Api\V1\ImportBatchRevalidateController;
+use App\Http\Controllers\Api\V1\ImportBatchRowIndexController;
+use App\Http\Controllers\Api\V1\ImportBatchRowUpdateController;
+use App\Http\Controllers\Api\V1\ImportBatchShowController;
+use App\Http\Controllers\Api\V1\ImportBatchStoreController;
+use App\Http\Controllers\Api\V1\ImportMappingProfileIndexController;
+use App\Http\Controllers\Api\V1\ImportMappingProfileStoreController;
 use App\Http\Controllers\Api\V1\SubjectActivityController;
 use Illuminate\Support\Facades\Route;
 
@@ -100,6 +110,20 @@ Route::prefix('v1')->group(function () {
         Route::post('archive-items/{archiveItem}/links', ArchiveItemLinkStoreController::class)->whereNumber('archiveItem')->middleware('can:update,archiveItem');
         Route::delete('archive-items/{archiveItem}/links/{link}', ArchiveItemLinkDestroyController::class)
             ->whereNumber('archiveItem')->whereNumber('link')->middleware('can:update,archiveItem');
+
+        Route::middleware('can:imports.manage')->group(function () {
+            Route::get('imports', ImportBatchIndexController::class);
+            Route::post('imports', ImportBatchStoreController::class);
+            Route::get('imports/{importBatch}', ImportBatchShowController::class);
+            Route::get('imports/{importBatch}/rows', ImportBatchRowIndexController::class);
+            Route::patch('imports/{importBatch}/rows/{row}', ImportBatchRowUpdateController::class);
+            Route::post('imports/{importBatch}/revalidate', ImportBatchRevalidateController::class);
+            Route::post('imports/{importBatch}/commit', ImportBatchCommitController::class);
+            Route::post('imports/{importBatch}/cancel', ImportBatchCancelController::class);
+
+            Route::get('import-mapping-profiles', ImportMappingProfileIndexController::class);
+            Route::post('import-mapping-profiles', ImportMappingProfileStoreController::class);
+        });
 
         Route::get('activity', ActivityFeedController::class)->middleware('can:activity.view');
         Route::get('{resource}/{id}/activity', SubjectActivityController::class)

@@ -56,7 +56,10 @@ it('attributes entries to the authenticated user and leaves causer null otherwis
     $thing = TrackableThing::create(['title' => 'Signed']);
     $entry = Activity::first();
 
-    expect($entry->causer_id)->toBe($user->id)
+    // causer_id/subject_id are VARCHAR (F4 widened them to hold both
+    // bigint and UUID subjects), so the raw Activity attribute is a string
+    // even for a bigint-keyed causer like User.
+    expect($entry->causer_id)->toBe((string) $user->id)
         ->and($entry->causer_type)->toBe(User::class);
 
     auth()->forgetGuards();
