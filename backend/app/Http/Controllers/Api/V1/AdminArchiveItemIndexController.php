@@ -7,6 +7,7 @@ use App\Models\RecordCompleteness;
 use App\Models\ReviewQueueItem;
 use App\Models\User;
 use App\Support\ArabicNormalizer;
+use App\ValueObjects\PartialDate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -72,7 +73,7 @@ class AdminArchiveItemIndexController
                 'legacy_ref' => $i->legacy_ref,
                 'item_type' => $i->item_type,
                 'title' => ['ar' => $i->title_ar, 'en' => $i->title_en],
-                'date' => $i->content->display ?? ($i->content->yearFrom !== null ? (string) $i->content->yearFrom : null),
+                'date' => $this->dateLabel($i->getAttribute('content')),
                 'source' => [
                     'name' => ['ar' => $i->rights_holder_ar ?? $i->publication_name_ar ?? $i->creator_name, 'en' => $i->rights_holder_en ?? $i->publication_name_en ?? $i->creator_name],
                     'rights_status' => $i->rights_status,
@@ -115,5 +116,14 @@ class AdminArchiveItemIndexController
     {
         return DB::table('review_queue_items')->select('citable_id')
             ->where('citable_type', ArchiveItem::class)->where('status', 'pending');
+    }
+
+    private function dateLabel(mixed $date): ?string
+    {
+        if (! $date instanceof PartialDate) {
+            return null;
+        }
+
+        return $date->display ?? ($date->yearFrom !== null ? (string) $date->yearFrom : null);
     }
 }
