@@ -90,6 +90,7 @@ class AdminArchiveItemIndexController
             'meta' => [
                 'current_page' => $paginated->currentPage(), 'last_page' => $paginated->lastPage(),
                 'per_page' => $paginated->perPage(), 'total' => $paginated->total(),
+                'total_all' => ArchiveItem::count(),
                 'mine_count' => ArchiveItem::whereIn('id', $this->createdBy($userId))->count(),
                 'incomplete_count' => ArchiveItem::whereIn('id', $this->incompleteIds())->count(),
             ],

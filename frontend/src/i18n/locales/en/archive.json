@@ -26,5 +26,48 @@
     "draft": "Draft",
     "published": "Published",
     "hidden": "Hidden"
+  },
+  "admin": {
+    "title": "Archive materials",
+    "summary": "{total} items · {mine} from your contributions · {incomplete} need completion",
+    "uploadBatch": "Upload a batch",
+    "searchPlaceholder": "Search archive materials…",
+    "status": "Status",
+    "allStatuses": "Status: all",
+    "rights": "Source / rights",
+    "allRights": "Source: all",
+    "period": "Period",
+    "yearFrom": "From year",
+    "yearTo": "To year",
+    "mine": "My contributions",
+    "showing": "Showing {from}–{to} of {total}",
+    "selected": "{count} selected",
+    "changeStatus": "Change status",
+    "assignArtist": "Assign to artist",
+    "delete": "Delete",
+    "confirmDelete": "Delete {count} items?",
+    "apply": "Apply",
+    "bulkDone": "{ok} updated, {failed} could not be updated.",
+    "selectAll": "Select all on this page",
+    "perPage": "{count} items per page",
+    "columns": {
+      "title": "Title and type",
+      "date": "Date",
+      "source": "Source / rights",
+      "status": "Status"
+    },
+    "rowStatuses": {
+      "draft": "Draft",
+      "published": "Published",
+      "hidden": "Hidden",
+      "incomplete": "Incomplete",
+      "under_review": "Under review"
+    },
+    "rightsOptions": {
+      "public_domain": "Public domain",
+      "licensed": "Licensed",
+      "all_rights_reserved": "All rights reserved",
+      "unknown": "Rights unknown"
+    }
   }
 }

@@ -34,3 +34,34 @@ export interface ArchiveQueryParams {
   sort?: "-created_at" | "created_at" | "content_year_from" | "-content_year_from";
   page?: number;
 }
+
+export type ArchiveRowStatus = "draft" | "published" | "hidden" | "incomplete" | "under_review";
+
+export interface AdminArchiveRow {
+  id: number;
+  legacy_ref: string | null;
+  item_type: ArchiveItemType;
+  title: Bilingual;
+  date: string | null;
+  source: { name: Bilingual; rights_status: RightsStatus };
+  publication_status: "draft" | "published" | "hidden";
+  incomplete: boolean;
+  gap_count: number;
+  under_review: boolean;
+}
+
+export interface AdminArchiveQuery {
+  q?: string;
+  item_type?: ArchiveItemType;
+  status?: ArchiveRowStatus;
+  rights_status?: RightsStatus;
+  year_from?: number;
+  year_to?: number;
+  mine?: 1;
+  page?: number;
+}
+
+export interface BulkResult {
+  succeeded: number[];
+  failed: { id: number; message: string }[];
+}

@@ -26,5 +26,48 @@
     "draft": "مسودة",
     "published": "منشور",
     "hidden": "مخفي"
+  },
+  "admin": {
+    "title": "مواد الأرشيف",
+    "summary": "{total} مادة · {mine} منها من إسهامك · {incomplete} بحاجة إلى استكمال",
+    "uploadBatch": "رفع دفعة",
+    "searchPlaceholder": "ابحث في مواد الأرشيف…",
+    "status": "الحالة",
+    "allStatuses": "الحالة: الكل",
+    "rights": "المصدر / الحقوق",
+    "allRights": "المصدر: الكل",
+    "period": "المدى الزمني",
+    "yearFrom": "من سنة",
+    "yearTo": "إلى سنة",
+    "mine": "إسهاماتي",
+    "showing": "عرض {from} – {to} من {total}",
+    "selected": "حُدّدت {count} مواد",
+    "changeStatus": "تغيير الحالة",
+    "assignArtist": "إسناد إلى فنان",
+    "delete": "حذف",
+    "confirmDelete": "حذف {count} مواد؟",
+    "apply": "تطبيق",
+    "bulkDone": "تم تحديث {ok}، وتعذّر تحديث {failed}.",
+    "selectAll": "تحديد كل مواد الصفحة",
+    "perPage": "{count} مادة في الصفحة",
+    "columns": {
+      "title": "العنوان والنوع",
+      "date": "التاريخ",
+      "source": "المصدر / الحقوق",
+      "status": "الحالة"
+    },
+    "rowStatuses": {
+      "draft": "مسودة",
+      "published": "منشورة",
+      "hidden": "مخفية",
+      "incomplete": "ناقصة",
+      "under_review": "قيد المراجعة"
+    },
+    "rightsOptions": {
+      "public_domain": "ملكية عامة",
+      "licensed": "مرخصة",
+      "all_rights_reserved": "جميع الحقوق محفوظة",
+      "unknown": "الحقوق غير محددة"
+    }
   }
 }

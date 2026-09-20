@@ -14,7 +14,7 @@ it('lists archive items for editors with counts, filters and mine', function () 
     $this->actingAs($other)->postJson('/api/v1/archive-items', ['item_type' => 'poster', 'title' => ['en' => 'A poster'], 'access_level' => 'institution_only'])->assertCreated();
     Auth::forgetGuards();
 
-    $all = $this->actingAs($editor)->getJson('/api/v1/admin/archive-items')->assertOk()->assertJsonPath('meta.total', 2)->assertJsonPath('meta.mine_count', 1);
+    $all = $this->actingAs($editor)->getJson('/api/v1/admin/archive-items')->assertOk()->assertJsonPath('meta.total', 2)->assertJsonPath('meta.mine_count', 1)->assertJsonPath('meta.total_all', 2);
     expect(collect($all->json('data'))->firstWhere('id', $mine)['incomplete'])->toBeTrue();
 
     $this->actingAs($editor)->getJson('/api/v1/admin/archive-items?mine=1')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $mine);

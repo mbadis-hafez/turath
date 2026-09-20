@@ -58,6 +58,12 @@ const routes: RouteRecordRaw[] = [
     meta: { titleKey: "archive.title" },
   },
   {
+    path: "/:locale/admin/archive",
+    name: "admin.archive",
+    component: () => import("@/pages/admin/ArchiveRegistryPage.vue"),
+    meta: { titleKey: "archive.admin.title", requiresAuth: true, requiresPermission: "archive.manage" },
+  },
+  {
     path: "/:locale/dashboard",
     name: "dashboard",
     component: () => import("@/pages/DashboardPage.vue"),

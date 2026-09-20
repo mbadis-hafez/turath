@@ -16,7 +16,7 @@ const { localePath } = useLocalePath();
 const homeLink = computed(() => localePath("home"));
 const artistsLink = computed(() => localePath("artists.index"));
 const artworksLink = computed(() => localePath("artworks.index"));
-const archiveLink = computed(() => localePath("archive.records"));
+const archiveLink = computed(() => localePath(auth.can("archive.manage") ? "admin.archive" : "archive.records"));
 const activityLink = computed(() => localePath("admin.activity"));
 const importsLink = computed(() => localePath("admin.imports"));
 const dashboardLink = computed(() => localePath("dashboard"));
