@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\ActivityFeedController;
 use App\Http\Controllers\Api\V1\AdminArchiveItemIndexController;
 use App\Http\Controllers\Api\V1\AdminArtistIndexController;
 use App\Http\Controllers\Api\V1\AdminArtworkIndexController;
+use App\Http\Controllers\Api\V1\AdminEventIndexController;
 use App\Http\Controllers\Api\V1\AdminHolderIndexController;
 use App\Http\Controllers\Api\V1\ArchiveItemBulkController;
 use App\Http\Controllers\Api\V1\ArchiveItemDestroyController;
@@ -58,6 +59,8 @@ use App\Http\Controllers\Api\V1\CandidateArtworkPromoteController;
 use App\Http\Controllers\Api\V1\DashboardCompletenessController;
 use App\Http\Controllers\Api\V1\DashboardExportController;
 use App\Http\Controllers\Api\V1\DashboardRecordsController;
+use App\Http\Controllers\Api\V1\EventController;
+use App\Http\Controllers\Api\V1\EventParticipantsController;
 use App\Http\Controllers\Api\V1\FieldCitationDestroyController;
 use App\Http\Controllers\Api\V1\FieldCitationStoreController;
 use App\Http\Controllers\Api\V1\HealthController;
@@ -83,6 +86,7 @@ use App\Http\Controllers\Api\V1\ReviewQueueIndexController;
 use App\Http\Controllers\Api\V1\SourceConflictResolveController;
 use App\Http\Controllers\Api\V1\SubjectActivityController;
 use App\Http\Controllers\Api\V1\ThemeController;
+use App\Http\Controllers\Api\V1\TimelineController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -102,6 +106,10 @@ Route::prefix('v1')->group(function () {
 
         Route::get('artworks/{artwork}/images/{image}/file', [ArtworkImageController::class, 'show'])->whereNumber(['artwork', 'image']);
         Route::get('holders/{holder}', HolderShowController::class)->whereNumber('holder');
+
+        Route::get('events', [EventController::class, 'index']);
+        Route::get('events/{event}', [EventController::class, 'show'])->whereNumber('event');
+        Route::get('timeline', TimelineController::class);
 
         Route::get('archive-items', ArchiveItemIndexController::class);
         Route::get('archive-items/{archiveItem}', ArchiveItemShowController::class)->whereNumber('archiveItem');
@@ -190,6 +198,15 @@ Route::prefix('v1')->group(function () {
             Route::post('themes', [ThemeController::class, 'store']);
         });
 
+        Route::middleware('can:events.manage')->group(function () {
+            Route::get('admin/events', AdminEventIndexController::class);
+            Route::post('events', [EventController::class, 'store']);
+            Route::patch('events/{event}', [EventController::class, 'update'])->whereNumber('event');
+            Route::post('events/{event}/publish', [EventController::class, 'publish'])->whereNumber('event');
+            Route::patch('events/{event}/participants', EventParticipantsController::class)->whereNumber('event');
+            Route::patch('events/{event}/themes', [ThemeController::class, 'syncEvent'])->whereNumber('event');
+        });
+
         Route::middleware('can:archive.manage')->group(function () {
             Route::get('admin/archive-items', AdminArchiveItemIndexController::class);
             Route::post('admin/archive-items/bulk', ArchiveItemBulkController::class);
@@ -202,6 +219,7 @@ Route::prefix('v1')->group(function () {
         Route::middleware('can:artworks.manage')->group(function () {
             Route::get('admin/artworks', AdminArtworkIndexController::class);
             Route::get('admin/holders', AdminHolderIndexController::class);
+            Route::patch('artworks/{artwork}/themes', [ThemeController::class, 'syncArtwork'])->whereNumber('artwork');
             Route::post('artworks/{artwork}/images', [ArtworkImageController::class, 'store'])->whereNumber('artwork');
             Route::patch('artworks/{artwork}/images/{image}', [ArtworkImageController::class, 'update'])->whereNumber(['artwork', 'image']);
             Route::delete('artworks/{artwork}/images/{image}', [ArtworkImageController::class, 'destroy'])->whereNumber(['artwork', 'image']);

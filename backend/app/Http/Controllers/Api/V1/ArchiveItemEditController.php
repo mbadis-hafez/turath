@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Models\ArchiveItem;
 use App\Models\Artist;
 use App\Models\Artwork;
+use App\Models\Event;
 use App\Models\ReviewQueueItem;
 use App\Support\Curation\ArchiveItemChecklist;
 use App\ValueObjects\PartialDate;
@@ -76,6 +77,7 @@ class ArchiveItemEditController
 
                 return match (true) {
                     $e instanceof Artist => ['id' => $l->id, 'role' => $l->role, 'kind' => 'artist', 'entity_id' => $e->id, 'label' => ['ar' => $e->name_ar, 'en' => $e->name_en]],
+                    $e instanceof Event => ['id' => $l->id, 'role' => $l->role, 'kind' => 'event', 'entity_id' => $e->id, 'label' => ['ar' => $e->title_ar, 'en' => $e->title_en]],
                     $e instanceof Artwork => ['id' => $l->id, 'role' => $l->role, 'kind' => 'artwork', 'entity_id' => $e->id, 'label' => ['ar' => $e->title_ar, 'en' => $e->title_en]],
                     default => null,
                 };

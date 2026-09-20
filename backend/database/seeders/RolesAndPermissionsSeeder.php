@@ -28,6 +28,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $artistsVerify = Permission::findOrCreate('artists.verify');
         $holdersManage = Permission::findOrCreate('holders.manage');
         $artworksManage = Permission::findOrCreate('artworks.manage');
+        $eventsManage = Permission::findOrCreate('events.manage');
         $archiveManage = Permission::findOrCreate('archive.manage');
         $archivePublish = Permission::findOrCreate('archive.publish');
         $importsManage = Permission::findOrCreate('imports.manage');
@@ -42,7 +43,7 @@ class RolesAndPermissionsSeeder extends Seeder
         }
 
         $editorPermissions = [
-            $activityView, $artistsManage, $artistsVerify, $holdersManage, $artworksManage,
+            $activityView, $artistsManage, $artistsVerify, $holdersManage, $artworksManage, $eventsManage,
             $archiveManage, $archivePublish, $importsManage, $dashboardManage,
             $sourceConflictsResolve, $reviewArchivist, $reviewDataAudit, $reviewSecondSource,
         ];

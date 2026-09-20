@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\ArchiveItem;
 use App\Models\Artist;
 use App\Models\Artwork;
+use App\Models\Event;
 use App\Support\ArchiveAccessResolver;
 use App\ValueObjects\PartialDate;
 use Illuminate\Http\Request;
@@ -120,6 +121,16 @@ class ArchiveItemResource extends JsonResource
                     'id' => $linkable->id,
                     'slug' => $linkable->slug,
                     'name' => ['ar' => $linkable->name_ar, 'en' => $linkable->name_en],
+                ],
+            ];
+        }
+
+        if ($linkable instanceof Event) {
+            return [
+                'role' => $link->role,
+                'event' => [
+                    'id' => $linkable->id,
+                    'title' => ['ar' => $linkable->title_ar, 'en' => $linkable->title_en],
                 ],
             ];
         }

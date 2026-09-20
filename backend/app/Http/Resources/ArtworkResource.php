@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Http\Controllers\Api\V1\ArtworkImageController;
 use App\Models\Artwork;
+use App\Support\Events\EventPresenter;
 use Illuminate\Http\Request;
 
 class ArtworkResource extends ArtworkListResource
@@ -36,6 +37,7 @@ class ArtworkResource extends ArtworkListResource
                 'ar' => $artwork->notes_ar,
                 'en' => $artwork->notes_en,
             ],
+            'events' => EventPresenter::eventsFor($artwork),
             'image_url' => $this->publicImageUrl($artwork),
             'publication_status' => $artwork->publication_status,
             'created_at' => $artwork->created_at?->toIso8601String(),

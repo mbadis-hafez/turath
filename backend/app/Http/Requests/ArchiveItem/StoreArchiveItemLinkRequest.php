@@ -19,7 +19,7 @@ class StoreArchiveItemLinkRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'linkable_type' => ['required', 'string', 'in:artist,artwork'],
+            'linkable_type' => ['required', 'string', 'in:artist,artwork,event'],
             'linkable_id' => ['required', 'integer'],
             'role' => ['required', new Enum(ArchiveLinkRole::class)],
         ];

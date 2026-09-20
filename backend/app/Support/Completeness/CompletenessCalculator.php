@@ -6,6 +6,7 @@ use App\Enums\CompletenessSeverity;
 use App\Models\ArchiveItem;
 use App\Models\Artist;
 use App\Models\Artwork;
+use App\Models\Event;
 use App\Models\FieldCitation;
 use App\Models\ReviewQueueItem;
 use App\Models\SourceConflict;
@@ -27,6 +28,7 @@ class CompletenessCalculator
         Artist::class => ArtistCompletenessRules::class,
         Artwork::class => ArtworkCompletenessRules::class,
         ArchiveItem::class => ArchiveItemCompletenessRules::class,
+        Event::class => EventCompletenessRules::class,
     ];
 
     public static function supports(string $modelClass): bool

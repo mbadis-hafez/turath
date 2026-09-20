@@ -8,9 +8,9 @@ use Database\Factories\ArtistFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Artist extends Model
@@ -76,11 +76,11 @@ class Artist extends Model
     }
 
     /**
-     * @return BelongsToMany<Theme, $this>
+     * @return MorphToMany<Theme, $this>
      */
-    public function themes(): BelongsToMany
+    public function themes(): MorphToMany
     {
-        return $this->belongsToMany(Theme::class, 'artist_themes');
+        return $this->morphToMany(Theme::class, 'taggable', 'theme_taggables');
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\ArtistEntriesSyncController;
 use App\Http\Controllers\Api\V1\ArtistPortraitController;
 use App\Http\Controllers\Api\V1\ArtistSocialLinksSyncController;
 use App\Models\Artist;
+use App\Support\Events\EventPresenter;
 use Illuminate\Http\Request;
 
 class ArtistResource extends ArtistListResource
@@ -21,6 +22,7 @@ class ArtistResource extends ArtistListResource
 
         $data = array_merge(parent::toArray($request), [
             'legacy_code' => $artist->legacy_code,
+            'events' => EventPresenter::eventsFor($artist),
             'bio' => [
                 'ar' => $artist->bio_ar,
                 'en' => $artist->bio_en,

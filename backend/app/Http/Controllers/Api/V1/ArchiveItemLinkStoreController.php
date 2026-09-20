@@ -6,6 +6,7 @@ use App\Http\Requests\ArchiveItem\StoreArchiveItemLinkRequest;
 use App\Models\ArchiveItem;
 use App\Models\Artist;
 use App\Models\Artwork;
+use App\Models\Event;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
@@ -13,7 +14,11 @@ class ArchiveItemLinkStoreController
 {
     public function __invoke(StoreArchiveItemLinkRequest $request, ArchiveItem $archiveItem): JsonResponse
     {
-        $linkableClass = $request->input('linkable_type') === 'artist' ? Artist::class : Artwork::class;
+        $linkableClass = match ($request->input('linkable_type')) {
+            'artist' => Artist::class,
+            'event' => Event::class,
+            default => Artwork::class,
+        };
         $linkableId = $request->input('linkable_id');
 
         if (! $linkableClass::query()->whereKey($linkableId)->exists()) {
