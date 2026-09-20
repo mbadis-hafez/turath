@@ -137,16 +137,18 @@
   },
   "create": {
     "title": "Add artist",
-    "help": "Creates a draft record. You can complete the rest from its curation page.",
-    "nameAr": "Name (Arabic)",
-    "nameEn": "Name (English)",
-    "code": "Artist code (optional, e.g. AR150)",
+    "help": "Creates a draft record. Contact details stay internal.",
+    "cancel": "Cancel",
+    "save": "Create artist",
+    "saving": "Creating…",
     "living": "Living status",
     "living_unknown": "Unknown",
     "living_living": "Living",
     "living_deceased": "Deceased",
-    "submit": "Create artist",
-    "creating": "Creating…",
-    "cancel": "Cancel"
+    "cityAr": "City (Arabic)",
+    "cityEn": "City (English)",
+    "bioAr": "Biography (Arabic)",
+    "bioEn": "Biography (English)",
+    "followUp": "The artist was created, but internal details could not be saved. Open the record to retry."
   }
 }

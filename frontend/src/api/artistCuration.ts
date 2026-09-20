@@ -53,10 +53,14 @@ export function listThemes(signal?: AbortSignal): Promise<{ data: Theme[] }> {
   return request({ method: "GET", url: "/api/v1/themes", signal });
 }
 
-export function createArtist(payload: {
+export interface CreateArtistPayload {
   name: { ar: string | null; en: string | null };
-  legacy_code?: string;
+  bio: { ar: string | null; en: string | null };
+  birth: { place: { ar: string | null; en: string | null } };
   living_status: "unknown" | "living" | "deceased";
-}): Promise<{ data: { id: number } }> {
+  legacy_code?: string;
+}
+
+export function createArtist(payload: CreateArtistPayload): Promise<{ data: { id: number } }> {
   return request({ method: "POST", url: "/api/v1/artists", data: payload });
 }

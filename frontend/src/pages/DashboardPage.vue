@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { useLocalePath } from "@/composables/useLocalePath";
 
@@ -10,7 +9,6 @@ import ErrorState from "@/components/common/ErrorState.vue";
 import Pagination from "@/components/common/Pagination.vue";
 import Spinner from "@/components/common/Spinner.vue";
 import CompletionSidebar from "@/components/dashboard/CompletionSidebar.vue";
-import CreateArtistModal from "@/components/curation/CreateArtistModal.vue";
 import ConflictResolutionModal from "@/components/dashboard/ConflictResolutionModal.vue";
 import RecordGroup from "@/components/dashboard/RecordGroup.vue";
 import StatTile from "@/components/dashboard/StatTile.vue";
@@ -24,14 +22,7 @@ import type {
 
 const { t } = useI18n();
 const auth = useAuthStore();
-const router = useRouter();
 const { localePath } = useLocalePath();
-const creating = ref(false);
-
-function onCreated(id: number): void {
-  creating.value = false;
-  void router.push(localePath("admin.artists.show", { id }));
-}
 
 const { stats, records, meta, loading, error, query, retry, setEntityType, setSeverity, setPage } =
   useDashboard();
@@ -74,15 +65,14 @@ function onResolved(): void {
         >
           {{ t("dashboard.exportGaps") }}
         </a>
-        <button
+        <RouterLink
           v-if="auth.can('artists.manage')"
-          type="button"
+          :to="localePath('admin.artists.new')"
           class="rounded-md bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-ink/85"
           data-testid="add-record"
-          @click="creating = true"
         >
           {{ t("dashboard.addRecord") }}
-        </button>
+        </RouterLink>
       </div>
     </div>
 
@@ -152,8 +142,6 @@ function onResolved(): void {
         </template>
       </div>
     </div>
-
-    <CreateArtistModal v-if="creating" @close="creating = false" @created="onCreated" />
 
     <ConflictResolutionModal
       v-if="resolving"
