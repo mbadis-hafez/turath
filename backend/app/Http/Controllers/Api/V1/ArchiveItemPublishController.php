@@ -8,6 +8,7 @@ use App\Enums\RightsStatus;
 use App\Http\Requests\ArchiveItem\PublishArchiveItemRequest;
 use App\Http\Resources\ArchiveItemResource;
 use App\Models\ArchiveItem;
+use App\Support\Completeness\CompletenessCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
@@ -49,6 +50,17 @@ class ArchiveItemPublishController
 
         if ($archiveItem->access_level === AccessLevel::Embargoed->value && $archiveItem->embargo_until === null) {
             $errors['embargo_until'] = ['An embargo_until date is required when access_level is embargoed.'];
+        }
+
+        // F10 D48: extends this gate with the shared completeness engine
+        // rather than duplicating its own separate check.
+        $calculator = new CompletenessCalculator;
+        $result = $calculator->evaluate($archiveItem);
+        $rules = $calculator->rulesFor(ArchiveItem::class);
+
+        foreach ($result['blocking'] as $fieldKey) {
+            $label = $rules->fieldLabel($fieldKey);
+            $errors["completeness.{$fieldKey}"] = ["Missing required field: {$label['en']}."];
         }
 
         if ($errors !== []) {

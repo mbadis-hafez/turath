@@ -33,6 +33,11 @@ use App\Http\Controllers\Api\V1\ArtworkUpdateController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\UserController;
+use App\Http\Controllers\Api\V1\DashboardCompletenessController;
+use App\Http\Controllers\Api\V1\DashboardExportController;
+use App\Http\Controllers\Api\V1\DashboardRecordsController;
+use App\Http\Controllers\Api\V1\FieldCitationDestroyController;
+use App\Http\Controllers\Api\V1\FieldCitationStoreController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\HolderDestroyController;
 use App\Http\Controllers\Api\V1\HolderRestoreController;
@@ -49,6 +54,10 @@ use App\Http\Controllers\Api\V1\ImportBatchShowController;
 use App\Http\Controllers\Api\V1\ImportBatchStoreController;
 use App\Http\Controllers\Api\V1\ImportMappingProfileIndexController;
 use App\Http\Controllers\Api\V1\ImportMappingProfileStoreController;
+use App\Http\Controllers\Api\V1\RecordCompletenessController;
+use App\Http\Controllers\Api\V1\ReviewQueueAcknowledgeController;
+use App\Http\Controllers\Api\V1\ReviewQueueIndexController;
+use App\Http\Controllers\Api\V1\SourceConflictResolveController;
 use App\Http\Controllers\Api\V1\SubjectActivityController;
 use Illuminate\Support\Facades\Route;
 
@@ -124,6 +133,20 @@ Route::prefix('v1')->group(function () {
             Route::get('import-mapping-profiles', ImportMappingProfileIndexController::class);
             Route::post('import-mapping-profiles', ImportMappingProfileStoreController::class);
         });
+
+        Route::get('dashboard/completeness', DashboardCompletenessController::class);
+        Route::get('dashboard/records', DashboardRecordsController::class);
+        Route::get('dashboard/export', DashboardExportController::class);
+
+        Route::get('records/{type}/{id}/completeness', RecordCompletenessController::class)->whereNumber('id');
+        Route::post('records/{type}/{id}/citations', FieldCitationStoreController::class)->whereNumber('id');
+        Route::delete('citations/{citation}', FieldCitationDestroyController::class);
+
+        Route::post('source-conflicts/{sourceConflict}/resolve', SourceConflictResolveController::class)
+            ->middleware('can:source_conflicts.resolve');
+
+        Route::get('review-queue', ReviewQueueIndexController::class);
+        Route::post('review-queue/{reviewQueueItem}/acknowledge', ReviewQueueAcknowledgeController::class);
 
         Route::get('activity', ActivityFeedController::class)->middleware('can:activity.view');
         Route::get('{resource}/{id}/activity', SubjectActivityController::class)

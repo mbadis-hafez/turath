@@ -31,13 +31,24 @@ class RolesAndPermissionsSeeder extends Seeder
         $archiveManage = Permission::findOrCreate('archive.manage');
         $archivePublish = Permission::findOrCreate('archive.publish');
         $importsManage = Permission::findOrCreate('imports.manage');
+        $dashboardManage = Permission::findOrCreate('dashboard.manage');
+        $sourceConflictsResolve = Permission::findOrCreate('source_conflicts.resolve');
+        $reviewArchivist = Permission::findOrCreate('review_queue.archivist_review');
+        $reviewDataAudit = Permission::findOrCreate('review_queue.data_audit');
+        $reviewSecondSource = Permission::findOrCreate('review_queue.second_source_needed');
 
         foreach (self::ROLES as $roleName) {
             Role::findOrCreate($roleName);
         }
 
-        Role::findByName('editor')->givePermissionTo($activityView, $artistsManage, $artistsVerify, $holdersManage, $artworksManage, $archiveManage, $archivePublish, $importsManage);
-        Role::findByName('admin')->givePermissionTo($activityView, $artistsManage, $artistsVerify, $holdersManage, $artworksManage, $archiveManage, $archivePublish, $importsManage);
+        $editorPermissions = [
+            $activityView, $artistsManage, $artistsVerify, $holdersManage, $artworksManage,
+            $archiveManage, $archivePublish, $importsManage, $dashboardManage,
+            $sourceConflictsResolve, $reviewArchivist, $reviewDataAudit, $reviewSecondSource,
+        ];
+
+        Role::findByName('editor')->givePermissionTo($editorPermissions);
+        Role::findByName('admin')->givePermissionTo($editorPermissions);
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }
