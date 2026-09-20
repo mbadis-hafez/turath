@@ -237,5 +237,103 @@
       "holder_missing": "Owner not set",
       "year_uncertain": "Year uncertain"
     }
+  },
+  "artworkDetail": {
+    "back": "Artworks",
+    "missingFields": "{count} missing fields",
+    "approve": "Approve artwork",
+    "approved": "Approved",
+    "blockers": "{count} items block approval",
+    "checklist": "Missing for verification and approval",
+    "metCount": "{met} of {total} items complete",
+    "pipeline": "Work pipeline",
+    "identification": "Identification",
+    "specifications": "General specifications",
+    "conditionImages": "Condition & images",
+    "materials": "Archive materials for this artwork",
+    "noMaterials": "No archive materials linked yet.",
+    "code": "Identification code",
+    "artist": "Artist",
+    "titleAr": "Title (Arabic)",
+    "titleEn": "Title (English)",
+    "category": "Category",
+    "year": "Year",
+    "mediumAr": "Medium (Arabic)",
+    "mediumEn": "Medium (English)",
+    "signed": "Signature",
+    "notesAr": "Description (Arabic)",
+    "notesEn": "Description (English)",
+    "height": "Height (cm)",
+    "width": "Width (cm)",
+    "depth": "Depth (cm)",
+    "frameHeight": "Frame height (cm)",
+    "frameWidth": "Frame width (cm)",
+    "frameDepth": "Frame depth (cm)",
+    "weight": "Weight (kg)",
+    "editionNumber": "Edition number",
+    "editionSize": "Edition size",
+    "holder": "Current holder",
+    "notSet": "Not set",
+    "holderInventory": "Holder inventory no.",
+    "inventoryByOwner": "Inventory by owner",
+    "conditionStatus": "Condition report status",
+    "conditionLink": "Condition report link",
+    "imageQuality": "Image quality",
+    "editingStatus": "Editing status",
+    "finalImage": "Final selected high-resolution image",
+    "noFinalImage": "No high-resolution copy",
+    "checklistItem": {
+      "code": "Identification code",
+      "titles": "Arabic and English title",
+      "artist": "Attributed to an artist",
+      "year": "Production year",
+      "dimensions": "Dimensions",
+      "medium": "Medium and technique",
+      "condition_report": "Condition report",
+      "hr_image": "High-resolution image",
+      "holder": "Current holder",
+      "authorization_letter": "Authorization letter"
+    },
+    "stages": {
+      "work_category": "Work category",
+      "status_research": "Status research",
+      "selection_process": "Selection process",
+      "availability": "Availability",
+      "owner_pre_agreement": "Owner pre-agreement",
+      "contract_draft": "Contract draft"
+    },
+    "stageStatus": {
+      "not_started": "Not started",
+      "in_progress": "In progress",
+      "tbc": "TBC",
+      "done": "Done",
+      "not_applicable": "Not applicable"
+    },
+    "categories": {
+      "painting": "Painting",
+      "drawing": "Drawing",
+      "printmaking": "Printmaking",
+      "sculpture": "Sculpture",
+      "mixed_media": "Mixed media",
+      "paper_work": "Work on paper",
+      "photography": "Photography",
+      "installation": "Installation",
+      "other": "Other"
+    },
+    "signedStates": {
+      "signed": "Signed",
+      "unsigned": "Unsigned",
+      "unknown": "Unknown"
+    },
+    "conditionStates": {
+      "not_available": "Not available",
+      "pending": "Pending",
+      "available": "Available"
+    },
+    "qualities": {
+      "low_resolution": "Low resolution",
+      "high_resolution": "High resolution",
+      "archive_source": "Archive image from other source"
+    }
   }
 }

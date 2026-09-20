@@ -237,5 +237,103 @@
       "holder_missing": "مالك غير محدد",
       "year_uncertain": "سنة غير مؤكدة"
     }
+  },
+  "artworkDetail": {
+    "back": "الأعمال",
+    "missingFields": "{count} حقول ناقصة",
+    "approve": "اعتماد العمل",
+    "approved": "معتمد",
+    "blockers": "{count} عناصر تمنع الاعتماد",
+    "checklist": "يلزم للتحقق والاعتماد",
+    "metCount": "{met} من {total} عناصر مستوفاة",
+    "pipeline": "مسار العمل",
+    "identification": "التعريف",
+    "specifications": "المواصفات",
+    "conditionImages": "الحالة والصور",
+    "materials": "مواد أرشيفية تذكر هذا العمل",
+    "noMaterials": "لا توجد مواد أرشيفية مرتبطة بعد.",
+    "code": "رمز التعريف",
+    "artist": "الفنان",
+    "titleAr": "العنوان (عربي)",
+    "titleEn": "العنوان (إنجليزي)",
+    "category": "الفئة",
+    "year": "السنة",
+    "mediumAr": "الوسيط (عربي)",
+    "mediumEn": "الوسيط (إنجليزي)",
+    "signed": "التوقيع",
+    "notesAr": "الوصف (عربي)",
+    "notesEn": "الوصف (إنجليزي)",
+    "height": "الارتفاع (سم)",
+    "width": "العرض (سم)",
+    "depth": "العمق (سم)",
+    "frameHeight": "ارتفاع الإطار (سم)",
+    "frameWidth": "عرض الإطار (سم)",
+    "frameDepth": "عمق الإطار (سم)",
+    "weight": "الوزن (كغ)",
+    "editionNumber": "رقم النسخة",
+    "editionSize": "حجم الإصدار",
+    "holder": "المالك الحالي",
+    "notSet": "غير محدد",
+    "holderInventory": "رقم الجرد لدى الجهة",
+    "inventoryByOwner": "الجرد لدى المالك",
+    "conditionStatus": "حالة تقرير الحالة",
+    "conditionLink": "رابط تقرير الحالة",
+    "imageQuality": "جودة الصورة",
+    "editingStatus": "حالة التحرير",
+    "finalImage": "الصورة النهائية عالية الدقة",
+    "noFinalImage": "لا توجد نسخة عالية الدقة",
+    "checklistItem": {
+      "code": "رمز تعريف",
+      "titles": "عنوان عربي وإنجليزي",
+      "artist": "نسبة العمل إلى فنان",
+      "year": "سنة الإنتاج",
+      "dimensions": "المقاسات",
+      "medium": "الوسيط والتقنية",
+      "condition_report": "تقرير حالة",
+      "hr_image": "صورة عالية الدقة",
+      "holder": "المالك الحالي",
+      "authorization_letter": "خطاب تفويض"
+    },
+    "stages": {
+      "work_category": "فئة العمل",
+      "status_research": "بحث الحالة",
+      "selection_process": "عملية الاختيار",
+      "availability": "التوفر",
+      "owner_pre_agreement": "اتفاق مبدئي مع المالك",
+      "contract_draft": "مسودة العقد"
+    },
+    "stageStatus": {
+      "not_started": "لم يبدأ",
+      "in_progress": "قيد التنفيذ",
+      "tbc": "يُؤكَّد لاحقًا",
+      "done": "تم",
+      "not_applicable": "لا ينطبق"
+    },
+    "categories": {
+      "painting": "لوحة",
+      "drawing": "رسم",
+      "printmaking": "طباعة فنية",
+      "sculpture": "منحوتة",
+      "mixed_media": "وسائط مختلطة",
+      "paper_work": "عمل على الورق",
+      "photography": "تصوير",
+      "installation": "عمل تركيبي",
+      "other": "أخرى"
+    },
+    "signedStates": {
+      "signed": "موقّع",
+      "unsigned": "غير موقّع",
+      "unknown": "غير معروف"
+    },
+    "conditionStates": {
+      "not_available": "غير متوفر",
+      "pending": "قيد الإعداد",
+      "available": "متوفر"
+    },
+    "qualities": {
+      "low_resolution": "دقة منخفضة",
+      "high_resolution": "دقة عالية",
+      "archive_source": "صورة أرشيفية من مصدر آخر"
+    }
   }
 }

@@ -139,3 +139,8 @@ Numbering continues locally (D43+); the F10 spec's own D47–D57 are cross-refer
 - On the curation page birth/death are only sent when edited, so dates the date picker cannot represent (circa, ranges, hijri) are never overwritten.
 - Frontend type checking: use `npm run typecheck`; bare `vue-tsc --noEmit` is vacuous in this repo.
 - Awards, exhibitions, talks and symposiums share one "activities" group in the API and UI; each entry carries a `type` (`artist_entries.type`, no schema change). Education stays its own group.
+
+## Artworks registry and curation screens
+- `GET /artworks/{id}/curation` (artworks.manage) is the single bundle for the detail page: fields, 10-item checklist (same completeness engine plus artist authorization letter), pipeline stages, approve blockers and linked archive items. Saves use the existing `PATCH /artworks/{id}`; stages use the pipeline PATCH; Approve uses the approve endpoint.
+- The year is only sent on save when edited, so circa/range creation dates are never overwritten.
+- Not built yet: artist/holder dropdown filters, add-artwork and merge UI, artwork image display and HR-image picking (no image linkage exists).

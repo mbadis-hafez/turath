@@ -7,6 +7,7 @@ import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import Pagination from "@/components/common/Pagination.vue";
 import Spinner from "@/components/common/Spinner.vue";
+import { useLocalePath } from "@/composables/useLocalePath";
 import { useAdminArtworks } from "@/composables/useAdminArtworks";
 import { useLocalized } from "@/composables/useLocalized";
 import { useAuthStore } from "@/stores/auth";
@@ -15,6 +16,7 @@ import type { ArtworkFlag, ArtworkStatus } from "@/types/artworkCuration";
 
 const { t } = useI18n();
 const { pick } = useLocalized();
+const { localePath } = useLocalePath();
 const auth = useAuthStore();
 
 const forbidden = new ApiError("forbidden", "Forbidden", { status: 403 });
@@ -93,7 +95,7 @@ const field = "rounded-md border border-line bg-surface px-3 py-2 text-sm text-i
                   <span v-for="f in a.flags" :key="f" class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="FLAG_CLASS[f]">{{ t(`curation.artworkRegistry.flags.${f}`) }}</span>
                 </span>
               </div>
-              <h2 class="mt-4 text-xl font-semibold text-ink"><LocalizedText :text="a.title" /></h2>
+              <h2 class="mt-4 text-xl font-semibold text-ink"><RouterLink :to="localePath('admin.artworks.show', { id: a.id })" class="hover:underline"><LocalizedText :text="a.title" /></RouterLink></h2>
               <p class="text-sm text-ink-muted">{{ pick({ ar: a.title.en, en: a.title.ar })?.text }}</p>
               <p v-if="a.artist" class="mt-2 text-sm font-medium text-ink"><LocalizedText :text="a.artist.name" /></p>
               <p class="mt-1 text-xs text-ink-muted">

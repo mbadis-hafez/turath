@@ -33,6 +33,7 @@ use App\Http\Controllers\Api\V1\ArtistVariantUpdateController;
 use App\Http\Controllers\Api\V1\ArtistVerifyController;
 use App\Http\Controllers\Api\V1\ArtworkApproveController;
 use App\Http\Controllers\Api\V1\ArtworkArchiveItemsController;
+use App\Http\Controllers\Api\V1\ArtworkCurationShowController;
 use App\Http\Controllers\Api\V1\ArtworkDestroyController;
 use App\Http\Controllers\Api\V1\ArtworkIndexController;
 use App\Http\Controllers\Api\V1\ArtworkMergeController;
@@ -190,6 +191,7 @@ Route::prefix('v1')->group(function () {
             Route::post('candidate-artworks/{candidate}/dismiss', CandidateArtworkDismissController::class);
             Route::post('pipeline-note-suggestions/{suggestion}/accept', PipelineNoteSuggestionAcceptController::class);
         });
+        Route::get('artworks/{artwork}/curation', ArtworkCurationShowController::class)->whereNumber('artwork')->middleware('can:artworks.manage');
         Route::get('artworks/{artwork}/pipeline', ArtworkPipelineShowController::class)->whereNumber('artwork')->middleware('can:artworks.manage');
         Route::patch('artworks/{artwork}/pipeline/{stageKey}', ArtworkPipelineUpdateController::class)->whereNumber('artwork');
 

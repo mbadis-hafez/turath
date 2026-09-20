@@ -126,3 +126,16 @@ it('filters the internal registry and blocks non-editors', function () {
 
     $this->actingAs(makeUser('reader'))->getJson('/api/v1/admin/artworks')->assertForbidden();
 });
+
+it('returns the artwork curation bundle with checklist and pipeline for editors only', function () {
+    $artwork = Artwork::factory()->create(['height_cm' => null, 'width_cm' => null]);
+
+    $data = $this->actingAs(editorUser())->getJson("/api/v1/artworks/{$artwork->id}/curation")
+        ->assertOk()->assertJsonCount(6, 'data.pipeline')->assertJsonCount(10, 'data.checklist')->json('data');
+
+    $dimensions = collect($data['checklist'])->firstWhere('key', 'dimensions');
+    expect($dimensions['met'])->toBeFalse()
+        ->and($data['approve_blockers'])->not->toBeEmpty();
+
+    $this->actingAs(makeUser('reader'))->getJson("/api/v1/artworks/{$artwork->id}/curation")->assertForbidden();
+});
