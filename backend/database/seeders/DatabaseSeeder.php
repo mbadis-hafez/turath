@@ -37,5 +37,7 @@ class DatabaseSeeder extends Seeder
         $editor->email_verified_at ??= now();
         $editor->save();
         $editor->assignRole('editor');
+
+        $this->call(DemoDashboardSeeder::class);
     }
 }
