@@ -9,5 +9,25 @@
   "pagination": "Pagination",
   "shownInOtherLanguage": "Shown in another language",
   "comingSoon": "This page is still being prepared and will be available soon.",
-  "clear": "Clear"
+  "clear": "Clear",
+  "fuzzyDate": {
+    "required": "required",
+    "mode": "Date precision",
+    "modes": {
+      "exact": "Exact date",
+      "year": "Year only",
+      "approx": "Approximate or range"
+    },
+    "text": "As written, e.g. early 1980s",
+    "from": "From year",
+    "to": "To year",
+    "certainty": "Certainty",
+    "certainties": {
+      "circa": "Approximate",
+      "range": "Range"
+    },
+    "note": "Reason for the approximation",
+    "needsReason": "An approximate date needs a stated reason (for example where the wording comes from).",
+    "help": "Enter a full date, or a four-digit year."
+  }
 }

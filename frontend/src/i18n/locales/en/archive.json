@@ -128,7 +128,6 @@
     "itemType": "Item type",
     "number": "Item number",
     "date": "Date",
-    "dateHelp": "Enter a full date, or a four-digit year.",
     "place": "Place",
     "content": "Content",
     "descriptionAr": "Description (Arabic)",
@@ -164,20 +163,6 @@
       "donor": "Donor",
       "subject": "Subject",
       "primary_documentation": "Primary documentation"
-    },
-    "dateMode": "Date precision",
-    "dateModes": {
-      "exact": "Exact date",
-      "year": "Year only",
-      "approx": "Approximate or range"
-    },
-    "approxText": "As written, e.g. early 1980s",
-    "certainty": "Certainty",
-    "certainties": {
-      "circa": "Approximate",
-      "range": "Range"
-    },
-    "dateNote": "Reason for the approximation",
-    "dateNeedsReason": "An approximate date needs a stated reason (for example where the wording comes from)."
+    }
   }
 }
