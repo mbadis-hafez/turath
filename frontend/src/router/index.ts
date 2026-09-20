@@ -52,6 +52,18 @@ const routes: RouteRecordRaw[] = [
     meta: { titleFromData: true },
   },
   {
+    path: "/:locale/events/:id(\\d+)",
+    name: "events.show",
+    component: () => import("@/pages/EventPage.vue"),
+    meta: { titleFromData: true },
+  },
+  {
+    path: "/:locale/timeline",
+    name: "timeline",
+    component: () => import("@/pages/TimelinePage.vue"),
+    meta: { titleKey: "events.timeline.title" },
+  },
+  {
     path: "/:locale/archive",
     name: "archive.records",
     component: () => import("@/pages/ArchivePage.vue"),

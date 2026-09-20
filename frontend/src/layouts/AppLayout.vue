@@ -20,6 +20,7 @@ const archiveLink = computed(() => localePath(auth.can("archive.manage") ? "admi
 const activityLink = computed(() => localePath("admin.activity"));
 const importsLink = computed(() => localePath("admin.imports"));
 const dashboardLink = computed(() => localePath("dashboard"));
+const timelineLink = computed(() => localePath("timeline"));
 const registryLink = computed(() => localePath("admin.artists"));
 const artworkRegistryLink = computed(() => localePath("admin.artworks"));
 const eventsRegistryLink = computed(() => localePath("admin.events"));
@@ -84,6 +85,12 @@ async function logout(): Promise<void> {
               class="text-ink transition-colors hover:text-accent"
               active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
               >{{ $t("nav.archive") }}</RouterLink
+            >
+            <RouterLink
+              :to="timelineLink"
+              class="text-ink transition-colors hover:text-accent"
+              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
+              >{{ $t("nav.timeline") }}</RouterLink
             >
             <RouterLink
               :to="dashboardLink"
@@ -151,10 +158,11 @@ async function logout(): Promise<void> {
               aria-current="page"
               >{{ $t("nav.archive") }}</a
             >
-            <a
-              href="#events"
+            <RouterLink
+              :to="timelineLink"
               class="text-ink transition-colors hover:text-accent"
-              >{{ $t("nav.events") }}</a
+              active-class="!text-accent-strong font-medium"
+              >{{ $t("nav.timeline") }}</RouterLink
             >
             <a
               href="#themes"

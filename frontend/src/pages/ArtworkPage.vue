@@ -6,6 +6,7 @@ import { useI18n } from "vue-i18n";
 import ArtworkHeader from "@/components/artworks/ArtworkHeader.vue";
 import DimensionsDisplay from "@/components/artworks/DimensionsDisplay.vue";
 import ErrorState from "@/components/common/ErrorState.vue";
+import PublicEventsList from "@/components/events/PublicEventsList.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import PartialDateDisplay from "@/components/common/PartialDateDisplay.vue";
 import NotFoundPage from "@/pages/NotFoundPage.vue";
@@ -159,6 +160,11 @@ watch(
       <p class="mt-2 leading-relaxed text-ink">
         <LocalizedText :text="artwork.notes" />
       </p>
+    </section>
+
+    <section v-if="artwork.events && artwork.events.length > 0" class="mt-10">
+      <h2 class="text-lg font-semibold text-ink">{{ t("artworks.events") }}</h2>
+      <PublicEventsList class="mt-2" :events="artwork.events" />
     </section>
   </article>
 </template>

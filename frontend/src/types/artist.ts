@@ -3,6 +3,7 @@ import type {
   ActivityEvent,
 } from "@/types/activity";
 import type { PaginatedResponse } from "@/types/api";
+import type { PublicEventRef } from "@/types/event";
 
 export interface Bilingual {
   ar: string | null;
@@ -49,6 +50,7 @@ export interface NameVariant {
 
 export interface Artist extends ArtistListItem {
   legacy_code: string | null;
+  events?: PublicEventRef[];
   bio: Bilingual;
   birth: (PartialDate & { place: Bilingual }) | null;
   death: (PartialDate & { place: Bilingual }) | null;

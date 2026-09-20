@@ -153,7 +153,8 @@
     "linkSearch": "Search…",
     "linkKinds": {
       "artist": "Artist",
-      "artwork": "Artwork"
+      "artwork": "Artwork",
+      "event": "Event"
     },
     "linkRoles": {
       "about": "About",
@@ -162,7 +163,8 @@
       "authored_by": "Authored by",
       "donor": "Donor",
       "subject": "Subject",
-      "primary_documentation": "Primary documentation"
+      "primary_documentation": "Primary documentation",
+      "event_documentation": "Event documentation"
     }
   }
 }

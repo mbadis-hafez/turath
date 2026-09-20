@@ -80,7 +80,7 @@ export interface ArchiveEditFile {
 export interface ArchiveEditLink {
   id?: number;
   role: string;
-  kind: "artist" | "artwork";
+  kind: "artist" | "artwork" | "event";
   entity_id: number;
   label: Bilingual;
 }
@@ -111,4 +111,4 @@ export interface ArchiveEdit {
   links: ArchiveEditLink[];
 }
 
-export const LINK_ROLES = ["about", "depicts", "mentions", "authored_by", "donor", "subject", "primary_documentation"] as const;
+export const LINK_ROLES = ["about", "depicts", "mentions", "authored_by", "donor", "subject", "primary_documentation", "event_documentation"] as const;

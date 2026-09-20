@@ -1,4 +1,5 @@
 import type { Bilingual, PartialDate } from "@/types/artist";
+import type { PublicEventRef } from "@/types/event";
 import type { Holder } from "@/types/holder";
 
 export type ArtworkCategory =
@@ -45,6 +46,7 @@ export interface ArtworkListItem {
 }
 
 export interface Artwork extends ArtworkListItem {
+  events?: PublicEventRef[];
   frame_dimensions: Dimensions | null;
   weight_kg: number | null;
   signed: "signed" | "unsigned" | "unknown";

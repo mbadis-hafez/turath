@@ -153,7 +153,8 @@
     "linkSearch": "ابحث…",
     "linkKinds": {
       "artist": "فنان",
-      "artwork": "عمل"
+      "artwork": "عمل",
+      "event": "فعالية"
     },
     "linkRoles": {
       "about": "يتناول",
@@ -162,7 +163,8 @@
       "authored_by": "من تأليف",
       "donor": "مُهدٍ",
       "subject": "موضوع",
-      "primary_documentation": "التوثيق الأساسي"
+      "primary_documentation": "التوثيق الأساسي",
+      "event_documentation": "توثيق فعالية"
     }
   }
 }

@@ -19,5 +19,7 @@
   "biography": "السيرة",
   "noBio": "لا توجد سيرة مكتوبة بعد",
   "overview": "نظرة عامة",
-  "tabArtworks": "الأعمال"
+  "tabArtworks": "الأعمال",
+  "tabEvents": "الفعاليات",
+  "noEvents": "لا توجد فعاليات مسجلة بعد"
 }

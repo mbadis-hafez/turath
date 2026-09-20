@@ -15,6 +15,7 @@ const api = vi.hoisted(() => ({
 vi.mock("@/api/archive", () => api);
 vi.mock("@/api/artistCuration", () => ({ listAdminArtists: vi.fn() }));
 vi.mock("@/api/artworkCuration", () => ({ searchHolders: vi.fn(), listAdminArtworks: vi.fn() }));
+vi.mock("@/api/events", () => ({ listAdminEvents: vi.fn() }));
 
 function bundle(patch: Partial<ArchiveEdit> = {}): ArchiveEdit {
   return {

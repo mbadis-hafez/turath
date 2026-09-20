@@ -84,3 +84,9 @@ export interface EventsQuery {
 }
 
 export type EventsPage<T> = { data: T[]; meta: PaginationMeta };
+
+/** An event as listed on an artist or artwork page, with that record's role in it. */
+export interface PublicEventRef extends EventSummary {
+  role: ParticipantRole;
+  note: string | null;
+}

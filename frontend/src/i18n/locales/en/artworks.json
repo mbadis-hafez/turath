@@ -35,5 +35,6 @@
   },
   "attributionHelp": "This artwork's attribution has not been fully confirmed",
   "noResults": "No matching artworks",
-  "noneForArtist": "No artworks recorded yet"
+  "noneForArtist": "No artworks recorded yet",
+  "events": "Events"
 }

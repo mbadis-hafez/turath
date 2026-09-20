@@ -8,6 +8,7 @@ import {
   submitArchiveReview, updateArchiveItem, uploadArchiveFile,
 } from "@/api/archive";
 import { listAdminArtworks } from "@/api/artworkCuration";
+import { listAdminEvents } from "@/api/events";
 import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import Spinner from "@/components/common/Spinner.vue";
@@ -187,12 +188,16 @@ async function sendForReview(): Promise<void> {
 
 // ---- links
 const linkOpen = ref(false);
-const linkKind = ref<"artist" | "artwork">("artist");
+const linkKind = ref<"artist" | "artwork" | "event">("artist");
 const linkRole = ref<string>("about");
 const linkEntity = ref<PickerOption | null>(null);
 
 const searchArtworks = async (q: string): Promise<PickerOption[]> =>
   (await listAdminArtworks({ q })).data.map((a) => ({ id: a.id, label: labelOf(a.title) }));
+
+const searchEvents = async (q: string): Promise<PickerOption[]> =>
+  (await listAdminEvents({ q })).data.map((e) => ({ id: e.id, label: labelOf(e.title) }));
+const searchFor = (kind: "artist" | "artwork" | "event") => (kind === "artist" ? searchArtistOptions : kind === "artwork" ? searchArtworks : searchEvents);
 
 async function addLink(): Promise<void> {
   if (!linkEntity.value) return;
@@ -371,9 +376,9 @@ const err = (key: string) => fieldErrors.value[key]?.[0];
               </li>
             </ul>
             <div v-if="linkOpen" class="mt-3 grid gap-3 rounded-md border border-line p-3 text-sm sm:grid-cols-3" data-testid="link-form">
-              <label class="text-xs text-ink-muted">{{ t("archive.edit.linkKind") }}<select v-model="linkKind" :class="input" @change="linkEntity = null"><option value="artist">{{ t("archive.edit.linkKinds.artist") }}</option><option value="artwork">{{ t("archive.edit.linkKinds.artwork") }}</option></select></label>
+              <label class="text-xs text-ink-muted">{{ t("archive.edit.linkKind") }}<select v-model="linkKind" :class="input" @change="linkEntity = null"><option value="artist">{{ t("archive.edit.linkKinds.artist") }}</option><option value="artwork">{{ t("archive.edit.linkKinds.artwork") }}</option><option value="event">{{ t("archive.edit.linkKinds.event") }}</option></select></label>
               <label class="text-xs text-ink-muted">{{ t("archive.edit.linkRole") }}<select v-model="linkRole" :class="input"><option v-for="r in LINK_ROLES" :key="r" :value="r">{{ t(`archive.edit.linkRoles.${r}`) }}</option></select></label>
-              <div class="text-xs text-ink-muted">{{ t("archive.edit.linkTarget") }}<EntityPicker :key="linkKind" v-model="linkEntity" :search="linkKind === 'artist' ? searchArtistOptions : searchArtworks" :placeholder="t('archive.edit.linkSearch')" /></div>
+              <div class="text-xs text-ink-muted">{{ t("archive.edit.linkTarget") }}<EntityPicker :key="linkKind" v-model="linkEntity" :search="searchFor(linkKind)" :placeholder="t('archive.edit.linkSearch')" /></div>
               <button type="button" class="rounded-md bg-ink px-3 py-2 text-sm text-paper disabled:opacity-50 sm:col-span-3 sm:w-fit" :disabled="!linkEntity" data-testid="link-apply" @click="addLink">{{ t("archive.admin.apply") }}</button>
             </div>
           </section>

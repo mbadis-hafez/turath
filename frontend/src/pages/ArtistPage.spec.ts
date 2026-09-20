@@ -81,6 +81,7 @@ async function mountPage(path: string, locale: "ar" | "en" = "ar") {
         component: ArtistPage,
       },
       { path: "/:locale", name: "home", component: { template: "<div />" } },
+      { path: "/:locale/events/:id", name: "events.show", component: { template: "<div />" } },
     ],
   });
   await router.push(path);
@@ -159,5 +160,25 @@ describe("ArtistPage", () => {
     const meta = document.querySelector('meta[name="description"]');
     expect(meta?.getAttribute("content")).toBe(longBio.slice(0, 160));
     expect(meta?.getAttribute("content")).toHaveLength(160);
+  });
+
+  it("lists real events with the artist's role on the Events tab", async () => {
+    vi.mocked(getArtist).mockResolvedValue({
+      data: makeArtist({
+        events: [{
+          id: 3, event_type: "award", title: { ar: "جائزة الشراع الذهبي", en: null }, start: { display: null, year_from: 1988, year_to: 1988, calendar: "gregorian", certainty: "exact" },
+          end: null, venue_name: "الكويت", city: null, publication_status: "published", role: "awardee", note: "الجائزة الأولى",
+        }],
+      }),
+    });
+    const wrapper = await mountPage("/ar/artists/inji-efflatoun");
+
+    const tab = wrapper.findAll("[role=tab]").find((t) => t.text().includes("الفعاليات"));
+    expect(tab?.text()).toContain("(1)");
+    await tab!.trigger("click");
+
+    expect(wrapper.get("[data-testid=public-event]").text()).toContain("جائزة الشراع الذهبي");
+    expect(wrapper.get("[data-testid=event-role]").text()).toBe("فائز");
+    expect(wrapper.text()).toContain("الجائزة الأولى");
   });
 });

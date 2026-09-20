@@ -11,5 +11,6 @@
   "themes": "Themes",
   "dashboard": "Dashboard",
   "registry": "Artists registry",
-  "artworkRegistry": "Artworks registry"
+  "artworkRegistry": "Artworks registry",
+  "timeline": "Timeline"
 }

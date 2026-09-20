@@ -19,5 +19,7 @@
   "biography": "Biography",
   "noBio": "No biography yet",
   "overview": "Overview",
-  "tabArtworks": "Artworks"
+  "tabArtworks": "Artworks",
+  "tabEvents": "Events",
+  "noEvents": "No events recorded yet"
 }

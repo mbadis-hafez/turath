@@ -11,6 +11,7 @@ import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import NotFoundPage from "@/pages/NotFoundPage.vue";
 import Tabs from "@/components/common/Tabs.vue";
+import PublicEventsList from "@/components/events/PublicEventsList.vue";
 import { useArtist } from "@/composables/useArtist";
 import { useArtistArtworks } from "@/composables/useArtistArtworks";
 import { useDocumentTitle } from "@/composables/useDocumentTitle";
@@ -71,6 +72,10 @@ const tabs = computed(() => [
     key: "artworks",
     label: `${t("artists.tabArtworks")} (${artworksCount.value})`,
   },
+  {
+    key: "events",
+    label: `${t("artists.tabEvents")} (${artist.value?.events?.length ?? 0})`,
+  },
 ]);
 </script>
 
@@ -107,6 +112,11 @@ const tabs = computed(() => [
           </p>
           <p v-else class="mt-2 text-ink-muted">{{ t("artists.noBio") }}</p>
         </section>
+      </template>
+
+      <template #events>
+        <EmptyState v-if="!artist.events || artist.events.length === 0" :title="t('artists.noEvents')" />
+        <PublicEventsList v-else :events="artist.events" />
       </template>
 
       <template #artworks>

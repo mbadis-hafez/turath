@@ -93,5 +93,20 @@
     "when": "When",
     "where": "Where",
     "backToTimeline": "Timeline"
+  },
+  "timeline": {
+    "title": "Timeline",
+    "subtitle": "Exhibitions, symposiums and awards in the history of Saudi art, in order.",
+    "all": "All",
+    "includeLifespans": "Show artist lifespans",
+    "includeArtworks": "Show artworks",
+    "allThemes": "All themes",
+    "empty": "Nothing on the timeline yet",
+    "emptyHelp": "Try another filter.",
+    "kinds": {
+      "event": "Event",
+      "artist_lifespan": "Artist (birth)",
+      "artwork": "Artwork"
+    }
   }
 }
