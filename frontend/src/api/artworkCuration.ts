@@ -1,5 +1,6 @@
 import { request } from "@/api/http";
 import type { PaginationMeta } from "@/types/api";
+import type { Localized } from "@/types/artistCuration";
 import type { AdminArtworkRow, AdminArtworksQuery, ArtworkCuration, PipelineStatus } from "@/types/artworkCuration";
 
 export async function listAdminArtworks(
@@ -31,4 +32,23 @@ export function updateArtworkStage(id: number, stageKey: string, status: Pipelin
 
 export function approveArtwork(id: number): Promise<unknown> {
   return request({ method: "POST", url: `/api/v1/artworks/${id}/approve` });
+}
+
+export async function searchHolders(q: string, signal?: AbortSignal): Promise<{ id: number; name: Localized }[]> {
+  const response = await request<{ data: { id: number; name: Localized }[] }>({
+    method: "GET", url: "/api/v1/admin/holders", params: { q }, signal,
+  });
+  return response.data;
+}
+
+export function createArtwork(payload: Record<string, unknown>): Promise<{ data: { id: number } }> {
+  return request({ method: "POST", url: "/api/v1/artworks", data: payload });
+}
+
+export function mergeArtworks(payload: {
+  survivor_id: number;
+  duplicate_id: number;
+  field_resolution: Record<string, "survivor" | "duplicate">;
+}): Promise<unknown> {
+  return request({ method: "POST", url: "/api/v1/artworks/merge", data: payload });
 }

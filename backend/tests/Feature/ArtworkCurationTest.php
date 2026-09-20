@@ -139,3 +139,11 @@ it('returns the artwork curation bundle with checklist and pipeline for editors 
 
     $this->actingAs(makeUser('reader'))->getJson("/api/v1/artworks/{$artwork->id}/curation")->assertForbidden();
 });
+
+it('searches holders for the pickers and blocks non-editors', function () {
+    Holder::factory()->create(['name_en' => 'Dar Al-Funun', 'name_ar' => 'دار الفنون']);
+    Holder::factory()->create(['name_en' => 'Other', 'name_ar' => 'آخر']);
+
+    $this->actingAs(editorUser())->getJson('/api/v1/admin/holders?q=Funun')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.name.en', 'Dar Al-Funun');
+    $this->actingAs(makeUser('reader'))->getJson('/api/v1/admin/holders')->assertForbidden();
+});

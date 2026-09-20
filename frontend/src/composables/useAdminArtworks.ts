@@ -12,10 +12,17 @@ export interface ArtworksRegistryQuery {
   status: ArtworkStatus | "";
   missingDimensions: boolean;
   pipelineGap: boolean;
+  artistId: number | null;
+  holderId: number | null;
   page: number;
 }
 
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
+
+const posInt = (v: unknown): number | null => {
+  const n = Number.parseInt(str(v), 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
 
 export function parseArtworksQuery(query: LocationQueryRaw): ArtworksRegistryQuery {
   const page = Number.parseInt(str(query.page), 10);
@@ -24,6 +31,8 @@ export function parseArtworksQuery(query: LocationQueryRaw): ArtworksRegistryQue
     status: str(query.status) as ArtworkStatus | "",
     missingDimensions: str(query.missing_dimensions) === "1",
     pipelineGap: str(query.has_pipeline_gap) === "1",
+    artistId: posInt(query.artist_id),
+    holderId: posInt(query.holder_id),
     page: Number.isFinite(page) && page > 0 ? page : 1,
   };
 }
@@ -52,6 +61,8 @@ export function useAdminArtworks() {
     if (next.status) target.status = next.status;
     if (next.missingDimensions) target.missing_dimensions = "1";
     if (next.pipelineGap) target.has_pipeline_gap = "1";
+    if (next.artistId) target.artist_id = String(next.artistId);
+    if (next.holderId) target.holder_id = String(next.holderId);
     if (next.page > 1) target.page = String(next.page);
     void router.push({ query: target });
   }
@@ -79,6 +90,8 @@ export function useAdminArtworks() {
           status: q.status || undefined,
           missing_dimensions: q.missingDimensions ? 1 : undefined,
           has_pipeline_gap: q.pipelineGap ? 1 : undefined,
+          artist_id: q.artistId ?? undefined,
+          holder_id: q.holderId ?? undefined,
           page: q.page,
         },
         self.signal,
@@ -108,6 +121,8 @@ export function useAdminArtworks() {
     setStatus: (v: ArtworkStatus | "") => push({ status: v, page: 1 }),
     setMissingDimensions: (v: boolean) => push({ missingDimensions: v, page: 1 }),
     setPipelineGap: (v: boolean) => push({ pipelineGap: v, page: 1 }),
+    setArtist: (v: number | null) => push({ artistId: v, page: 1 }),
+    setHolder: (v: number | null) => push({ holderId: v, page: 1 }),
     setPage: (page: number) => push({ page }),
     clear: () => void router.push({ query: {} }),
   };

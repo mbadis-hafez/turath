@@ -236,7 +236,11 @@
       "missing_dimensions": "Missing dimensions",
       "holder_missing": "Owner not set",
       "year_uncertain": "Year uncertain"
-    }
+    },
+    "add": "+ Add artwork",
+    "merge": "Merge duplicates",
+    "artist": "Artist",
+    "holder": "Holder"
   },
   "artworkDetail": {
     "back": "Artworks",
@@ -334,6 +338,26 @@
       "low_resolution": "Low resolution",
       "high_resolution": "High resolution",
       "archive_source": "Archive image from other source"
+    },
+    "searchArtist": "Search for an artist…",
+    "searchHolder": "Search for a holder…"
+  },
+  "artworkCreate": {
+    "title": "Add artwork",
+    "submit": "Create artwork",
+    "creating": "Creating…",
+    "titleRequired": "Enter a title, or mark the work as untitled.",
+    "attribution": "Attribution",
+    "certainty": {
+      "confirmed": "Confirmed",
+      "attributed": "Attributed",
+      "disputed": "Disputed",
+      "unattributed": "Unattributed"
     }
+  },
+  "artworkMerge": {
+    "title": "Merge duplicate artworks",
+    "help": "Pick the record to keep and the duplicate to fold into it. Archive links move to the survivor and the duplicate redirects to it.",
+    "search": "Search artworks…"
   }
 }

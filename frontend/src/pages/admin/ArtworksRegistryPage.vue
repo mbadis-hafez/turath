@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 import EmptyState from "@/components/common/EmptyState.vue";
@@ -8,6 +8,9 @@ import LocalizedText from "@/components/common/LocalizedText.vue";
 import Pagination from "@/components/common/Pagination.vue";
 import Spinner from "@/components/common/Spinner.vue";
 import { useLocalePath } from "@/composables/useLocalePath";
+import ArtworkMergeModal from "@/components/curation/ArtworkMergeModal.vue";
+import EntityPicker, { type PickerOption } from "@/components/curation/EntityPicker.vue";
+import { searchArtistOptions, searchHolderOptions } from "@/components/curation/ArtworkPickers";
 import { useAdminArtworks } from "@/composables/useAdminArtworks";
 import { useLocalized } from "@/composables/useLocalized";
 import { useAuthStore } from "@/stores/auth";
@@ -24,8 +27,31 @@ const canManage = computed(() => auth.can("artworks.manage"));
 
 const {
   items, meta, loading, error, query, searchInput, retry,
-  setSearch, setStatus, setMissingDimensions, setPipelineGap, setPage, clear,
+  setSearch, setArtist, setHolder, setStatus, setMissingDimensions, setPipelineGap, setPage, clear,
 } = useAdminArtworks();
+
+const merging = ref(false);
+const labels = ref<Record<string, string>>({});
+
+function pickerModel(kind: "artist" | "holder") {
+  return computed<PickerOption | null>({
+    get: () => {
+      const id = kind === "artist" ? query.value.artistId : query.value.holderId;
+      return id ? { id, label: labels.value[`${kind}${id}`] ?? `#${id}` } : null;
+    },
+    set: (v) => {
+      if (v) labels.value[`${kind}${v.id}`] = v.label;
+      (kind === "artist" ? setArtist : setHolder)(v?.id ?? null);
+    },
+  });
+}
+const artistFilter = pickerModel("artist");
+const holderFilter = pickerModel("holder");
+
+function onMerged(): void {
+  merging.value = false;
+  void retry();
+}
 
 const STATUSES: ArtworkStatus[] = ["draft", "published", "hidden"];
 const STATUS_CLASS: Record<ArtworkStatus, string> = {
@@ -50,12 +76,18 @@ const field = "rounded-md border border-line bg-surface px-3 py-2 text-sm text-i
   <section>
     <ErrorState v-if="!canManage" :error="forbidden" />
     <template v-else>
-      <div class="border-b-2 border-ink pb-6">
-        <h1 class="text-balance text-3xl font-semibold tracking-tight text-ink">{{ t("curation.artworkRegistry.title") }}</h1>
-        <p v-if="meta" class="mt-1 text-sm text-ink-muted">
-          {{ t("curation.artworkRegistry.subtitle", { count: meta.total }) }}
-          <template v-if="meta.candidate_count > 0"> · {{ t("curation.artworkRegistry.candidates", { count: meta.candidate_count }) }}</template>
-        </p>
+      <div class="flex flex-wrap items-start justify-between gap-4 border-b-2 border-ink pb-6">
+        <div>
+          <h1 class="text-balance text-3xl font-semibold tracking-tight text-ink">{{ t("curation.artworkRegistry.title") }}</h1>
+          <p v-if="meta" class="mt-1 text-sm text-ink-muted">
+            {{ t("curation.artworkRegistry.subtitle", { count: meta.total }) }}
+            <template v-if="meta.candidate_count > 0"> · {{ t("curation.artworkRegistry.candidates", { count: meta.candidate_count }) }}</template>
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft" data-testid="merge-open" @click="merging = true">{{ t("curation.artworkRegistry.merge") }}</button>
+          <RouterLink :to="localePath('admin.artworks.new')" class="rounded-md bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-ink/85" data-testid="add-artwork">{{ t("curation.artworkRegistry.add") }}</RouterLink>
+        </div>
       </div>
 
       <div class="mt-6 flex flex-wrap items-center gap-2">
@@ -73,6 +105,8 @@ const field = "rounded-md border border-line bg-surface px-3 py-2 text-sm text-i
         <button type="button" class="rounded-md border px-3 py-2 text-sm font-medium" :class="toggle(query.missingDimensions)" :aria-pressed="query.missingDimensions" @click="setMissingDimensions(!query.missingDimensions)">
           {{ t("curation.artworkRegistry.missingDimensions") }}
         </button>
+        <div class="w-48"><EntityPicker v-model="artistFilter" :search="searchArtistOptions" :placeholder="t('curation.artworkRegistry.artist')" /></div>
+        <div class="w-48"><EntityPicker v-model="holderFilter" :search="searchHolderOptions" :placeholder="t('curation.artworkRegistry.holder')" /></div>
         <button type="button" class="rounded-md border px-3 py-2 text-sm font-medium" :class="toggle(query.pipelineGap)" :aria-pressed="query.pipelineGap" @click="setPipelineGap(!query.pipelineGap)">
           {{ t("curation.artworkRegistry.pipelineGap") }}
         </button>
@@ -112,6 +146,7 @@ const field = "rounded-md border border-line bg-surface px-3 py-2 text-sm text-i
           <Pagination class="mt-6" :meta="meta" @change="setPage" />
         </template>
       </div>
+      <ArtworkMergeModal v-if="merging" @close="merging = false" @merged="onMerged" />
     </template>
   </section>
 </template>

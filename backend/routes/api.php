@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\ActivityFeedController;
 use App\Http\Controllers\Api\V1\AdminArtistIndexController;
 use App\Http\Controllers\Api\V1\AdminArtworkIndexController;
+use App\Http\Controllers\Api\V1\AdminHolderIndexController;
 use App\Http\Controllers\Api\V1\ArchiveItemDestroyController;
 use App\Http\Controllers\Api\V1\ArchiveItemIndexController;
 use App\Http\Controllers\Api\V1\ArchiveItemLinkDestroyController;
@@ -184,6 +185,7 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware('can:artworks.manage')->group(function () {
             Route::get('admin/artworks', AdminArtworkIndexController::class);
+            Route::get('admin/holders', AdminHolderIndexController::class);
             Route::post('artworks/merge', ArtworkMergeController::class);
             Route::post('artworks/{artwork}/approve', ArtworkApproveController::class)->whereNumber('artwork');
             Route::get('candidate-artworks', CandidateArtworkIndexController::class);

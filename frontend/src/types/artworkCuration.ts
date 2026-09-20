@@ -26,6 +26,8 @@ export interface AdminArtworksQuery {
   status?: ArtworkStatus | "";
   missing_dimensions?: 1;
   has_pipeline_gap?: 1;
+  artist_id?: number;
+  holder_id?: number;
   page?: number;
 }
 

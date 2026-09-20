@@ -236,7 +236,11 @@
       "missing_dimensions": "مقاسات ناقصة",
       "holder_missing": "مالك غير محدد",
       "year_uncertain": "سنة غير مؤكدة"
-    }
+    },
+    "add": "+ عمل فني",
+    "merge": "دمج سجلات مكررة",
+    "artist": "الفنان",
+    "holder": "المالك"
   },
   "artworkDetail": {
     "back": "الأعمال",
@@ -334,6 +338,26 @@
       "low_resolution": "دقة منخفضة",
       "high_resolution": "دقة عالية",
       "archive_source": "صورة أرشيفية من مصدر آخر"
+    },
+    "searchArtist": "ابحث عن فنان…",
+    "searchHolder": "ابحث عن مالك…"
+  },
+  "artworkCreate": {
+    "title": "إضافة عمل فني",
+    "submit": "إنشاء العمل",
+    "creating": "جارٍ الإنشاء…",
+    "titleRequired": "أدخل عنوانًا أو اجعل العمل بلا عنوان.",
+    "attribution": "النسبة",
+    "certainty": {
+      "confirmed": "مؤكدة",
+      "attributed": "منسوبة",
+      "disputed": "متنازع عليها",
+      "unattributed": "غير منسوبة"
     }
+  },
+  "artworkMerge": {
+    "title": "دمج أعمال مكررة",
+    "help": "اختر السجل الذي سيبقى والمكرر الذي سيُدمج فيه. تنتقل روابط الأرشيف إلى السجل الباقي ويُحوَّل المكرر إليه.",
+    "search": "ابحث عن الأعمال…"
   }
 }

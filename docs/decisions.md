@@ -143,4 +143,6 @@ Numbering continues locally (D43+); the F10 spec's own D47–D57 are cross-refer
 ## Artworks registry and curation screens
 - `GET /artworks/{id}/curation` (artworks.manage) is the single bundle for the detail page: fields, 10-item checklist (same completeness engine plus artist authorization letter), pipeline stages, approve blockers and linked archive items. Saves use the existing `PATCH /artworks/{id}`; stages use the pipeline PATCH; Approve uses the approve endpoint.
 - The year is only sent on save when edited, so circa/range creation dates are never overwritten.
-- Not built yet: artist/holder dropdown filters, add-artwork and merge UI, artwork image display and HR-image picking (no image linkage exists).
+- Artist and holder are chosen with a shared search picker (`EntityPicker`); holders are searched through `GET /admin/holders` (artworks.manage), artists through the existing admin artists list. The registry filters by both via the URL.
+- Add-artwork creates a draft (no artist means `unattributed`) and opens the detail page; the merge modal reuses `POST /artworks/merge` with per-field survivor/duplicate choice.
+- Not built yet: artwork image display and HR-image picking (needs F3 file uploads and artwork-file linkage).

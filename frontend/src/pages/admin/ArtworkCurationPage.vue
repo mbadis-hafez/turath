@@ -4,6 +4,8 @@ import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 import { approveArtwork, updateArtwork, updateArtworkStage } from "@/api/artworkCuration";
+import EntityPicker, { type PickerOption } from "@/components/curation/EntityPicker.vue";
+import { labelOf, searchArtistOptions, searchHolderOptions } from "@/components/curation/ArtworkPickers";
 import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import Spinner from "@/components/common/Spinner.vue";
@@ -42,12 +44,16 @@ const form = reactive({
   conditionLink: "", conditionStatus: "" as ConditionStatus | "", imageQuality: "" as ImageQuality | "", editingStatus: "",
   notes: { ar: "", en: "" },
 });
+const artistPick = ref<PickerOption | null>(null);
+const holderPick = ref<PickerOption | null>(null);
 let initialYear = "";
 
 watch(curation, (c) => {
   if (!c) return;
   form.title = { ar: c.title.ar ?? "", en: c.title.en ?? "" };
   form.category = c.category;
+  artistPick.value = c.artist ? { id: c.artist.id, label: labelOf(c.artist.name) } : null;
+  holderPick.value = c.holder ? { id: c.holder.id, label: labelOf(c.holder.name) } : null;
   form.medium = { ar: c.medium.ar ?? "", en: c.medium.en ?? "" };
   form.year = initialYear = c.creation?.year_from ? String(c.creation.year_from) : "";
   form.signed = c.signed;
@@ -77,6 +83,8 @@ async function save(): Promise<void> {
   const payload: Record<string, unknown> = {
     title: { ar: blank(form.title.ar), en: blank(form.title.en) },
     category: form.category,
+    artist_id: artistPick.value?.id ?? null,
+    holder_id: holderPick.value?.id ?? null,
     medium: { ar: blank(form.medium.ar), en: blank(form.medium.en) },
     signed: form.signed,
     dimensions: { height_cm: num(form.height), width_cm: num(form.width), depth_cm: num(form.depth) },
@@ -226,7 +234,7 @@ const gapInput = (key: string) => (gap(key) ? "!border-danger !bg-danger-soft" :
             <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t("curation.artworkDetail.identification") }}</h2>
             <div class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
               <div class="text-xs text-ink-muted">{{ t("curation.artworkDetail.code") }}<p class="mt-1 rounded-md border border-line bg-neutral-soft px-3 py-2 text-sm text-ink" dir="ltr">{{ curation.legacy_ref ?? "—" }}</p></div>
-              <div class="text-xs text-ink-muted">{{ t("curation.artworkDetail.artist") }}<p class="mt-1 rounded-md border border-line bg-neutral-soft px-3 py-2 text-sm text-ink"><LocalizedText v-if="curation.artist" :text="curation.artist.name" /><template v-else>—</template></p></div>
+              <div class="text-xs text-ink-muted">{{ t("curation.artworkDetail.artist") }}<EntityPicker v-model="artistPick" :search="searchArtistOptions" :placeholder="t('curation.artworkDetail.searchArtist')" /></div>
               <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.titleAr") }}<input v-model="form.title.ar" type="text" dir="rtl" :class="input" /></label>
               <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.titleEn") }}<input v-model="form.title.en" type="text" dir="ltr" :class="input" /></label>
               <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.category") }}
@@ -255,7 +263,7 @@ const gapInput = (key: string) => (gap(key) ? "!border-danger !bg-danger-soft" :
               <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.weight") }}<input v-model="form.weight" type="number" step="0.01" min="0" dir="ltr" :class="input" /></label>
               <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.editionNumber") }}<input v-model="form.editionNumber" type="text" dir="ltr" :class="input" /></label>
               <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.editionSize") }}<input v-model="form.editionSize" type="number" min="0" dir="ltr" :class="input" /></label>
-              <div class="text-xs text-ink-muted">{{ t("curation.artworkDetail.holder") }}<p class="mt-1 rounded-md border px-3 py-2 text-sm text-ink" :class="curation.holder ? 'border-line bg-neutral-soft' : 'border-danger bg-danger-soft'"><LocalizedText v-if="curation.holder" :text="curation.holder.name" /><template v-else>{{ t("curation.artworkDetail.notSet") }}</template></p></div>
+              <div class="text-xs text-ink-muted">{{ t("curation.artworkDetail.holder") }}<EntityPicker v-model="holderPick" :search="searchHolderOptions" :placeholder="t('curation.artworkDetail.searchHolder')" /></div>
               <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.holderInventory") }}<input v-model="form.holderInventory" type="text" dir="ltr" :class="input" /></label>
               <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.inventoryByOwner") }}<input v-model="form.inventoryByOwner" type="text" dir="ltr" :class="input" /></label>
             </div>
