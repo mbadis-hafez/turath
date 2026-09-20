@@ -71,6 +71,15 @@ const verifyTooltip = computed(() =>
   blockReason.value ? t("curation.detail.verifyBlocked", { reason: blockReason.value }) : t("curation.detail.verifyReady"),
 );
 const metCount = computed(() => curation.value?.checklist.filter((c) => c.met).length ?? 0);
+const isMet = (key: string): boolean => curation.value?.checklist.find((c) => c.key === key)?.met ?? false;
+const IDENTITY_KEYS = ["name", "artist_code", "city", "name_verified", "life_dates"];
+const identityMissing = computed(() => curation.value?.checklist.filter((c) => IDENTITY_KEYS.includes(c.key) && !c.met).length ?? 0);
+const contactComplete = computed(() => isMet("contact") && isMet("authorization_letter"));
+const lifeDates = computed(() => {
+  const l = curation.value?.life_dates;
+  return l && (l.birth || l.death) ? `${l.birth ?? "?"} – ${l.death ?? "?"}` : null;
+});
+const badgeClass = (met: boolean): string => (met ? "bg-success-soft text-success" : "bg-danger-soft text-danger");
 
 function payload(): CurationUpdate {
   const blank = (v: string): string | null => (v.trim() === "" ? null : v.trim());
@@ -124,16 +133,23 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
     <Spinner v-else-if="loading && !curation" class="mx-auto my-12 block" />
 
     <template v-else-if="curation">
-      <RouterLink :to="localePath('admin.artists')" class="text-sm text-ink-muted hover:text-ink">&larr; {{ t("curation.detail.back") }}</RouterLink>
+      <nav class="text-xs text-ink-muted" aria-label="Breadcrumb">
+        <RouterLink :to="localePath('admin.artists')" class="hover:text-ink">{{ t("curation.detail.back") }}</RouterLink>
+        <span aria-hidden="true"> &rsaquo; </span>
+        <bdi>{{ curation.legacy_code }} · {{ curation.name.en ?? curation.name.ar }}</bdi>
+      </nav>
 
       <div class="mt-3 flex flex-wrap items-start justify-between gap-4 border-b-2 border-ink pb-6">
         <div>
           <div class="flex flex-wrap items-center gap-2">
-            <span class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="curation.verified_status === 'verified' ? 'bg-success-soft text-success' : 'bg-danger-soft text-danger'">{{ t(`curation.status.${curation.verified_status}`) }}</span>
+            <span class="rounded-sm bg-neutral-soft px-1.5 py-0.5 text-xs font-medium text-ink-muted">{{ t("curation.detail.type") }}</span>
+            <span class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="curation.verified_status === 'verified' ? 'bg-success-soft text-success' : 'bg-danger-soft text-danger'" data-testid="status-badge">{{ t(`curation.status.${curation.verified_status}`) }}</span>
             <span class="rounded-sm bg-info-soft px-1.5 py-0.5 text-xs font-medium tabular-nums text-info">{{ t("curation.registry.materials", { count: curation.linked_materials.length }) }}</span>
           </div>
           <h1 class="mt-2 text-balance text-3xl font-semibold tracking-tight text-ink"><LocalizedText :text="curation.name" /></h1>
-          <p class="mt-1 text-sm text-ink-muted">{{ pick({ ar: curation.name.en, en: curation.name.ar })?.text }}</p>
+          <p class="mt-1 text-sm text-ink-muted">
+            {{ pick({ ar: curation.name.en, en: curation.name.ar })?.text }}<template v-if="curation.city.ar || curation.city.en"> · <LocalizedText :text="curation.city" /></template>
+          </p>
         </div>
         <div class="flex items-center gap-2">
           <button type="button" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft disabled:opacity-50" :disabled="saving" @click="save">
@@ -154,10 +170,15 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
       <p v-if="saved" class="mt-2 text-sm text-success">{{ t("curation.detail.saved") }}</p>
       <p v-if="actionError" class="mt-2 text-sm text-danger">{{ actionError }}</p>
 
-      <div class="mt-8 grid gap-10 lg:grid-cols-[18rem_1fr]">
+      <div class="mt-8 grid gap-10 lg:grid-cols-[20rem_1fr]">
         <aside class="space-y-6">
+          <section class="rounded-lg border border-line bg-surface p-4">
+            <div class="aspect-[4/3] rounded-md bg-neutral-soft" aria-hidden="true" />
+            <p class="mt-3 text-pretty text-xs text-ink-muted">{{ t("curation.detail.portraitCaption") }}</p>
+          </section>
+
           <section class="rounded-lg border p-4" :class="curation.public_visibility === 'visible' ? 'border-line bg-surface' : 'border-danger bg-danger-soft'">
-            <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold text-ink">{{ t("curation.detail.checklist") }}</h2>
+            <h2 class="text-base font-semibold" :class="curation.public_visibility === 'visible' ? 'text-ink' : 'text-danger'">{{ t("curation.detail.checklist") }}</h2>
             <ul class="mt-3 space-y-2" data-testid="checklist">
               <li v-for="item in curation.checklist" :key="item.key" class="flex items-center gap-2 text-sm" :class="item.met ? 'text-ink-muted' : 'text-ink'">
                 <input type="checkbox" class="size-4" :checked="item.met" disabled :aria-label="t(`curation.checklistItem.${item.key}`)" />
@@ -165,65 +186,67 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
                 <span v-if="!item.supported" class="text-xs text-ink-muted">({{ t("curation.detail.unsupported") }})</span>
               </li>
             </ul>
-            <p class="mt-3 text-xs tabular-nums text-ink-muted">{{ metCount }} / {{ curation.checklist.length }}</p>
+            <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-neutral-soft">
+              <div class="h-full rounded-full" :class="curation.public_visibility === 'visible' ? 'bg-success' : 'bg-danger'" :style="{ width: `${(metCount / curation.checklist.length) * 100}%` }" />
+            </div>
+            <p class="mt-1 text-xs tabular-nums text-ink-muted">{{ t("curation.detail.requiredMet", { met: metCount, total: curation.checklist.length }) }}</p>
           </section>
 
-          <section class="rounded-lg border border-line bg-surface p-4">
-            <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold text-ink">{{ t("curation.detail.pipeline") }}</h2>
-            <dl class="mt-3 space-y-3 text-sm">
-              <div>
-                <dt class="text-ink-muted">{{ t("curation.detail.authorizationLetter") }}</dt>
-                <dd>
-                  <select v-model="form.authorization_letter_status" :class="input" :aria-label="t('curation.detail.authorizationLetter')">
-                    <option v-for="s in LETTER" :key="s" :value="s">{{ t(`curation.docStatus.${s}`) }}</option>
-                  </select>
-                </dd>
-              </div>
-              <div>
-                <dt class="text-ink-muted">{{ t("curation.detail.ownerPreAgreement") }}</dt>
-                <dd>
-                  <select v-model="form.owner_pre_agreement_status" :class="input" :aria-label="t('curation.detail.ownerPreAgreement')">
-                    <option v-for="s in AGREEMENT" :key="s" :value="s">{{ t(`curation.docStatus.${s}`) }}</option>
-                  </select>
-                </dd>
-              </div>
-              <div class="flex items-center justify-between">
-                <dt class="text-ink-muted">{{ t("curation.detail.publicVisibility") }}</dt>
-                <dd class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="curation.public_visibility === 'visible' ? 'bg-success-soft text-success' : 'bg-danger-soft text-danger'" data-testid="visibility">
-                  {{ t(`curation.detail.${curation.public_visibility}`) }}
-                </dd>
-              </div>
+          <section>
+            <h2 class="border-b-2 border-ink pb-2 text-xs font-semibold text-ink-muted">{{ t("curation.detail.workPath") }}</h2>
+            <dl class="divide-y divide-line text-sm" data-testid="work-path">
+              <div class="flex items-center justify-between py-3"><dt class="text-ink">{{ t("curation.detail.materialsCount") }}</dt><dd class="rounded-sm bg-info-soft px-1.5 py-0.5 text-xs font-medium tabular-nums text-info">{{ curation.linked_materials.length }}</dd></div>
+              <div class="flex items-center justify-between py-3"><dt class="text-ink">{{ t("curation.detail.authorizationLetter") }}</dt><dd class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="badgeClass(isMet('authorization_letter'))">{{ t(`curation.docStatus.${form.authorization_letter_status}`) }}</dd></div>
+              <div class="flex items-center justify-between py-3"><dt class="text-ink">{{ t("curation.detail.ownerPreAgreement") }}</dt><dd class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="badgeClass(['yes', 'not_applicable'].includes(form.owner_pre_agreement_status))">{{ t(`curation.docStatus.${form.owner_pre_agreement_status}`) }}</dd></div>
+              <div class="flex items-center justify-between py-3"><dt class="text-ink">{{ t("curation.detail.nameVerified") }}</dt><dd class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="badgeClass(isMet('name_verified'))">{{ isMet("name_verified") ? t("curation.detail.yes") : t("curation.detail.no") }}</dd></div>
+              <div class="flex items-center justify-between py-3"><dt class="text-ink">{{ t("curation.detail.publicVisibility") }}</dt><dd class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="badgeClass(curation.public_visibility === 'visible')" data-testid="visibility">{{ t(`curation.detail.${curation.public_visibility}`) }}</dd></div>
             </dl>
           </section>
         </aside>
 
         <div class="space-y-10">
           <section>
-            <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t("curation.detail.identity") }}</h2>
-            <dl class="mt-4 grid gap-4 sm:grid-cols-2 text-sm">
+            <div class="flex items-baseline justify-between border-b-2 border-ink pb-2">
+              <h2 class="text-sm font-semibold uppercase text-ink">{{ t("curation.detail.identity") }}</h2>
+              <span v-if="identityMissing > 0" class="text-xs text-danger" data-testid="identity-missing">{{ t("curation.detail.missingFields", { count: identityMissing }) }}</span>
+            </div>
+            <dl class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
               <div><dt class="text-xs text-ink-muted">{{ t("curation.detail.artistCode") }}</dt><dd class="mt-1 rounded-md border border-line bg-surface px-3 py-2 text-ink">{{ curation.legacy_code ?? "—" }}</dd></div>
-              <div>
-                <dt class="text-xs text-ink-muted">{{ t("curation.detail.identifiedThrough") }}</dt>
-                <dd><input v-model="form.identified_through_note" type="text" :class="input" /></dd>
-              </div>
+              <div><dt class="text-xs text-ink-muted">{{ t("curation.detail.identifiedThrough") }}</dt><dd><input v-model="form.identified_through_note" type="text" :class="input" /></dd></div>
               <div><dt class="text-xs text-ink-muted">{{ t("curation.detail.nameAr") }}</dt><dd class="mt-1 rounded-md border border-line bg-surface px-3 py-2 text-ink">{{ curation.name.ar ?? "—" }}</dd></div>
               <div><dt class="text-xs text-ink-muted">{{ t("curation.detail.nameEn") }}</dt><dd class="mt-1 rounded-md border border-line bg-surface px-3 py-2 text-ink">{{ curation.name.en ?? "—" }}</dd></div>
-              <div v-if="curation.name_as_in_sources?.length" class="sm:col-span-2">
+              <div>
+                <dt class="flex justify-between text-xs text-ink-muted"><span>{{ t("curation.detail.nameVerified") }}</span><span v-if="!isMet('name_verified')" class="text-danger">{{ t("curation.detail.missing") }}</span></dt>
+                <dd class="mt-1 rounded-md border px-3 py-2" :class="isMet('name_verified') ? 'border-line bg-surface text-ink' : 'border-danger bg-danger-soft text-danger'" data-testid="name-verified-field">
+                  {{ isMet("name_verified") ? t("curation.detail.yes") : t("curation.detail.nameNotVerified") }}
+                </dd>
+              </div>
+              <div>
                 <dt class="text-xs text-ink-muted">{{ t("curation.detail.nameAsInSources") }}</dt>
-                <dd class="mt-1 rounded-md border border-line bg-surface px-3 py-2 text-ink">{{ curation.name_as_in_sources.join(" · ") }}</dd>
+                <dd class="mt-1 rounded-md border border-line bg-surface px-3 py-2 text-ink">{{ curation.name_as_in_sources?.join(" · ") || "—" }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-ink-muted">{{ t("curation.detail.city") }}</dt>
+                <dd class="mt-1 rounded-md border border-line bg-surface px-3 py-2 text-ink"><LocalizedText v-if="curation.city.ar || curation.city.en" :text="curation.city" /><template v-else>—</template></dd>
+              </div>
+              <div>
+                <dt class="flex justify-between text-xs text-ink-muted"><span>{{ t("curation.detail.lifeDates") }}</span><span v-if="!isMet('life_dates')" class="text-danger">{{ t("curation.detail.missing") }}</span></dt>
+                <dd class="mt-1 rounded-md border px-3 py-2" :class="isMet('life_dates') ? 'border-line bg-surface text-ink' : 'border-danger bg-danger-soft text-danger'" data-testid="life-dates-field">
+                  {{ lifeDates ?? t("curation.detail.notRecorded") }}
+                </dd>
               </div>
             </dl>
           </section>
 
           <section>
             <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t("curation.detail.bio") }}</h2>
-            <p v-if="curation.bio.source_type === 'derived_from_linked_materials'" class="mt-3 inline-block rounded-sm bg-warn-soft px-1.5 py-0.5 text-xs font-medium text-warn" data-testid="provisional-bio">
-              {{ t("curation.detail.provisionalBio") }}
-            </p>
-            <p class="mt-3 text-pretty text-sm text-ink">
-              <LocalizedText v-if="curation.bio.ar || curation.bio.en" :text="{ ar: curation.bio.ar, en: curation.bio.en }" />
-              <span v-else class="text-ink-muted">{{ t("curation.detail.noBio") }}</span>
-            </p>
+            <div class="mt-3 rounded-md border border-line bg-surface p-4">
+              <p class="text-pretty text-sm text-ink">
+                <LocalizedText v-if="curation.bio.ar || curation.bio.en" :text="{ ar: curation.bio.ar, en: curation.bio.en }" />
+                <span v-else class="text-ink-muted">{{ t("curation.detail.noBio") }}</span>
+              </p>
+              <p v-if="curation.bio.source_type === 'derived_from_linked_materials'" class="mt-2 text-xs text-warn" data-testid="provisional-bio">{{ t("curation.detail.provisionalBio") }}</p>
+            </div>
             <label class="mt-3 block max-w-sm text-xs text-ink-muted">
               {{ t("curation.detail.bioSource") }}
               <select v-model="form.bio_source_type" :class="input">
@@ -233,9 +256,12 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
           </section>
 
           <section data-testid="contact-section">
-            <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t("curation.detail.contact") }}</h2>
+            <div class="flex items-baseline justify-between border-b-2 border-ink pb-2">
+              <h2 class="text-sm font-semibold uppercase text-ink">{{ t("curation.detail.contact") }}</h2>
+              <span v-if="contactComplete" class="text-xs text-accent">{{ t("curation.detail.complete") }}</span>
+            </div>
             <p class="mt-2 text-xs text-ink-muted">{{ t("curation.detail.contactHelp") }}</p>
-            <div class="mt-4 grid gap-4 sm:grid-cols-2 text-sm">
+            <div class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
               <label class="text-xs text-ink-muted">{{ t("curation.detail.keyContact") }}<input v-model="form.key_contact_name" type="text" :class="input" /></label>
               <label class="text-xs text-ink-muted">{{ t("curation.detail.ownerType") }}
                 <select v-model="form.owner_type" :class="input">
@@ -245,6 +271,17 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
               </label>
               <label class="text-xs text-ink-muted">{{ t("curation.detail.email") }}<input v-model="form.contact_email" type="email" dir="ltr" :class="input" /></label>
               <label class="text-xs text-ink-muted">{{ t("curation.detail.phone") }}<input v-model="form.contact_phone" type="tel" dir="ltr" :class="input" /></label>
+              <label class="text-xs text-ink-muted">{{ t("curation.detail.authorizationLetter") }}
+                <select v-model="form.authorization_letter_status" :class="input" :aria-label="t('curation.detail.authorizationLetter')">
+                  <option v-for="s in LETTER" :key="s" :value="s">{{ t(`curation.docStatus.${s}`) }}</option>
+                </select>
+                <span class="mt-1 block text-ink" dir="ltr">{{ curation.pipeline.authorization_letter.file_name ?? t("curation.detail.noFile") }}</span>
+              </label>
+              <label class="text-xs text-ink-muted">{{ t("curation.detail.ownerPreAgreement") }}
+                <select v-model="form.owner_pre_agreement_status" :class="input" :aria-label="t('curation.detail.ownerPreAgreement')">
+                  <option v-for="s in AGREEMENT" :key="s" :value="s">{{ t(`curation.docStatus.${s}`) }}</option>
+                </select>
+              </label>
               <label class="text-xs text-ink-muted sm:col-span-2">{{ t("curation.detail.supervisor") }}<input v-model="form.ref_supervisor_note" type="text" :class="input" /></label>
             </div>
           </section>
@@ -252,12 +289,14 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
           <section>
             <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t("curation.detail.materials") }}</h2>
             <p v-if="curation.linked_materials.length === 0" class="mt-3 text-sm text-ink-muted">{{ t("curation.detail.noMaterials") }}</p>
-            <ul v-else class="mt-2 divide-y divide-line" data-testid="materials">
-              <li v-for="m in curation.linked_materials" :key="m.id" class="flex items-center justify-between gap-3 py-3">
-                <div class="min-w-0">
-                  <p class="truncate text-sm font-medium text-ink"><LocalizedText :text="m.title" /></p>
-                  <p class="text-xs text-ink-muted">{{ m.legacy_ref }} · {{ m.item_type }}</p>
+            <ul v-else class="divide-y divide-line" data-testid="materials">
+              <li v-for="m in curation.linked_materials" :key="m.id" class="flex items-center gap-4 py-4">
+                <div class="size-14 shrink-0 rounded-sm bg-neutral-soft" aria-hidden="true" />
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-base font-semibold text-ink"><LocalizedText :text="m.title" /></p>
+                  <p class="text-xs text-ink-muted" dir="ltr">{{ m.legacy_ref }}</p>
                 </div>
+                <p class="hidden text-xs text-ink-muted sm:block">{{ m.item_type }}<template v-if="m.year"> · {{ m.year }}</template></p>
                 <span class="shrink-0 rounded-sm px-1.5 py-0.5 text-xs font-medium tabular-nums" :class="m.gap_count > 0 ? SEVERITY_BADGE_CLASS.blocking : SEVERITY_BADGE_CLASS.clear">
                   {{ t("curation.detail.materialGaps", { count: m.gap_count }) }}
                 </span>

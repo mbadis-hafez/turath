@@ -124,3 +124,16 @@ it('merges artists: re-points artworks, links, citations, variants and leaves a 
 
     $this->getJson("/api/v1/artists/{$duplicate->slug}")->assertStatus(301)->assertRedirect("/api/v1/artists/{$survivor->slug}");
 });
+
+it('includes city, life dates and material years in the curation bundle', function () {
+    $artist = Artist::factory()->create(['birth_place_en' => 'Alahsa', 'birth_place_ar' => 'الأحساء', 'birth_year_from' => 1939, 'birth_year_to' => 1939]);
+    $item = ArchiveItem::factory()->create(['content_year_from' => 1978, 'content_year_to' => 1978]);
+    ArchiveItemLink::create(['archive_item_id' => $item->id, 'linkable_type' => Artist::class, 'linkable_id' => $artist->id, 'role' => 'subject']);
+
+    $data = $this->actingAs(editorUser())->getJson("/api/v1/artists/{$artist->id}/curation")->assertOk()->json('data');
+
+    expect($data['city']['en'])->toBe('Alahsa')
+        ->and($data['life_dates']['birth'])->toBe('1939')
+        ->and($data['life_dates']['death'])->toBeNull()
+        ->and($data['linked_materials'][0]['year'])->toBe('1978');
+});

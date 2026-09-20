@@ -14,11 +14,12 @@ vi.mock("@/api/artistCuration", () => api);
 function bundle(patch: Partial<ArtistCuration> = {}): ArtistCuration {
   return {
     id: 36, slug: "ahmad", legacy_code: "AR036", name: { ar: "أحمد المغلوث", en: "Ahmad Almaghlout" },
+    city: { ar: "الأحساء", en: "Alahsa" }, life_dates: { birth: null, death: null },
     name_as_in_sources: null, identified_through: { note: "Site visit", date: null },
     bio: { ar: null, en: "Saudi artist.", source_type: "derived_from_linked_materials" },
     verified_status: "unverified",
     contact: { key_contact_name: "Ahmad", owner_type: "artist", contact_email: "a@b.co", contact_phone: null, ref_supervisor_note: null },
-    pipeline: { authorization_letter: { status: "not_started", file_id: null }, owner_pre_agreement: { status: "not_started" } },
+    pipeline: { authorization_letter: { status: "not_started", file_id: null, file_name: null }, owner_pre_agreement: { status: "not_started" } },
     checklist: [
       { key: "name", tier: "core", met: true, supported: true },
       { key: "name_verified", tier: "core", met: false, supported: true },
@@ -26,7 +27,7 @@ function bundle(patch: Partial<ArtistCuration> = {}): ArtistCuration {
     ],
     public_visibility: "hidden",
     verify_blockers: { "data.primary_source": ["Missing required field: Primary source."], "pipeline.authorization_letter": ["Authorization letter is not_started."] },
-    themes: [], linked_materials: [{ id: 1, legacy_ref: "ARC1", item_type: "image", title: { ar: null, en: "Photo" }, completeness_pct: 30, gap_count: 6 }],
+    themes: [], linked_materials: [{ id: 1, legacy_ref: "ARC1", item_type: "image", year: "1978", title: { ar: null, en: "Photo" }, completeness_pct: 30, gap_count: 6 }],
     ...patch,
   };
 }
@@ -83,6 +84,22 @@ describe("ArtistCurationPage", () => {
     expect(wrapper.text()).toContain("not tracked yet");
     expect(wrapper.find("[data-testid=provisional-bio]").exists()).toBe(true);
     expect(wrapper.get("[data-testid=materials]").text()).toContain("6 gaps");
+  });
+
+  it("highlights missing identity fields in red and counts them, like the mockup", async () => {
+    api.getArtistCuration.mockResolvedValue({ data: bundle({ checklist: [
+      { key: "name", tier: "core", met: true, supported: true },
+      { key: "name_verified", tier: "core", met: false, supported: true },
+      { key: "life_dates", tier: "core", met: false, supported: true },
+    ] }) });
+    const wrapper = await mountPage();
+
+    expect(wrapper.get("[data-testid=name-verified-field]").classes()).toContain("bg-danger-soft");
+    expect(wrapper.get("[data-testid=life-dates-field]").text()).toBe("Not recorded");
+    expect(wrapper.get("[data-testid=identity-missing]").text()).toBe("2 fields missing");
+    expect(wrapper.get("[data-testid=work-path]").text()).toContain("Name verified");
+    expect(wrapper.text()).toContain("1 of 3 required fields met");
+    expect(wrapper.text()).toContain("Ahmad Almaghlout");
   });
 
   it("shows the internal contact section only to holders of artists.manage", async () => {

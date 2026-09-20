@@ -51,6 +51,7 @@ export interface LinkedMaterial {
   id: number;
   legacy_ref: string | null;
   item_type: string;
+  year: string | null;
   title: Localized;
   completeness_pct: number;
   gap_count: number;
@@ -61,6 +62,8 @@ export interface ArtistCuration {
   slug: string;
   legacy_code: string | null;
   name: Localized;
+  city: Localized;
+  life_dates: { birth: string | null; death: string | null };
   name_as_in_sources: string[] | null;
   identified_through: { note: string | null; date: string | null };
   bio: { ar: string | null; en: string | null; source_type: BioSourceType };
@@ -73,7 +76,7 @@ export interface ArtistCuration {
     ref_supervisor_note: string | null;
   };
   pipeline: {
-    authorization_letter: { status: AuthLetterStatus; file_id: number | null };
+    authorization_letter: { status: AuthLetterStatus; file_id: number | null; file_name: string | null };
     owner_pre_agreement: { status: PreAgreementStatus };
   };
   checklist: ChecklistItem[];
