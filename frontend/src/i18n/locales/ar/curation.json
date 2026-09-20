@@ -213,5 +213,29 @@
       "talk": "محاضرة",
       "symposium": "ندوة"
     }
+  },
+  "artworkRegistry": {
+    "title": "سجل الأعمال الفنية",
+    "subtitle": "{count} عمل فني",
+    "candidates": "{count} أعمال مرشحة بانتظار المراجعة",
+    "searchPlaceholder": "ابحث بعنوان العمل أو اسم الفنان…",
+    "status": "الحالة",
+    "allStatuses": "كل الحالات",
+    "statuses": {
+      "draft": "مسودة",
+      "published": "منشور",
+      "hidden": "مخفي"
+    },
+    "missingDimensions": "المقاسات ناقصة",
+    "pipelineGap": "مراحل مفتوحة",
+    "empty": "لا توجد أعمال مطابقة",
+    "emptyHelp": "جرّب تغيير عوامل التصفية.",
+    "pipeline": "المسار {cleared}/{total}",
+    "flags": {
+      "untitled": "بلا عنوان",
+      "missing_dimensions": "مقاسات ناقصة",
+      "holder_missing": "مالك غير محدد",
+      "year_uncertain": "سنة غير مؤكدة"
+    }
   }
 }

@@ -213,5 +213,29 @@
       "talk": "Talk",
       "symposium": "Symposium"
     }
+  },
+  "artworkRegistry": {
+    "title": "Artworks registry",
+    "subtitle": "{count} artworks",
+    "candidates": "{count} candidate artworks awaiting review",
+    "searchPlaceholder": "Search by artwork title or artist…",
+    "status": "Status",
+    "allStatuses": "All statuses",
+    "statuses": {
+      "draft": "Draft",
+      "published": "Published",
+      "hidden": "Hidden"
+    },
+    "missingDimensions": "Missing dimensions",
+    "pipelineGap": "Open pipeline stages",
+    "empty": "No matching artworks",
+    "emptyHelp": "Try changing the filters.",
+    "pipeline": "Pipeline {cleared}/{total}",
+    "flags": {
+      "untitled": "Untitled",
+      "missing_dimensions": "Missing dimensions",
+      "holder_missing": "Owner not set",
+      "year_uncertain": "Year uncertain"
+    }
   }
 }

@@ -21,6 +21,7 @@ const activityLink = computed(() => localePath("admin.activity"));
 const importsLink = computed(() => localePath("admin.imports"));
 const dashboardLink = computed(() => localePath("dashboard"));
 const registryLink = computed(() => localePath("admin.artists"));
+const artworkRegistryLink = computed(() => localePath("admin.artworks"));
 const loginLink = computed(() => localePath("login"));
 
 const otherLocale = computed<AppLocale>(() =>
@@ -109,6 +110,14 @@ async function logout(): Promise<void> {
               active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
             >
               {{ $t("nav.registry") }}
+            </RouterLink>
+            <RouterLink
+              v-if="auth.can('artworks.manage')"
+              :to="artworkRegistryLink"
+              class="text-ink-muted transition-colors hover:text-ink"
+              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
+            >
+              {{ $t("nav.artworkRegistry") }}
             </RouterLink>
             <RouterLink
               v-if="auth.can('imports.manage')"

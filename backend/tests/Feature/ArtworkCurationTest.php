@@ -121,7 +121,8 @@ it('filters the internal registry and blocks non-editors', function () {
     Artwork::factory()->create(['height_cm' => 10, 'width_cm' => 10]);
 
     $this->actingAs($editor)->getJson('/api/v1/admin/artworks?missing_dimensions=1&has_pipeline_gap=1')
-        ->assertOk()->assertJsonCount(1, 'data');
+        ->assertOk()->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.flags', fn ($flags) => in_array('missing_dimensions', $flags, true));
 
     $this->actingAs(makeUser('reader'))->getJson('/api/v1/admin/artworks')->assertForbidden();
 });

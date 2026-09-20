@@ -10,5 +10,6 @@
   "events": "Events",
   "themes": "Themes",
   "dashboard": "Dashboard",
-  "registry": "Artists registry"
+  "registry": "Artists registry",
+  "artworkRegistry": "Artworks registry"
 }
