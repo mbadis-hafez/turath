@@ -1,0 +1,79 @@
+{
+  "title": "ما ينقص سجلاتك",
+  "subtitle": "الاكتمال والمصادر والأسئلة المفتوحة في السجلات التي أنشأتها",
+  "exportGaps": "تصدير تقرير النواقص",
+  "tiles": {
+    "totalRecords": "السجلات",
+    "avgCompleteness": "متوسط الاكتمال",
+    "blockingRecords": "تحجب النشر",
+    "conflicts": "تعارضات المصادر",
+    "missingFields": "حقول ناقصة"
+  },
+  "sidebar": {
+    "byType": "الاكتمال حسب النوع",
+    "typeCount": "{count} من {of} تحتاج إلى اهتمام",
+    "reviewQueue": "بانتظار المراجعة",
+    "reviewEmpty": "لا شيء بانتظارك",
+    "acknowledge": "تم الاطلاع",
+    "whyTitle": "لماذا يهم التحقق؟",
+    "whyBody": "يحتاج السجل إلى مصدر منشور لحقائقه الأساسية قبل نشره. توثيق المصادر هو ما يمنح شارة «موثّق» ويُبقي الخلافات ظاهرة."
+  },
+  "entity": {
+    "artist": "الفنانون",
+    "artwork": "الأعمال",
+    "archive_item": "المواد الأرشيفية"
+  },
+  "severity": {
+    "blocking": "يحجب النشر",
+    "conflict": "تعارض مصادر",
+    "minor": "نواقص ثانوية",
+    "pending_review": "قيد المراجعة",
+    "clear": "مكتمل"
+  },
+  "action": {
+    "complete": "استكمال",
+    "resolve": "حسم التعارض",
+    "follow": "متابعة"
+  },
+  "filters": {
+    "allTypes": "كل أنواع السجلات",
+    "allSeverities": "كل الحالات"
+  },
+  "review": {
+    "archivist_review": "مراجعة أمين الأرشيف",
+    "data_audit": "تدقيق البيانات",
+    "second_source_needed": "بانتظار مصدر ثانٍ"
+  },
+  "field": {
+    "death_year_or_living_confirmed": "سنة الوفاة أو تأكيد الحياة",
+    "primary_source": "مصدر أساسي",
+    "birth_city": "مدينة الميلاد",
+    "bio_en": "السيرة بالإنجليزية",
+    "holder": "الجهة الحائزة",
+    "dimensions": "الأبعاد",
+    "medium": "الخامة",
+    "rights_holder": "مالك الحقوق",
+    "rights_status_known": "حالة الحقوق",
+    "digitized_at": "تاريخ الرقمنة"
+  },
+  "row": {
+    "gapsHint": "ناقص",
+    "conflictsHint": "{count} تعارض مفتوح",
+    "untitled": "سجل بلا عنوان",
+    "completion": "مكتمل بنسبة {pct}٪"
+  },
+  "empty": {
+    "title": "لا شيء يطابق هذه العوامل",
+    "description": "جرّب نوع سجل أو حالة مختلفة."
+  },
+  "conflict": {
+    "title": "حسم تعارض المصادر",
+    "help": "تختلف المصادر حول هذا الحقل. اختر المصدر المعتمد.",
+    "claims": "تذكر",
+    "noSource": "مصدر غير معروف",
+    "note": "سبب اختيارك",
+    "submit": "حسم",
+    "cancel": "إلغاء",
+    "loading": "جارٍ تحميل المصادر…"
+  }
+}

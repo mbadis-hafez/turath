@@ -1,0 +1,79 @@
+{
+  "title": "What's missing from your records",
+  "subtitle": "Completeness, sources and open questions across the records you created",
+  "exportGaps": "Export gaps report",
+  "tiles": {
+    "totalRecords": "Records",
+    "avgCompleteness": "Average completeness",
+    "blockingRecords": "Blocking publication",
+    "conflicts": "Source conflicts",
+    "missingFields": "Missing fields"
+  },
+  "sidebar": {
+    "byType": "Completion by type",
+    "typeCount": "{count} of {of} need attention",
+    "reviewQueue": "Awaiting review",
+    "reviewEmpty": "Nothing waiting for you",
+    "acknowledge": "Acknowledge",
+    "whyTitle": "Why does verification matter?",
+    "whyBody": "A record needs a published source for its key facts before it can be published. Citing sources is what earns the verified badge and keeps disagreements visible."
+  },
+  "entity": {
+    "artist": "Artists",
+    "artwork": "Artworks",
+    "archive_item": "Archive items"
+  },
+  "severity": {
+    "blocking": "Blocks publishing",
+    "conflict": "Source conflict",
+    "minor": "Minor gaps",
+    "pending_review": "Under review",
+    "clear": "Complete"
+  },
+  "action": {
+    "complete": "Complete",
+    "resolve": "Resolve conflict",
+    "follow": "Follow up"
+  },
+  "filters": {
+    "allTypes": "All record types",
+    "allSeverities": "All statuses"
+  },
+  "review": {
+    "archivist_review": "Archivist review",
+    "data_audit": "Data audit",
+    "second_source_needed": "Second source needed"
+  },
+  "field": {
+    "death_year_or_living_confirmed": "Death year or living status",
+    "primary_source": "Primary source",
+    "birth_city": "Birth city",
+    "bio_en": "English biography",
+    "holder": "Holder",
+    "dimensions": "Dimensions",
+    "medium": "Medium",
+    "rights_holder": "Rights holder",
+    "rights_status_known": "Rights status",
+    "digitized_at": "Digitization date"
+  },
+  "row": {
+    "gapsHint": "Missing",
+    "conflictsHint": "{count} open conflict(s)",
+    "untitled": "Untitled record",
+    "completion": "{pct}% complete"
+  },
+  "empty": {
+    "title": "Nothing matches these filters",
+    "description": "Try a different record type or status."
+  },
+  "conflict": {
+    "title": "Resolve source conflict",
+    "help": "Sources disagree about this field. Choose the authoritative source.",
+    "claims": "claims",
+    "noSource": "Unknown source",
+    "note": "Reason for your choice",
+    "submit": "Resolve",
+    "cancel": "Cancel",
+    "loading": "Loading sources…"
+  }
+}

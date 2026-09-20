@@ -5,6 +5,7 @@ import arArtists from "./locales/ar/artists.json";
 import arArtworks from "./locales/ar/artworks.json";
 import arAuth from "./locales/ar/auth.json";
 import arCommon from "./locales/ar/common.json";
+import arDashboard from "./locales/ar/dashboard.json";
 import arDates from "./locales/ar/dates.json";
 import arErrors from "./locales/ar/errors.json";
 import arHome from "./locales/ar/home.json";
@@ -16,6 +17,7 @@ import enArtists from "./locales/en/artists.json";
 import enArtworks from "./locales/en/artworks.json";
 import enAuth from "./locales/en/auth.json";
 import enCommon from "./locales/en/common.json";
+import enDashboard from "./locales/en/dashboard.json";
 import enDates from "./locales/en/dates.json";
 import enErrors from "./locales/en/errors.json";
 import enHome from "./locales/en/home.json";
@@ -78,6 +80,7 @@ export const i18n = createI18n({
       dates: arDates,
       search: arSearch,
       imports: arImports,
+      dashboard: arDashboard,
     },
     en: {
       common: enCommon,
@@ -91,6 +94,7 @@ export const i18n = createI18n({
       dates: enDates,
       search: enSearch,
       imports: enImports,
+      dashboard: enDashboard,
     },
   },
 });

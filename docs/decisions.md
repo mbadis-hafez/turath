@@ -113,3 +113,11 @@ Numbering continues locally (D43+); the F10 spec's own D47–D57 are cross-refer
 - **D62 — Artist merge mirrors artwork merge (D52):** re-points artworks, archive links, citations, name variants (dropping duplicate names) and themes; tombstone = soft-delete + `merged_into_id`, and `GET /artists/{oldSlug}` answers `301` to the survivor. F7 proposals not moved (don't exist).
 - **D63 — `artist_staff_assignments` (optional in spec) not built;** `ref_supervisor_note` free text only. `bio_source_type` is set manually (no auto-compilation from linked materials).
 - **Not built:** F10/F11/F12 frontends.
+
+## F10 — Dashboard frontend (2026-09-20)
+
+- **D64 — `/{locale}/dashboard` is open to any signed-in user** (own records only; the API enforces scoping and `dashboard.manage` for other users). No per-page permission check, unlike the admin pages. Viewing another contributor or the org aggregate has no UI yet (API supports `?user_id=` / `?scope=org`).
+- **D65 — Row actions link to public detail pages** (artist by slug, artwork by id) because no admin edit UI exists; archive items have no page yet (F3 frontend), so "Complete/Follow up" renders as inert text for them. The spec's "add new record" button and "scroll to first missing field" are not built for the same reason. The collector now returns `slug` for artists.
+- **D66 — Added `success` / `success-soft` color tokens** so D56's green ("clear") exists in the design system.
+- **D67 — Filters are single-select** (record type, status) in the URL query, not the API's multi-select arrays. Records are grouped client-side per page. The per-field "Sources" panel on record edit pages is not built (no edit pages).
+- Verified by typecheck, lint, Vitest (100 tests, incl. i18n parity) and a production build; **not viewed in a browser** (no browser tool available).
