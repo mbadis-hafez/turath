@@ -128,6 +128,24 @@ const routes: RouteRecordRaw[] = [
     meta: { titleKey: "curation.artworkRegistry.title", requiresAuth: true, requiresPermission: "artworks.manage" },
   },
   {
+    path: "/:locale/admin/events",
+    name: "admin.events",
+    component: () => import("@/pages/admin/EventsRegistryPage.vue"),
+    meta: { titleKey: "events.title", requiresAuth: true, requiresPermission: "events.manage" },
+  },
+  {
+    path: "/:locale/admin/events/new",
+    name: "admin.events.new",
+    component: () => import("@/pages/admin/EventEditPage.vue"),
+    meta: { titleKey: "events.edit.addTitle", requiresAuth: true, requiresPermission: "events.manage" },
+  },
+  {
+    path: "/:locale/admin/events/:id(\\d+)",
+    name: "admin.events.edit",
+    component: () => import("@/pages/admin/EventEditPage.vue"),
+    meta: { titleKey: "events.edit.editTitle", requiresAuth: true, requiresPermission: "events.manage" },
+  },
+  {
     path: "/:locale/admin/imports",
     name: "admin.imports",
     component: () => import("@/pages/admin/ImportsPage.vue"),
