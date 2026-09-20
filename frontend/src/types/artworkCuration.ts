@@ -58,6 +58,8 @@ export interface ArtworkCuration {
   medium: Localized;
   creation: DateValue | null;
   signed: SignedState;
+  material_classification: MaterialClassification;
+  conservation_risk_note: string | null;
   notes: Localized;
   edition: { number: string | null; size: number | null };
   dimensions: Dims;
@@ -92,3 +94,5 @@ export interface ArtworkImage {
   rights_status: ImageRights;
   is_final: boolean;
 }
+
+export type MaterialClassification = "movable" | "immovable" | "digital_native" | "unspecified";

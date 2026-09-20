@@ -28,7 +28,7 @@ export const newActivity = (): ProfileEntry => ({
   year_to: null,
   note: emptyLocalized(),
 });
-export const newContact = (): ArtistContact => ({ name: null, role_note: null, email: null, phone: null });
+export const newContact = (): ArtistContact => ({ name: null, role_note: null, email: null, phone: null, address: null });
 export const newSocial = (): SocialLink => ({ platform: "instagram", url: "", is_public: false });
 
 const blank = (v: string | null | undefined): string | null => (v && v.trim() !== "" ? v.trim() : null);
@@ -117,13 +117,14 @@ export function useArtistProfileForm() {
 
   function contactsPayload(): ArtistContact[] {
     return form.contacts
-      .filter((c) => blank(c.name) || blank(c.email) || blank(c.phone))
+      .filter((c) => blank(c.name) || blank(c.email) || blank(c.phone) || blank(c.address))
       .map((c) => ({
         ...(c.id ? { id: c.id } : {}),
         name: blank(c.name),
         role_note: blank(c.role_note),
         email: blank(c.email),
         phone: blank(c.phone),
+        address: blank(c.address),
       }));
   }
 

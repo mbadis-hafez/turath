@@ -20,7 +20,8 @@
     "poster": "Poster",
     "document": "Document",
     "portfolio": "Portfolio",
-    "other": "Other"
+    "other": "Other",
+    "documentation_card": "Documentation card"
   },
   "statuses": {
     "draft": "Draft",
@@ -162,7 +163,8 @@
       "mentions": "Mentions",
       "authored_by": "Authored by",
       "donor": "Donor",
-      "subject": "Subject"
+      "subject": "Subject",
+      "primary_documentation": "Primary documentation"
     }
   }
 }

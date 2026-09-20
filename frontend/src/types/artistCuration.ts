@@ -44,6 +44,7 @@ export interface ArtistContact {
   role_note: string | null;
   email: string | null;
   phone: string | null;
+  address?: string | null;
 }
 
 export type SocialPlatform = "website" | "instagram" | "x" | "facebook" | "youtube" | "tiktok" | "linkedin" | "snapchat" | "other";

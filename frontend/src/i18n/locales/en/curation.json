@@ -212,7 +212,8 @@
       "exhibition": "Exhibition",
       "talk": "Talk",
       "symposium": "Symposium"
-    }
+    },
+    "contactAddress": "Address"
   },
   "artworkRegistry": {
     "title": "Artworks registry",
@@ -340,7 +341,16 @@
       "archive_source": "Archive image from other source"
     },
     "searchArtist": "Search for an artist…",
-    "searchHolder": "Search for a holder…"
+    "searchHolder": "Search for a holder…",
+    "materialClassification": "Material classification",
+    "materialClassifications": {
+      "movable": "Movable",
+      "immovable": "Immovable",
+      "digital_native": "Digital-native",
+      "unspecified": "Unspecified"
+    },
+    "riskNote": "Conservation risk note",
+    "riskNoteHelp": "Internal only. Separate from the condition: a piece can be in good condition today and still sit somewhere humid."
   },
   "artworkCreate": {
     "title": "Add artwork",

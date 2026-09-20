@@ -19,6 +19,7 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-1.5 
         <label class="text-xs text-ink-muted">{{ t("curation.profileForm.contactRole") }}<input v-model="item.role_note" type="text" :class="input" /></label>
         <label class="text-xs text-ink-muted">{{ t("curation.detail.email") }}<input v-model="item.email" type="email" dir="ltr" :class="input" /></label>
         <label class="text-xs text-ink-muted">{{ t("curation.detail.phone") }}<input v-model="item.phone" type="tel" dir="ltr" :class="input" /></label>
+        <label class="text-xs text-ink-muted sm:col-span-2">{{ t("curation.profileForm.contactAddress") }}<input v-model="item.address" type="text" :class="input" data-testid="contact-address" /></label>
       </div>
     </template>
   </ListEditor>

@@ -2,11 +2,12 @@ import { reactive, ref } from "vue";
 
 import { labelOf } from "@/components/curation/ArtworkPickers";
 import type { PickerOption } from "@/components/curation/EntityPicker.vue";
-import type { ArtworkCuration, ConditionStatus, ImageQuality, SignedState } from "@/types/artworkCuration";
+import type { ArtworkCuration, ConditionStatus, ImageQuality, MaterialClassification, SignedState } from "@/types/artworkCuration";
 
 export const ARTWORK_CATEGORIES = ["painting", "drawing", "printmaking", "sculpture", "mixed_media", "paper_work", "photography", "installation", "other"];
 export const CONDITION_STATES: ConditionStatus[] = ["not_available", "pending", "available"];
 export const IMAGE_QUALITIES: ImageQuality[] = ["low_resolution", "high_resolution", "archive_source"];
+export const MATERIAL_CLASSIFICATIONS: MaterialClassification[] = ["movable", "immovable", "digital_native", "unspecified"];
 export const SIGNED_STATES: SignedState[] = ["signed", "unsigned", "unknown"];
 
 const blank = (v: string | null | undefined): string | null => (v && v.trim() !== "" ? v.trim() : null);
@@ -20,6 +21,7 @@ export interface ArtworkFormState {
   editionNumber: string; editionSize: string; holderInventory: string; inventoryByOwner: string;
   conditionLink: string; conditionStatus: ConditionStatus | ""; imageQuality: ImageQuality | ""; editingStatus: string;
   notes: { ar: string; en: string };
+  materialClassification: MaterialClassification; riskNote: string;
 }
 
 /** Editable artwork fields shared by the add and curation pages. */
@@ -31,6 +33,7 @@ export function useArtworkForm() {
     editionNumber: "", editionSize: "", holderInventory: "", inventoryByOwner: "",
     conditionLink: "", conditionStatus: "", imageQuality: "", editingStatus: "",
     notes: { ar: "", en: "" },
+    materialClassification: "movable", riskNote: "",
   });
   const artist = ref<PickerOption | null>(null);
   const holder = ref<PickerOption | null>(null);
@@ -54,6 +57,7 @@ export function useArtworkForm() {
     form.conditionLink = c.condition_report_link ?? ""; form.conditionStatus = c.condition_report_status ?? "";
     form.imageQuality = c.image_quality ?? ""; form.editingStatus = c.editing_status ?? "";
     form.notes = { ar: c.notes.ar ?? "", en: c.notes.en ?? "" };
+    form.materialClassification = c.material_classification; form.riskNote = c.conservation_risk_note ?? "";
   }
 
   /** Request body. On existing records the year is sent only when edited so circa/range dates survive. */
@@ -78,6 +82,8 @@ export function useArtworkForm() {
       image_quality: form.imageQuality || null,
       editing_status: blank(form.editingStatus),
       notes: { ar: blank(form.notes.ar), en: blank(form.notes.en) },
+      material_classification: form.materialClassification,
+      conservation_risk_note: blank(form.riskNote),
     };
     if (mode === "create") {
       body.legacy_ref = blank(form.code);

@@ -20,7 +20,8 @@
     "poster": "ملصق",
     "document": "وثيقة",
     "portfolio": "ملف أعمال",
-    "other": "أخرى"
+    "other": "أخرى",
+    "documentation_card": "جذاذة توثيق"
   },
   "statuses": {
     "draft": "مسودة",
@@ -162,7 +163,8 @@
       "mentions": "يذكر",
       "authored_by": "من تأليف",
       "donor": "مُهدٍ",
-      "subject": "موضوع"
+      "subject": "موضوع",
+      "primary_documentation": "التوثيق الأساسي"
     }
   }
 }

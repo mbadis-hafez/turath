@@ -5,7 +5,7 @@ import { searchArtistOptions, searchHolderOptions } from "@/components/curation/
 import EntityPicker, { type PickerOption } from "@/components/curation/EntityPicker.vue";
 import type { ArtworkFormState } from "@/composables/useArtworkForm";
 import {
-  ARTWORK_CATEGORIES as CATEGORIES, CONDITION_STATES as CONDITION, IMAGE_QUALITIES as QUALITY, SIGNED_STATES as SIGNED,
+  ARTWORK_CATEGORIES as CATEGORIES, CONDITION_STATES as CONDITION, MATERIAL_CLASSIFICATIONS as MATERIAL, IMAGE_QUALITIES as QUALITY, SIGNED_STATES as SIGNED,
 } from "@/composables/useArtworkForm";
 
 const props = defineProps<{
@@ -39,7 +39,10 @@ const gapInput = (key: string) => (props.gaps.includes(key) ? "!border-danger !b
         <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.year") }}<input v-model="form.year" type="number" min="1000" max="2100" inputmode="numeric" :class="[input, gapInput('year')]" /></label>
         <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.mediumAr") }}<input v-model="form.medium.ar" type="text" dir="rtl" :class="[input, gapInput('medium')]" /></label>
         <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.mediumEn") }}<input v-model="form.medium.en" type="text" dir="ltr" :class="[input, gapInput('medium')]" /></label>
-        <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.signed") }}
+        <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.materialClassification") }}
+        <select v-model="form.materialClassification" :class="input" data-testid="material-classification"><option v-for="m in MATERIAL" :key="m" :value="m">{{ t(`curation.artworkDetail.materialClassifications.${m}`) }}</option></select>
+      </label>
+      <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.signed") }}
           <select v-model="form.signed" :class="input"><option v-for="s in SIGNED" :key="s" :value="s">{{ t(`curation.artworkDetail.signedStates.${s}`) }}</option></select>
         </label>
         <label class="text-xs text-ink-muted sm:col-span-2">{{ t("curation.artworkDetail.notesAr") }}<textarea v-model="form.notes.ar" rows="3" dir="rtl" :class="input" /></label>
@@ -72,7 +75,8 @@ const gapInput = (key: string) => (props.gaps.includes(key) ? "!border-danger !b
           <select v-model="form.conditionStatus" :class="input"><option value="">—</option><option v-for="c in CONDITION" :key="c" :value="c">{{ t(`curation.artworkDetail.conditionStates.${c}`) }}</option></select>
         </label>
         <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.conditionLink") }}<input v-model="form.conditionLink" type="url" dir="ltr" :class="input" /></label>
-        <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.imageQuality") }}
+        <label class="text-xs text-ink-muted sm:col-span-2">{{ t("curation.artworkDetail.riskNote") }}<textarea v-model="form.riskNote" rows="2" :class="input" data-testid="risk-note" /><span class="mt-1 block text-ink-muted">{{ t("curation.artworkDetail.riskNoteHelp") }}</span></label>
+      <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.imageQuality") }}
           <select v-model="form.imageQuality" :class="input"><option value="">—</option><option v-for="q in QUALITY" :key="q" :value="q">{{ t(`curation.artworkDetail.qualities.${q}`) }}</option></select>
         </label>
         <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.editingStatus") }}<input v-model="form.editingStatus" type="text" dir="ltr" maxlength="20" :class="input" /></label>

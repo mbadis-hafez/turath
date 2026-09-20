@@ -212,7 +212,8 @@
       "exhibition": "معرض",
       "talk": "محاضرة",
       "symposium": "ندوة"
-    }
+    },
+    "contactAddress": "العنوان"
   },
   "artworkRegistry": {
     "title": "سجل الأعمال الفنية",
@@ -340,7 +341,16 @@
       "archive_source": "صورة أرشيفية من مصدر آخر"
     },
     "searchArtist": "ابحث عن فنان…",
-    "searchHolder": "ابحث عن مالك…"
+    "searchHolder": "ابحث عن مالك…",
+    "materialClassification": "التصنيف المادي",
+    "materialClassifications": {
+      "movable": "منقول",
+      "immovable": "غير منقول",
+      "digital_native": "رقمي المنشأ",
+      "unspecified": "غير محدد"
+    },
+    "riskNote": "ملاحظة مخاطر الحفظ",
+    "riskNoteHelp": "للاستخدام الداخلي فقط. منفصلة عن الحالة: قد تكون القطعة بحالة جيدة اليوم وهي في مكان رطب."
   },
   "artworkCreate": {
     "title": "إضافة عمل فني",

@@ -1,7 +1,7 @@
 import type { Bilingual, PartialDate } from "@/types/artist";
 
 export const ARCHIVE_ITEM_TYPES = [
-  "article", "image", "video", "audio", "catalogue", "certificate", "invitation", "poster", "document", "portfolio", "other",
+  "article", "image", "video", "audio", "catalogue", "certificate", "invitation", "poster", "document", "portfolio", "documentation_card", "other",
 ] as const;
 export type ArchiveItemType = (typeof ARCHIVE_ITEM_TYPES)[number];
 export type AccessLevel = "public" | "registered" | "researcher" | "institution_only" | "embargoed";
@@ -110,4 +110,4 @@ export interface ArchiveEdit {
   links: ArchiveEditLink[];
 }
 
-export const LINK_ROLES = ["about", "depicts", "mentions", "authored_by", "donor", "subject"] as const;
+export const LINK_ROLES = ["about", "depicts", "mentions", "authored_by", "donor", "subject", "primary_documentation"] as const;

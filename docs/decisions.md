@@ -155,3 +155,13 @@ Numbering continues locally (D43+); the F10 spec's own D47–D57 are cross-refer
 - New archive item columns: place, people names, keywords, source entity, verification reference. The mockup's 3 access options map to `public`, `registered` (restricted) and `institution_only` (hidden); other stored levels stay selectable.
 - One original file per item, on the private disk and streamed through `/archive-items/{id}/files/{file}/download` with the existing access resolver; a new upload replaces the old one. No thumbnails, resumable uploads or derivatives yet.
 - The publishing checklist (Arabic title, type and file, exact date, rights holder and license, people names for images) is computed server-side (`ArchiveItemChecklist`); "Send for review" requires all of it and creates a pending `archivist_review` queue item. A plain calendar date is required for "exact", and an existing approximate date is only replaced when the user picks a new one.
+
+## Amendments from real archival material (D105–D111)
+- **D105** `artist_contacts.address` (encrypted, internal-only, never in audit diffs). Contacts live in a child table, so the address is per contact rather than a single artist column.
+- **D106** `artworks.material_classification` (`movable` default, `immovable`, `digital_native`, `unspecified`); editable in the add/edit forms, returned publicly, mergeable.
+- **D107** `artworks.conservation_risk_note`, internal-only (not on the public resource), independent of `condition_report_status`.
+- **D108** `ArchiveItemType::documentation_card`; the essay stays as prose in the item's description rather than split into columns.
+- **D109** `ArchiveLinkRole::primary_documentation`. The `archive_item_links.role` column was widened from 20 to 30 characters because the value is 21 long (a test caught the truncation).
+- **D110** `sources.linked_archive_item_id` (nullable FK). A citation may create a source with only `linked_archive_item_id`; the title is then derived from the item (`Source::displayTitle()`).
+- **D111** The stored type of such a source is the marker `archive_item`; `Source::effectiveType()` returns the linked item's own `ArchiveItemType`, so a document is never classified twice.
+- **A6–A8 (validation only).** The fuzzy date "أوائل الثمانينيات الميلادية" did not actually parse (no digits → unknown), so `PartialDate::fromString()` now understands Arabic decade phrases: early/mid/late decades become a 4/3/3-year circa span and a bare decade a range. Hijri phrases are left unparsed. The Bugis and Alshalti dates are test fixtures.

@@ -20,7 +20,7 @@ function bundle(patch: Partial<ArtworkCuration> = {}): ArtworkCuration {
     id: 7, legacy_ref: "AW007", title: { ar: "تكوين أعواد", en: "Composition of Lutes" }, is_untitled: false,
     artist: { id: 1, name: { ar: "أحمد", en: "Ahmad" } }, attribution_certainty: "confirmed", category: "painting",
     medium: { ar: null, en: null }, creation: { display: "1990", year_from: 1990, year_to: 1990, calendar: "gregorian", certainty: "exact" },
-    signed: "unknown", notes: { ar: null, en: null }, edition: { number: null, size: null }, dimensions: dims, frame_dimensions: dims,
+    signed: "unknown", material_classification: "movable", conservation_risk_note: null, notes: { ar: null, en: null }, edition: { number: null, size: null }, dimensions: dims, frame_dimensions: dims,
     weight_kg: null, holder: null, holder_inventory_no: null, inventory_by_owner: null, condition_report_link: null,
     condition_report_status: null, image_quality: null, editing_status: null, has_final_hr_image: false, images: [], publication_status: "draft",
     completeness: { pct: 33, severity: "blocking", blocking: ["holder"], minor: ["dimensions", "medium"] },
@@ -117,5 +117,16 @@ describe("ArtworkCurationPage", () => {
     await wrapper.get("[data-testid=make-final]").trigger("click");
     await flushPromises();
     expect(api.updateArtworkImage).toHaveBeenCalledWith(7, 5, { is_final: true });
+  });
+
+  it("saves the material classification and the separate conservation risk note", async () => {
+    const wrapper = await mountPage();
+
+    await wrapper.get("[data-testid=material-classification]").setValue("immovable");
+    await wrapper.get("[data-testid=risk-note]").setValue("Stored in a humid room.");
+    await wrapper.findAll("button").find((b) => b.text() === "Save")!.trigger("click");
+    await flushPromises();
+
+    expect(api.updateArtwork.mock.calls[0][1]).toMatchObject({ material_classification: "immovable", conservation_risk_note: "Stored in a humid room." });
   });
 });

@@ -13,7 +13,7 @@ const shape = computed(() => {
       return "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM6 11a6 6 0 0 0 12 0M12 17v4";
     case "video":
       return "M3 6h13v12H3zM16 10l5-3v10l-5-3";
-    case "article": case "catalogue":
+    case "article": case "catalogue": case "documentation_card":
       return "M5 4h14v16H5zM8 8h8M8 12h8M8 16h5";
     default:
       return "M7 3h8l4 4v14H7zM15 3v4h4M10 12h6M10 16h6";
