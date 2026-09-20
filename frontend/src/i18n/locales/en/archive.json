@@ -93,9 +93,9 @@
     "checklist": {
       "title_ar": "Arabic title",
       "type_and_file": "Item type and uploaded file",
-      "exact_date": "Exact date",
       "rights_holder_license": "Rights holder and license",
-      "people_names": "Names of people"
+      "people_names": "Names of people",
+      "date": "Date (exact, or approximate with a reason)"
     },
     "completion": "{pct}% complete — 100% required to publish",
     "access": "Access",
@@ -128,8 +128,7 @@
     "itemType": "Item type",
     "number": "Item number",
     "date": "Date",
-    "dateHelp": "An exact date (day/month/year) is required before publishing.",
-    "dateApprox": "Currently recorded as “{date}”. An exact date is required before publishing.",
+    "dateHelp": "Enter a full date, or a four-digit year.",
     "place": "Place",
     "content": "Content",
     "descriptionAr": "Description (Arabic)",
@@ -165,6 +164,20 @@
       "donor": "Donor",
       "subject": "Subject",
       "primary_documentation": "Primary documentation"
-    }
+    },
+    "dateMode": "Date precision",
+    "dateModes": {
+      "exact": "Exact date",
+      "year": "Year only",
+      "approx": "Approximate or range"
+    },
+    "approxText": "As written, e.g. early 1980s",
+    "certainty": "Certainty",
+    "certainties": {
+      "circa": "Approximate",
+      "range": "Range"
+    },
+    "dateNote": "Reason for the approximation",
+    "dateNeedsReason": "An approximate date needs a stated reason (for example where the wording comes from)."
   }
 }

@@ -92,6 +92,7 @@ export interface ArchiveEdit {
   title: Bilingual;
   description: Bilingual;
   place: Bilingual;
+  date_note: string | null;
   content: { display: string | null; year_from: number | null; year_to: number | null; calendar: string | null; certainty: string | null } | null;
   people_names: string[];
   keywords: string[];

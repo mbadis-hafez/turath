@@ -14,13 +14,15 @@ class ArchiveItemChecklist
     public static function evaluate(ArchiveItem $item): array
     {
         $date = $item->getAttribute('content');
-        $exactDate = $date instanceof PartialDate && $date->yearFrom !== null && $date->certainty?->value === 'exact';
+        // An approximate date (circa/range) is accepted once the reason for the approximation is stated.
+        $dated = $date instanceof PartialDate && $date->yearFrom !== null
+            && ($date->certainty?->value === 'exact' || filled($item->getAttribute('content_date_note')));
         $peopleNeeded = $item->item_type === 'image';
 
         $items = [
             ['title_ar', $item->title_ar !== null],
             ['type_and_file', filled($item->item_type) && $item->files()->where('role', 'original')->exists()],
-            ['exact_date', $exactDate],
+            ['date', $dated],
             ['rights_holder_license', ($item->rights_holder_ar !== null || $item->rights_holder_en !== null) && filled($item->license)],
             ['people_names', ! $peopleNeeded || count($item->people_names ?? []) > 0],
         ];

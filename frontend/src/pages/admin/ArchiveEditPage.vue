@@ -34,7 +34,7 @@ const canManage = computed(() => auth.can("archive.manage"));
 const id = computed(() => (route.params.id ? Number(route.params.id) : null));
 const isNew = computed(() => id.value === null);
 
-const { form, load: loadForm, payload, checklist: liveChecklist, existingDateText } = useArchiveForm();
+const { form, load: loadForm, payload, checklist: liveChecklist } = useArchiveForm();
 
 const item = ref<ArchiveEdit | null>(null);
 const loading = ref(false);
@@ -325,11 +325,30 @@ const err = (key: string) => fieldErrors.value[key]?.[0];
               <label class="text-xs text-ink-muted">{{ t("archive.edit.titleEn") }}<input v-model="form.titleEn" type="text" dir="ltr" :class="input" /></label>
               <label class="text-xs text-ink-muted">{{ t("archive.edit.itemType") }}<select v-model="form.type" :class="input"><option v-for="ty in ARCHIVE_ITEM_TYPES" :key="ty" :value="ty">{{ t(`archive.types.${ty}`) }}</option></select></label>
               <label class="text-xs text-ink-muted">{{ t("archive.edit.number") }}<input v-model="form.code" type="text" dir="ltr" maxlength="80" :class="input" /><span v-if="err('legacy_ref')" class="text-danger">{{ err("legacy_ref") }}</span></label>
-              <div class="text-xs text-ink-muted">
-                <label>{{ t("archive.edit.date") }} <span class="text-danger">{{ t("archive.edit.required") }}</span><input v-model="form.date" type="date" dir="ltr" :class="[input, missing('exact_date')]" data-testid="date-input" /></label>
-                <p v-if="missingKeys.has('exact_date')" class="mt-1 text-danger">{{ existingDateText ? t("archive.edit.dateApprox", { date: existingDateText }) : t("archive.edit.dateHelp") }}</p>
-              </div>
-              <label class="text-xs text-ink-muted">{{ t("archive.edit.place") }}<input v-model="form.placeAr" type="text" dir="rtl" :class="input" /></label>
+              <fieldset class="text-xs text-ink-muted sm:col-span-2" data-testid="date-group">
+                <legend>{{ t("archive.edit.date") }} <span class="text-danger">{{ t("archive.edit.required") }}</span></legend>
+                <div class="mt-1 grid gap-3 sm:grid-cols-2">
+                  <select v-model="form.dateMode" :class="input" :aria-label="t('archive.edit.dateMode')" data-testid="date-mode">
+                    <option v-for="m in ['exact', 'year', 'approx']" :key="m" :value="m">{{ t(`archive.edit.dateModes.${m}`) }}</option>
+                  </select>
+                  <input v-if="form.dateMode === 'exact'" v-model="form.date" type="date" dir="ltr" :class="[input, missing('date')]" data-testid="date-input" />
+                  <input v-else-if="form.dateMode === 'year'" v-model="form.year" type="number" min="1000" max="2100" inputmode="numeric" dir="ltr" :class="[input, missing('date')]" data-testid="year-input" />
+                  <template v-else>
+                    <input v-model="form.approxText" type="text" :placeholder="t('archive.edit.approxText')" :class="input" data-testid="approx-text" />
+                    <div class="flex items-center gap-2 sm:col-span-2">
+                      <input v-model="form.approxFrom" type="number" min="1000" max="2100" inputmode="numeric" dir="ltr" :placeholder="t('archive.admin.yearFrom')" :class="[input, missing('date'), 'mt-0']" data-testid="approx-from" />
+                      <span aria-hidden="true">–</span>
+                      <input v-model="form.approxTo" type="number" min="1000" max="2100" inputmode="numeric" dir="ltr" :placeholder="t('archive.admin.yearTo')" :class="[input, 'mt-0']" data-testid="approx-to" />
+                      <select v-model="form.certainty" :class="[input, 'mt-0']" :aria-label="t('archive.edit.certainty')"><option value="circa">{{ t("archive.edit.certainties.circa") }}</option><option value="range">{{ t("archive.edit.certainties.range") }}</option></select>
+                    </div>
+                  </template>
+                </div>
+                <label v-if="form.dateMode === 'approx'" class="mt-3 block">{{ t("archive.edit.dateNote") }} <span class="text-danger">{{ t("archive.edit.required") }}</span>
+                  <textarea v-model="form.dateNote" rows="2" :class="[input, missing('date')]" data-testid="date-note" />
+                </label>
+                <p v-if="missingKeys.has('date')" class="mt-1 text-danger">{{ form.dateMode === "approx" ? t("archive.edit.dateNeedsReason") : t("archive.edit.dateHelp") }}</p>
+              </fieldset>
+              <label class="text-xs text-ink-muted sm:col-span-2">{{ t("archive.edit.place") }}<input v-model="form.placeAr" type="text" dir="rtl" :class="input" /></label>
             </div>
           </section>
 

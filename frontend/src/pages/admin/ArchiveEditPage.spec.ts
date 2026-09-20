@@ -19,12 +19,12 @@ vi.mock("@/api/artworkCuration", () => ({ searchHolders: vi.fn(), listAdminArtwo
 function bundle(patch: Partial<ArchiveEdit> = {}): ArchiveEdit {
   return {
     id: 5, legacy_ref: "ARC-1979-0412", item_type: "image", title: { ar: "افتتاح معرض", en: null }, description: { ar: null, en: null },
-    place: { ar: null, en: null }, content: { display: "1979 (approx.)", year_from: 1979, year_to: 1979, calendar: "gregorian", certainty: "circa" },
+    place: { ar: null, en: null }, date_note: null, content: { display: "1979 (approx.)", year_from: 1979, year_to: 1979, calendar: "gregorian", certainty: "circa" },
     people_names: [], keywords: [], source_name: null, rights_holder: { ar: null, en: null }, rights_status: "unknown", license: null,
     verification_reference: null, access_level: "registered", publication_status: "draft", under_review: false, updated_at: null,
     file: { id: 1, name: "a.tif", mime_type: "image/tiff", size_bytes: 2048, width_px: 4200, height_px: 3100, is_image: false, url: "/f" },
     checklist: [
-      { key: "title_ar", met: true }, { key: "type_and_file", met: true }, { key: "exact_date", met: false },
+      { key: "title_ar", met: true }, { key: "type_and_file", met: true }, { key: "date", met: false },
       { key: "rights_holder_license", met: false }, { key: "people_names", met: false },
     ],
     completeness_pct: 40, links: [{ id: 9, role: "depicts", kind: "artist", entity_id: 3, label: { ar: "منيرة الموصلي", en: null } }],
@@ -71,16 +71,18 @@ describe("ArchiveEditPage (edit)", () => {
     expect(wrapper.get("[data-testid=pct]").text()).toContain("40%");
     expect(wrapper.get("[data-testid=links]").text()).toContain("منيرة الموصلي");
     expect(wrapper.get("[data-testid=send-review]").attributes("disabled")).toBeDefined();
-    expect(wrapper.text()).toContain("Currently recorded as “1979 (approx.)”");
+    expect(wrapper.get("[data-testid=date-mode]").element).toHaveProperty("value", "approx");
+    expect(wrapper.get("[data-testid=approx-text]").element).toHaveProperty("value", "1979 (approx.)");
   });
 
-  it("saves without re-sending an untouched approximate date, and sends the exact date once picked", async () => {
+  it("saves without re-sending an untouched approximate date, and sends the exact date once the precision is switched", async () => {
     const wrapper = await mountAt("/en/admin/archive/5");
 
     await wrapper.get("[data-testid=save-draft]").trigger("click");
     await flushPromises();
     expect(api.updateArchiveItem.mock.calls[0][1]).not.toHaveProperty("content");
 
+    await wrapper.get("[data-testid=date-mode]").setValue("exact");
     await wrapper.get("[data-testid=date-input]").setValue("1979-03-14");
     await wrapper.get("[data-testid=save-draft]").trigger("click");
     await flushPromises();
@@ -97,6 +99,38 @@ describe("ArchiveEditPage (edit)", () => {
     expect(api.updateArchiveItem).toHaveBeenCalledBefore(api.submitArchiveReview);
     expect(api.submitArchiveReview).toHaveBeenCalledWith(5);
     expect(wrapper.get("[data-testid=send-review]").text()).toBe("Under review");
+  });
+});
+
+describe("ArchiveEditPage (approximate dates)", () => {
+  it("counts an approximate date only once its reason is given, and sends it as a circa span", async () => {
+    const wrapper = await mountAt("/en/admin/archive/new");
+    const dateMet = () => (wrapper.findAll("[data-testid=checklist] input")[2].element as HTMLInputElement).checked;
+
+    await wrapper.get("[data-testid=date-mode]").setValue("approx");
+    await wrapper.get("[data-testid=approx-text]").setValue("أوائل الثمانينيات الميلادية");
+    await wrapper.get("[data-testid=approx-from]").setValue("1980");
+    await wrapper.get("[data-testid=approx-to]").setValue("1983");
+    expect(dateMet()).toBe(false);
+    expect(wrapper.text()).toContain("needs a stated reason");
+
+    await wrapper.get("[data-testid=date-note]").setValue("The card only says early 1980s.");
+    expect(dateMet()).toBe(true);
+
+    await wrapper.get("[data-testid=save-draft]").trigger("click");
+    await flushPromises();
+    expect(api.createArchiveItem.mock.calls[0][0]).toMatchObject({
+      content: { display: "أوائل الثمانينيات الميلادية", year_from: 1980, year_to: 1983, certainty: "circa" },
+      date_note: "The card only says early 1980s.",
+    });
+  });
+
+  it("treats a bare year as an exact date", async () => {
+    const wrapper = await mountAt("/en/admin/archive/new");
+    await wrapper.get("[data-testid=date-mode]").setValue("year");
+    await wrapper.get("[data-testid=year-input]").setValue("1984");
+
+    expect((wrapper.findAll("[data-testid=checklist] input")[2].element as HTMLInputElement).checked).toBe(true);
   });
 });
 

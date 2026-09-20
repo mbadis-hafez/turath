@@ -123,6 +123,7 @@ class ArchiveItem extends Model
             'rights_holder_en' => ['ar' => 'مالك الحقوق (إنجليزي)', 'en' => 'Rights holder (English)'],
             'license' => ['ar' => 'الترخيص', 'en' => 'License'],
             'consent_status' => ['ar' => 'حالة الموافقة', 'en' => 'Consent status'],
+            'content_date_note' => ['ar' => 'مبرر تقريب التاريخ', 'en' => 'Date approximation reason'],
             'place_ar' => ['ar' => 'المكان (عربي)', 'en' => 'Place (Arabic)'],
             'place_en' => ['ar' => 'المكان (إنجليزي)', 'en' => 'Place (English)'],
             'source_name' => ['ar' => 'الجهة المصدر', 'en' => 'Source entity'],

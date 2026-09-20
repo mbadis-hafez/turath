@@ -116,3 +116,27 @@ it('accepts documentation cards, primary-documentation links, and a source that 
         'field_key' => 'bio_ar', 'claimed_value' => 'x', 'new_source' => ['title_en' => 'A book'],
     ])->assertUnprocessable();
 });
+
+it('accepts an approximate date only together with its reason, and round-trips every editable field', function () {
+    $editor = editorUser();
+    $id = $this->actingAs($editor)->postJson('/api/v1/archive-items', [
+        'item_type' => 'document', 'title' => ['ar' => 'جذاذة'], 'access_level' => 'institution_only',
+        'content' => ['display' => 'أوائل الثمانينيات الميلادية', 'year_from' => 1980, 'year_to' => 1983, 'certainty' => 'circa'],
+        'place' => ['ar' => 'دار الفنون', 'en' => 'Dar Al-Funun'], 'keywords' => ['معارض'], 'source_name' => 'مؤسسة حافظ',
+        'verification_reference' => 'شهادة', 'rights_holder' => ['ar' => 'مؤسسة حافظ'], 'license' => 'CC BY',
+    ])->assertCreated()->json('data.id');
+
+    $date = fn () => collect($this->actingAs($editor)->getJson("/api/v1/admin/archive-items/{$id}")->json('data.checklist'))->firstWhere('key', 'date')['met'];
+    expect($date())->toBeFalse();
+
+    $this->actingAs($editor)->patchJson("/api/v1/archive-items/{$id}", ['date_note' => 'The card only says early 1980s.'])->assertOk();
+    expect($date())->toBeTrue();
+
+    $data = $this->actingAs($editor)->getJson("/api/v1/admin/archive-items/{$id}")->json('data');
+    expect($data['date_note'])->toBe('The card only says early 1980s.')
+        ->and($data['place'])->toBe(['ar' => 'دار الفنون', 'en' => 'Dar Al-Funun'])
+        ->and($data['keywords'])->toBe(['معارض'])
+        ->and($data['source_name'])->toBe('مؤسسة حافظ')
+        ->and($data['verification_reference'])->toBe('شهادة')
+        ->and($data['content']['certainty'])->toBe('circa');
+});

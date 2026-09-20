@@ -49,6 +49,10 @@ abstract class ArchiveItemPayloadRequest extends FormRequest
             $attributes['place_en'] = $v['place']['en'] ?? null;
         }
 
+        if (array_key_exists('date_note', $v)) {
+            $attributes['content_date_note'] = $v['date_note'];
+        }
+
         foreach (['people_names', 'keywords'] as $list) {
             if (array_key_exists($list, $v)) {
                 $attributes[$list] = array_values(array_filter(array_map(fn ($x) => trim((string) $x), $v[$list] ?? []), fn ($x) => $x !== '')) ?: null;
@@ -200,6 +204,7 @@ abstract class ArchiveItemPayloadRequest extends FormRequest
             'people_names.*' => ['nullable', 'string', 'max:255'],
             'keywords' => array_merge($presence, ['nullable', 'array', 'max:50']),
             'keywords.*' => ['nullable', 'string', 'max:100'],
+            'date_note' => array_merge($presence, ['nullable', 'string', 'max:500']),
             'source_name' => array_merge($presence, ['nullable', 'string', 'max:255']),
             'verification_reference' => array_merge($presence, ['nullable', 'string', 'max:500']),
         ];
