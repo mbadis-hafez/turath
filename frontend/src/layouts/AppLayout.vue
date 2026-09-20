@@ -58,12 +58,7 @@ async function logout(): Promise<void> {
           :to="homeLink"
           class="flex w-fit items-baseline gap-2 text-ink hover:text-accent-strong"
         >
-          <span class="text-xl font-semibold">{{ $t("home.heading") }}</span>
-          <span
-            v-if="otherLocale === 'en'"
-            class="hidden text-xs text-ink-muted uppercase sm:inline"
-            >Bidayaat</span
-          >
+          <img src="/logo.png" :alt="$t('home.heading')" class="h-12 w-auto" width="113" height="48" />
         </RouterLink>
         <nav
           aria-label="Main"
@@ -197,16 +192,7 @@ async function logout(): Promise<void> {
       <div
         class="mx-auto flex max-w-[90rem] flex-wrap items-start justify-between gap-10 px-6 py-10 sm:px-12"
       >
-        <p class="flex items-baseline gap-3">
-          <span class="text-[26px] font-bold text-ink font-display">{{
-            $t("home.heading")
-          }}</span>
-          <span
-            v-if="otherLocale === 'en'"
-            class="text-[11px] tracking-widest text-ink-faint uppercase font-latin"
-            >Bidayaat</span
-          >
-        </p>
+        <img src="/logo.png" :alt="$t('home.heading')" class="h-16 w-auto" width="151" height="64" />
         <nav
           aria-label="Footer"
           class="flex flex-wrap gap-11 text-[13.5px] text-ink-muted"
