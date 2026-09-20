@@ -67,12 +67,7 @@ async function submit(): Promise<void> {
     <aside
       class="hidden flex-col justify-between bg-ink p-12 text-paper lg:flex xl:p-16"
     >
-      <p class="flex items-baseline gap-3 text-lg font-semibold">
-        {{ $t("home.heading") }}
-        <span class="text-sm font-normal tracking-wide text-paper/60 uppercase"
-          >Bidayaat</span
-        >
-      </p>
+      <img src="/logo-light.png" :alt="$t('home.heading')" class="h-24 w-auto self-start" width="226" height="96" />
 
       <div class="max-w-lg">
         <h2
@@ -101,9 +96,7 @@ async function submit(): Promise<void> {
     <!-- Form panel -->
     <section class="flex items-center justify-center px-6 py-12 sm:px-12">
       <div class="w-full max-w-md">
-        <p class="mb-10 text-center text-lg font-semibold text-ink lg:hidden">
-          {{ $t("home.heading") }}
-        </p>
+        <img src="/logo.png" :alt="$t('home.heading')" class="mx-auto mb-10 h-20 w-auto lg:hidden" width="188" height="80" />
 
         <p class="text-sm text-ink-muted">{{ t("auth.title") }}</p>
         <h1
