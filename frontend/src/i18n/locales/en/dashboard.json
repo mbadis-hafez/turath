@@ -83,5 +83,6 @@
     "loading": "Loading sources…"
   },
   "eyebrow": "Verification & documentation",
-  "viewAll": "View all"
+  "viewAll": "View all",
+  "addRecord": "Add new record"
 }

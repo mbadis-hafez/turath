@@ -24,7 +24,8 @@
     "materials": "{count} materials",
     "empty": "No artists match these filters",
     "emptyHelp": "Clear a filter to see more.",
-    "clear": "Clear filters"
+    "clear": "Clear filters",
+    "addArtist": "+ Artist"
   },
   "status": {
     "unverified": "Unverified",
@@ -133,5 +134,19 @@
     "cancel": "Cancel",
     "sameRecord": "Choose two different artists",
     "loading": "Loading records…"
+  },
+  "create": {
+    "title": "Add artist",
+    "help": "Creates a draft record. You can complete the rest from its curation page.",
+    "nameAr": "Name (Arabic)",
+    "nameEn": "Name (English)",
+    "code": "Artist code (optional, e.g. AR150)",
+    "living": "Living status",
+    "living_unknown": "Unknown",
+    "living_living": "Living",
+    "living_deceased": "Deceased",
+    "submit": "Create artist",
+    "creating": "Creating…",
+    "cancel": "Cancel"
   }
 }

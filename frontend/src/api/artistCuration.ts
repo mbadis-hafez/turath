@@ -52,3 +52,11 @@ export function mergeArtists(payload: {
 export function listThemes(signal?: AbortSignal): Promise<{ data: Theme[] }> {
   return request({ method: "GET", url: "/api/v1/themes", signal });
 }
+
+export function createArtist(payload: {
+  name: { ar: string | null; en: string | null };
+  legacy_code?: string;
+  living_status: "unknown" | "living" | "deceased";
+}): Promise<{ data: { id: number } }> {
+  return request({ method: "POST", url: "/api/v1/artists", data: payload });
+}

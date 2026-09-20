@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 import { listThemes } from "@/api/artistCuration";
@@ -8,6 +9,7 @@ import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import Pagination from "@/components/common/Pagination.vue";
 import Spinner from "@/components/common/Spinner.vue";
+import CreateArtistModal from "@/components/curation/CreateArtistModal.vue";
 import MergeToolModal from "@/components/curation/MergeToolModal.vue";
 import { useAdminArtists } from "@/composables/useAdminArtists";
 import { useLocalePath } from "@/composables/useLocalePath";
@@ -21,6 +23,13 @@ const { t } = useI18n();
 const { localePath } = useLocalePath();
 const { pick } = useLocalized();
 const auth = useAuthStore();
+const router = useRouter();
+const creating = ref(false);
+
+function onCreated(id: number): void {
+  creating.value = false;
+  void router.push(localePath("admin.artists.show", { id }));
+}
 
 const forbidden = new ApiError("forbidden", "Forbidden", { status: 403 });
 const canManage = computed(() => auth.can("artists.manage"));
@@ -68,9 +77,14 @@ const toggle = (on: boolean) =>
           <h1 class="text-balance text-3xl font-semibold tracking-tight text-ink">{{ t("curation.registry.title") }}</h1>
           <p v-if="meta" class="mt-1 text-sm text-ink-muted">{{ t("curation.registry.subtitle", { count: meta.total }) }}</p>
         </div>
-        <button type="button" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft" @click="merging = true">
-          {{ t("curation.registry.mergeTool") }}
-        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft" @click="merging = true">
+            {{ t("curation.registry.mergeTool") }}
+          </button>
+          <button type="button" class="rounded-md bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-ink/85" data-testid="add-artist" @click="creating = true">
+            {{ t("curation.registry.addArtist") }}
+          </button>
+        </div>
       </div>
 
       <div class="mt-6 flex flex-wrap items-center gap-2">
@@ -160,6 +174,7 @@ const toggle = (on: boolean) =>
         </template>
       </div>
 
+      <CreateArtistModal v-if="creating" @close="creating = false" @created="onCreated" />
       <MergeToolModal v-if="merging" @close="merging = false" @merged="onMerged" />
     </template>
   </section>
