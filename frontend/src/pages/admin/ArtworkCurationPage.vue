@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 
@@ -7,18 +7,18 @@ import {
   approveArtwork, deleteArtworkImage, updateArtwork, updateArtworkImage, updateArtworkStage, uploadArtworkImage,
 } from "@/api/artworkCuration";
 import ArtworkImagesPanel from "@/components/curation/ArtworkImagesPanel.vue";
-import EntityPicker, { type PickerOption } from "@/components/curation/EntityPicker.vue";
-import { labelOf, searchArtistOptions, searchHolderOptions } from "@/components/curation/ArtworkPickers";
+import ArtworkFormSections from "@/components/curation/ArtworkFormSections.vue";
 import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import Spinner from "@/components/common/Spinner.vue";
+import { useArtworkForm } from "@/composables/useArtworkForm";
 import { useArtworkCuration } from "@/composables/useArtworkCuration";
 import { useLocalePath } from "@/composables/useLocalePath";
 import { useLocalized } from "@/composables/useLocalized";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
 import {
-  PIPELINE_STATUSES, type ArtworkStatus, type ImageRights, type ConditionStatus, type ImageQuality, type PipelineStatus, type SignedState,
+  PIPELINE_STATUSES, type ArtworkStatus, type ImageRights, type PipelineStatus,
 } from "@/types/artworkCuration";
 
 const route = useRoute();
@@ -32,43 +32,9 @@ const canManage = computed(() => auth.can("artworks.manage"));
 const id = computed(() => Number(route.params.id));
 const { curation, loading, error, retry } = useArtworkCuration(id);
 
-const CATEGORIES = ["painting", "drawing", "printmaking", "sculpture", "mixed_media", "paper_work", "photography", "installation", "other"];
-const CONDITION: ConditionStatus[] = ["not_available", "pending", "available"];
-const QUALITY: ImageQuality[] = ["low_resolution", "high_resolution", "archive_source"];
-const SIGNED: SignedState[] = ["signed", "unsigned", "unknown"];
+const { form, artist, holder, load: loadForm, payload } = useArtworkForm();
 
-const blank = (v: string | null | undefined) => (v && v.trim() !== "" ? v.trim() : null);
-const num = (v: string | number | null) => (v === "" || v === null ? null : Number(v));
-
-const form = reactive({
-  title: { ar: "", en: "" }, category: "painting", medium: { ar: "", en: "" }, year: "", signed: "unknown" as SignedState,
-  height: "", width: "", depth: "", frameHeight: "", frameWidth: "", frameDepth: "", weight: "",
-  editionNumber: "", editionSize: "", holderInventory: "", inventoryByOwner: "",
-  conditionLink: "", conditionStatus: "" as ConditionStatus | "", imageQuality: "" as ImageQuality | "", editingStatus: "",
-  notes: { ar: "", en: "" },
-});
-const artistPick = ref<PickerOption | null>(null);
-const holderPick = ref<PickerOption | null>(null);
-let initialYear = "";
-
-watch(curation, (c) => {
-  if (!c) return;
-  form.title = { ar: c.title.ar ?? "", en: c.title.en ?? "" };
-  form.category = c.category;
-  artistPick.value = c.artist ? { id: c.artist.id, label: labelOf(c.artist.name) } : null;
-  holderPick.value = c.holder ? { id: c.holder.id, label: labelOf(c.holder.name) } : null;
-  form.medium = { ar: c.medium.ar ?? "", en: c.medium.en ?? "" };
-  form.year = initialYear = c.creation?.year_from ? String(c.creation.year_from) : "";
-  form.signed = c.signed;
-  form.height = String(c.dimensions.height_cm ?? ""); form.width = String(c.dimensions.width_cm ?? ""); form.depth = String(c.dimensions.depth_cm ?? "");
-  form.frameHeight = String(c.frame_dimensions.height_cm ?? ""); form.frameWidth = String(c.frame_dimensions.width_cm ?? ""); form.frameDepth = String(c.frame_dimensions.depth_cm ?? "");
-  form.weight = String(c.weight_kg ?? "");
-  form.editionNumber = c.edition.number ?? ""; form.editionSize = String(c.edition.size ?? "");
-  form.holderInventory = c.holder_inventory_no ?? ""; form.inventoryByOwner = c.inventory_by_owner ?? "";
-  form.conditionLink = c.condition_report_link ?? ""; form.conditionStatus = c.condition_report_status ?? "";
-  form.imageQuality = c.image_quality ?? ""; form.editingStatus = c.editing_status ?? "";
-  form.notes = { ar: c.notes.ar ?? "", en: c.notes.en ?? "" };
-}, { immediate: true });
+watch(curation, (c) => c && loadForm(c), { immediate: true });
 
 const saving = ref(false);
 const saved = ref(false);
@@ -83,33 +49,8 @@ async function save(): Promise<void> {
   saving.value = true;
   saved.value = false;
   actionError.value = null;
-  const payload: Record<string, unknown> = {
-    title: { ar: blank(form.title.ar), en: blank(form.title.en) },
-    category: form.category,
-    artist_id: artistPick.value?.id ?? null,
-    holder_id: holderPick.value?.id ?? null,
-    medium: { ar: blank(form.medium.ar), en: blank(form.medium.en) },
-    signed: form.signed,
-    dimensions: { height_cm: num(form.height), width_cm: num(form.width), depth_cm: num(form.depth) },
-    frame_dimensions: { height_cm: num(form.frameHeight), width_cm: num(form.frameWidth), depth_cm: num(form.frameDepth) },
-    weight_kg: num(form.weight),
-    edition_number: blank(form.editionNumber),
-    edition_size: num(form.editionSize),
-    holder_inventory_no: blank(form.holderInventory),
-    inventory_by_owner: blank(form.inventoryByOwner),
-    condition_report_link: blank(form.conditionLink),
-    condition_report_status: form.conditionStatus || null,
-    image_quality: form.imageQuality || null,
-    editing_status: blank(form.editingStatus),
-    notes: { ar: blank(form.notes.ar), en: blank(form.notes.en) },
-  };
-  // Only sent when edited so circa/range dates are never overwritten.
-  if (String(form.year) !== initialYear) {
-    const y = num(form.year);
-    payload.creation = y ? { display: String(y), year_from: y, year_to: y, calendar: "gregorian", certainty: "exact" } : null;
-  }
   try {
-    await updateArtwork(id.value, payload);
+    await updateArtwork(id.value, payload("update"));
     await retry();
     saved.value = true;
   } catch (err) {
@@ -171,9 +112,6 @@ const STATUS_CLASS: Record<ArtworkStatus, string> = {
 };
 const stageClass = (s: PipelineStatus) =>
   s === "done" || s === "not_applicable" ? "bg-success-soft text-success" : s === "not_started" ? "bg-danger-soft text-danger" : "bg-warn-soft text-warn";
-const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none";
-const gap = (key: string) => curation.value?.completeness.blocking.includes(key) || curation.value?.completeness.minor.includes(key);
-const gapInput = (key: string) => (gap(key) ? "!border-danger !bg-danger-soft" : "");
 </script>
 
 <template>
@@ -253,59 +191,13 @@ const gapInput = (key: string) => (gap(key) ? "!border-danger !bg-danger-soft" :
         </aside>
 
         <div class="space-y-10">
-          <section>
-            <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t("curation.artworkDetail.identification") }}</h2>
-            <div class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
-              <div class="text-xs text-ink-muted">{{ t("curation.artworkDetail.code") }}<p class="mt-1 rounded-md border border-line bg-neutral-soft px-3 py-2 text-sm text-ink" dir="ltr">{{ curation.legacy_ref ?? "—" }}</p></div>
-              <div class="text-xs text-ink-muted">{{ t("curation.artworkDetail.artist") }}<EntityPicker v-model="artistPick" :search="searchArtistOptions" :placeholder="t('curation.artworkDetail.searchArtist')" /></div>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.titleAr") }}<input v-model="form.title.ar" type="text" dir="rtl" :class="input" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.titleEn") }}<input v-model="form.title.en" type="text" dir="ltr" :class="input" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.category") }}
-                <select v-model="form.category" :class="input"><option v-for="c in CATEGORIES" :key="c" :value="c">{{ t(`curation.artworkDetail.categories.${c}`) }}</option></select>
-              </label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.year") }}<input v-model="form.year" type="number" min="1000" max="2100" inputmode="numeric" :class="[input, gapInput('year')]" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.mediumAr") }}<input v-model="form.medium.ar" type="text" dir="rtl" :class="[input, gapInput('medium')]" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.mediumEn") }}<input v-model="form.medium.en" type="text" dir="ltr" :class="[input, gapInput('medium')]" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.signed") }}
-                <select v-model="form.signed" :class="input"><option v-for="s in SIGNED" :key="s" :value="s">{{ t(`curation.artworkDetail.signedStates.${s}`) }}</option></select>
-              </label>
-              <label class="text-xs text-ink-muted sm:col-span-2">{{ t("curation.artworkDetail.notesAr") }}<textarea v-model="form.notes.ar" rows="3" dir="rtl" :class="input" /></label>
-              <label class="text-xs text-ink-muted sm:col-span-2">{{ t("curation.artworkDetail.notesEn") }}<textarea v-model="form.notes.en" rows="3" dir="ltr" :class="input" /></label>
-            </div>
-          </section>
-
-          <section>
-            <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t("curation.artworkDetail.specifications") }}</h2>
-            <div class="mt-4 grid gap-4 text-sm sm:grid-cols-3">
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.height") }}<input v-model="form.height" type="number" step="0.01" min="0" dir="ltr" :class="[input, gapInput('dimensions')]" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.width") }}<input v-model="form.width" type="number" step="0.01" min="0" dir="ltr" :class="[input, gapInput('dimensions')]" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.depth") }}<input v-model="form.depth" type="number" step="0.01" min="0" dir="ltr" :class="input" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.frameHeight") }}<input v-model="form.frameHeight" type="number" step="0.01" min="0" dir="ltr" :class="input" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.frameWidth") }}<input v-model="form.frameWidth" type="number" step="0.01" min="0" dir="ltr" :class="input" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.frameDepth") }}<input v-model="form.frameDepth" type="number" step="0.01" min="0" dir="ltr" :class="input" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.weight") }}<input v-model="form.weight" type="number" step="0.01" min="0" dir="ltr" :class="input" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.editionNumber") }}<input v-model="form.editionNumber" type="text" dir="ltr" :class="input" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.editionSize") }}<input v-model="form.editionSize" type="number" min="0" dir="ltr" :class="input" /></label>
-              <div class="text-xs text-ink-muted">{{ t("curation.artworkDetail.holder") }}<EntityPicker v-model="holderPick" :search="searchHolderOptions" :placeholder="t('curation.artworkDetail.searchHolder')" /></div>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.holderInventory") }}<input v-model="form.holderInventory" type="text" dir="ltr" :class="input" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.inventoryByOwner") }}<input v-model="form.inventoryByOwner" type="text" dir="ltr" :class="input" /></label>
-            </div>
-          </section>
-
-          <section>
-            <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t("curation.artworkDetail.conditionImages") }}</h2>
-            <div class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.conditionStatus") }}
-                <select v-model="form.conditionStatus" :class="input"><option value="">—</option><option v-for="c in CONDITION" :key="c" :value="c">{{ t(`curation.artworkDetail.conditionStates.${c}`) }}</option></select>
-              </label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.conditionLink") }}<input v-model="form.conditionLink" type="url" dir="ltr" :class="input" /></label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.imageQuality") }}
-                <select v-model="form.imageQuality" :class="input"><option value="">—</option><option v-for="q in QUALITY" :key="q" :value="q">{{ t(`curation.artworkDetail.qualities.${q}`) }}</option></select>
-              </label>
-              <label class="text-xs text-ink-muted">{{ t("curation.artworkDetail.editingStatus") }}<input v-model="form.editingStatus" type="text" dir="ltr" maxlength="20" :class="input" /></label>
-              <div class="text-xs text-ink-muted">{{ t("curation.artworkDetail.finalImage") }}<p class="mt-1 rounded-md border px-3 py-2 text-sm text-ink" :class="curation.has_final_hr_image ? 'border-line bg-neutral-soft' : 'border-danger bg-danger-soft'">{{ curation.has_final_hr_image ? curation.images.find((i) => i.is_final)?.filename : t("curation.artworkDetail.noFinalImage") }}</p></div>
-            </div>
-          </section>
+          <ArtworkFormSections
+            v-model:form="form"
+            v-model:artist="artist"
+            v-model:holder="holder"
+            :gaps="[...curation.completeness.blocking, ...curation.completeness.minor]"
+            :final-image="{ present: curation.has_final_hr_image, label: curation.images.find((i) => i.is_final)?.filename ?? null }"
+          />
 
           <section>
             <h2 class="border-b-2 border-ink pb-2 text-xs font-semibold text-ink-muted">{{ t("curation.artworkDetail.materials") }}</h2>

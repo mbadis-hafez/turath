@@ -347,13 +347,9 @@
     "submit": "Create artwork",
     "creating": "Creating…",
     "titleRequired": "Enter a title, or mark the work as untitled.",
-    "attribution": "Attribution",
-    "certainty": {
-      "confirmed": "Confirmed",
-      "attributed": "Attributed",
-      "disputed": "Disputed",
-      "unattributed": "Unattributed"
-    }
+    "subtitle": "Fill in what you know. Missing items stay flagged on the artwork until they are completed.",
+    "imagesFailed": "The artwork was created, but some images failed to upload. You can add them again from the artwork page.",
+    "openArtwork": "Open the artwork"
   },
   "artworkMerge": {
     "title": "Merge duplicate artworks",

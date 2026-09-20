@@ -181,3 +181,13 @@ it('uploads artwork images privately, marks one final, and only serves publicly 
     $this->actingAs($editor)->deleteJson("/api/v1/artworks/{$artwork->id}/images/{$first['id']}")->assertOk()->assertJsonCount(1, 'data');
     $this->actingAs($editor)->post("/api/v1/artworks/{$artwork->id}/images", ['image' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf')], ['Accept' => 'application/json'])->assertUnprocessable();
 });
+
+it('accepts condition and inventory fields when creating an artwork', function () {
+    $id = $this->actingAs(editorUser())->postJson('/api/v1/artworks', [
+        'title' => ['en' => 'X'], 'category' => 'painting', 'attribution_certainty' => 'unattributed',
+        'condition_report_status' => 'pending', 'image_quality' => 'high_resolution', 'inventory_by_owner' => 'N-1',
+    ])->assertCreated()->json('data.id');
+
+    expect(Artwork::find($id)->getAttribute('condition_report_status'))->toBe('pending')
+        ->and(Artwork::find($id)->getAttribute('inventory_by_owner'))->toBe('N-1');
+});
