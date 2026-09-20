@@ -1,8 +1,11 @@
 <?php
 
+use App\Models\ArchiveItem;
+use App\Models\ArchiveItemLink;
 use App\Models\Artist;
 use App\Models\ArtistNameVariant;
 use App\Models\Artwork;
+use App\Models\File;
 use App\Models\Holder;
 
 return [
@@ -29,5 +32,12 @@ return [
         ],
         'artworks' => Artwork::class,
         'holders' => Holder::class,
+        'archive-items' => [
+            'model' => ArchiveItem::class,
+            'children' => [
+                ['class' => File::class, 'fk' => 'archive_item_id'],
+                ['class' => ArchiveItemLink::class, 'fk' => 'archive_item_id'],
+            ],
+        ],
     ],
 ];

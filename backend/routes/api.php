@@ -1,6 +1,16 @@
 <?php
 
 use App\Http\Controllers\Api\V1\ActivityFeedController;
+use App\Http\Controllers\Api\V1\ArchiveItemDestroyController;
+use App\Http\Controllers\Api\V1\ArchiveItemIndexController;
+use App\Http\Controllers\Api\V1\ArchiveItemLinkDestroyController;
+use App\Http\Controllers\Api\V1\ArchiveItemLinkStoreController;
+use App\Http\Controllers\Api\V1\ArchiveItemPublishController;
+use App\Http\Controllers\Api\V1\ArchiveItemRestoreController;
+use App\Http\Controllers\Api\V1\ArchiveItemShowController;
+use App\Http\Controllers\Api\V1\ArchiveItemStoreController;
+use App\Http\Controllers\Api\V1\ArchiveItemUpdateController;
+use App\Http\Controllers\Api\V1\ArtistArchiveItemsController;
 use App\Http\Controllers\Api\V1\ArtistArtworksController;
 use App\Http\Controllers\Api\V1\ArtistDestroyController;
 use App\Http\Controllers\Api\V1\ArtistIndexController;
@@ -13,6 +23,7 @@ use App\Http\Controllers\Api\V1\ArtistVariantDestroyController;
 use App\Http\Controllers\Api\V1\ArtistVariantStoreController;
 use App\Http\Controllers\Api\V1\ArtistVariantUpdateController;
 use App\Http\Controllers\Api\V1\ArtistVerifyController;
+use App\Http\Controllers\Api\V1\ArtworkArchiveItemsController;
 use App\Http\Controllers\Api\V1\ArtworkDestroyController;
 use App\Http\Controllers\Api\V1\ArtworkIndexController;
 use App\Http\Controllers\Api\V1\ArtworkRestoreController;
@@ -43,8 +54,13 @@ Route::prefix('v1')->group(function () {
 
         Route::get('artworks', ArtworkIndexController::class);
         Route::get('artworks/{artwork}', ArtworkShowController::class)->whereNumber('artwork');
+        Route::get('artworks/{artwork}/archive-items', ArtworkArchiveItemsController::class)->whereNumber('artwork');
 
         Route::get('holders/{holder}', HolderShowController::class)->whereNumber('holder');
+
+        Route::get('archive-items', ArchiveItemIndexController::class);
+        Route::get('archive-items/{archiveItem}', ArchiveItemShowController::class)->whereNumber('archiveItem');
+        Route::get('artists/{artist}/archive-items', ArtistArchiveItemsController::class)->whereNumber('artist');
     });
 
     Route::middleware('auth:sanctum')->group(function () {
@@ -74,6 +90,16 @@ Route::prefix('v1')->group(function () {
         Route::patch('holders/{holder}', HolderUpdateController::class)->whereNumber('holder')->middleware('can:update,holder');
         Route::delete('holders/{holder}', HolderDestroyController::class)->whereNumber('holder')->middleware('can:delete,holder');
         Route::post('holders/{id}/restore', HolderRestoreController::class)->whereNumber('id')->middleware('can:restore,App\Models\Holder');
+
+        Route::post('archive-items', ArchiveItemStoreController::class)->middleware('can:create,App\Models\ArchiveItem');
+        Route::patch('archive-items/{archiveItem}', ArchiveItemUpdateController::class)->whereNumber('archiveItem')->middleware('can:update,archiveItem');
+        Route::delete('archive-items/{archiveItem}', ArchiveItemDestroyController::class)->whereNumber('archiveItem')->middleware('can:delete,archiveItem');
+        Route::post('archive-items/{id}/restore', ArchiveItemRestoreController::class)->whereNumber('id')->middleware('can:restore,App\Models\ArchiveItem');
+        Route::post('archive-items/{archiveItem}/publish', ArchiveItemPublishController::class)->whereNumber('archiveItem')->middleware('can:publish,archiveItem');
+
+        Route::post('archive-items/{archiveItem}/links', ArchiveItemLinkStoreController::class)->whereNumber('archiveItem')->middleware('can:update,archiveItem');
+        Route::delete('archive-items/{archiveItem}/links/{link}', ArchiveItemLinkDestroyController::class)
+            ->whereNumber('archiveItem')->whereNumber('link')->middleware('can:update,archiveItem');
 
         Route::get('activity', ActivityFeedController::class)->middleware('can:activity.view');
         Route::get('{resource}/{id}/activity', SubjectActivityController::class)

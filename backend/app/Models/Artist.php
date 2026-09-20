@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Artist extends Model
@@ -45,6 +46,14 @@ class Artist extends Model
     public function artworks(): HasMany
     {
         return $this->hasMany(Artwork::class);
+    }
+
+    /**
+     * @return MorphMany<ArchiveItemLink, $this>
+     */
+    public function archiveItemLinks(): MorphMany
+    {
+        return $this->morphMany(ArchiveItemLink::class, 'linkable');
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Models\Observers;
 
 use App\Models\Artist;
+use App\Support\ArchiveItemSearchTextBuilder;
 use App\Support\ArtistSearchTextBuilder;
 use App\Support\ArtistSlugGenerator;
 use App\Support\ArtworkSearchTextBuilder;
@@ -28,6 +29,12 @@ class ArtistObserver
 
         if (! $artist->wasRecentlyCreated && $artist->wasChanged(['name_ar', 'name_en'])) {
             $artist->artworks()->each(fn ($artwork) => ArtworkSearchTextBuilder::rebuildQuietly($artwork));
+
+            $artist->archiveItemLinks()->with('archiveItem')->get()
+                ->pluck('archiveItem')
+                ->filter()
+                ->unique('id')
+                ->each(fn ($item) => ArchiveItemSearchTextBuilder::rebuildQuietly($item));
         }
     }
 }

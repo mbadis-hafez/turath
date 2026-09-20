@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
         $this->call(ArtistSeeder::class);
         $this->call(HolderSeeder::class);
         $this->call(ArtworkSeeder::class);
+        $this->call(ArchiveItemSeeder::class);
 
         if (! app()->environment('local')) {
             return;
