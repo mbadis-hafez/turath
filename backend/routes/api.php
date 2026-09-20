@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\V1\AdminArtworkIndexController;
 use App\Http\Controllers\Api\V1\AdminHolderIndexController;
 use App\Http\Controllers\Api\V1\ArchiveItemBulkController;
 use App\Http\Controllers\Api\V1\ArchiveItemDestroyController;
+use App\Http\Controllers\Api\V1\ArchiveItemEditController;
+use App\Http\Controllers\Api\V1\ArchiveItemFileController;
 use App\Http\Controllers\Api\V1\ArchiveItemIndexController;
 use App\Http\Controllers\Api\V1\ArchiveItemLinkDestroyController;
 use App\Http\Controllers\Api\V1\ArchiveItemLinkStoreController;
@@ -103,6 +105,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('archive-items', ArchiveItemIndexController::class);
         Route::get('archive-items/{archiveItem}', ArchiveItemShowController::class)->whereNumber('archiveItem');
+        Route::get('archive-items/{archiveItem}/files/{file}/download', [ArchiveItemFileController::class, 'download'])->whereNumber(['archiveItem', 'file']);
         Route::get('artists/{artist}/archive-items', ArtistArchiveItemsController::class)->whereNumber('artist');
     });
 
@@ -190,6 +193,10 @@ Route::prefix('v1')->group(function () {
         Route::middleware('can:archive.manage')->group(function () {
             Route::get('admin/archive-items', AdminArchiveItemIndexController::class);
             Route::post('admin/archive-items/bulk', ArchiveItemBulkController::class);
+            Route::get('admin/archive-items/{archiveItem}', [ArchiveItemEditController::class, 'show'])->whereNumber('archiveItem');
+            Route::post('archive-items/{archiveItem}/submit-review', [ArchiveItemEditController::class, 'submitReview'])->whereNumber('archiveItem');
+            Route::post('archive-items/{archiveItem}/file', [ArchiveItemFileController::class, 'store'])->whereNumber('archiveItem');
+            Route::delete('archive-items/{archiveItem}/file', [ArchiveItemFileController::class, 'destroy'])->whereNumber('archiveItem');
         });
 
         Route::middleware('can:artworks.manage')->group(function () {

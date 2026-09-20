@@ -47,6 +47,10 @@ class ArchiveItemResource extends JsonResource
                 'en' => $item->description_en,
             ],
             'creator_name' => $item->creator_name,
+            'place' => ['ar' => $item->getAttribute('place_ar'), 'en' => $item->getAttribute('place_en')],
+            'people_names' => $item->people_names ?? [],
+            'keywords' => $item->keywords ?? [],
+            'source_name' => $item->getAttribute('source_name'),
             'publication' => [
                 'name' => [
                     'ar' => $item->publication_name_ar,

@@ -44,7 +44,19 @@ abstract class ArchiveItemPayloadRequest extends FormRequest
             $attributes['rights_holder_en'] = $v['rights_holder']['en'] ?? null;
         }
 
+        if (array_key_exists('place', $v)) {
+            $attributes['place_ar'] = $v['place']['ar'] ?? null;
+            $attributes['place_en'] = $v['place']['en'] ?? null;
+        }
+
+        foreach (['people_names', 'keywords'] as $list) {
+            if (array_key_exists($list, $v)) {
+                $attributes[$list] = array_values(array_filter(array_map(fn ($x) => trim((string) $x), $v[$list] ?? []), fn ($x) => $x !== '')) ?: null;
+            }
+        }
+
         foreach ([
+            'source_name', 'verification_reference',
             'legacy_ref', 'parent_id', 'item_type', 'internal_notes', 'creator_name',
             'language', 'original_format', 'source_filename', 'quality_flag',
             'digitized_at', 'access_level', 'embargo_until', 'post_embargo_access_level',
@@ -170,6 +182,26 @@ abstract class ArchiveItemPayloadRequest extends FormRequest
             'content.year_to' => ['nullable', 'integer', 'gte:content.year_from'],
             'content.calendar' => ['nullable', new Enum(CalendarType::class)],
             'content.certainty' => ['nullable', new Enum(DateCertainty::class)],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function profileRules(bool $partial): array
+    {
+        $presence = $partial ? ['sometimes'] : ['nullable'];
+
+        return [
+            'place' => array_merge($presence, ['nullable', 'array']),
+            'place.ar' => ['nullable', 'string', 'max:255'],
+            'place.en' => ['nullable', 'string', 'max:255'],
+            'people_names' => array_merge($presence, ['nullable', 'array', 'max:100']),
+            'people_names.*' => ['nullable', 'string', 'max:255'],
+            'keywords' => array_merge($presence, ['nullable', 'array', 'max:50']),
+            'keywords.*' => ['nullable', 'string', 'max:100'],
+            'source_name' => array_merge($presence, ['nullable', 'string', 'max:255']),
+            'verification_reference' => array_merge($presence, ['nullable', 'string', 'max:500']),
         ];
     }
 }

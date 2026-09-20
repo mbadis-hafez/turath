@@ -35,6 +35,7 @@ class UpdateArchiveItemRequest extends ArchiveItemPayloadRequest
             $this->publicationRules(partial: true),
             $this->rightsHolderRules(partial: true),
             $this->contentRules(partial: true),
+            $this->profileRules(partial: true),
             [
                 'legacy_ref' => [
                     'sometimes', 'nullable', 'string', 'max:80',

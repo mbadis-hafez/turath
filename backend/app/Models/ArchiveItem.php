@@ -28,6 +28,8 @@ class ArchiveItem extends Model
             'content' => PartialDateCast::class.':content',
             'digitized_at' => 'date',
             'embargo_until' => 'date',
+            'people_names' => 'array',
+            'keywords' => 'array',
         ];
     }
 
@@ -121,6 +123,10 @@ class ArchiveItem extends Model
             'rights_holder_en' => ['ar' => 'مالك الحقوق (إنجليزي)', 'en' => 'Rights holder (English)'],
             'license' => ['ar' => 'الترخيص', 'en' => 'License'],
             'consent_status' => ['ar' => 'حالة الموافقة', 'en' => 'Consent status'],
+            'place_ar' => ['ar' => 'المكان (عربي)', 'en' => 'Place (Arabic)'],
+            'place_en' => ['ar' => 'المكان (إنجليزي)', 'en' => 'Place (English)'],
+            'source_name' => ['ar' => 'الجهة المصدر', 'en' => 'Source entity'],
+            'verification_reference' => ['ar' => 'مرجع التحقق', 'en' => 'Verification reference'],
             'publication_status' => ['ar' => 'حالة النشر', 'en' => 'Publication status'],
         ];
     }

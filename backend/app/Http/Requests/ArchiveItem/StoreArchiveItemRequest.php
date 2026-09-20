@@ -27,6 +27,7 @@ class StoreArchiveItemRequest extends ArchiveItemPayloadRequest
             $this->publicationRules(partial: false),
             $this->rightsHolderRules(partial: false),
             $this->contentRules(partial: false),
+            $this->profileRules(partial: false),
             [
                 'legacy_ref' => ['nullable', 'string', 'max:80', 'unique:archive_items,legacy_ref'],
                 'parent_id' => ['nullable', 'integer', 'exists:archive_items,id'],
