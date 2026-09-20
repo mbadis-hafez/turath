@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\ActivityFeedController;
+use App\Http\Controllers\Api\V1\AdminArtworkIndexController;
 use App\Http\Controllers\Api\V1\ArchiveItemDestroyController;
 use App\Http\Controllers\Api\V1\ArchiveItemIndexController;
 use App\Http\Controllers\Api\V1\ArchiveItemLinkDestroyController;
@@ -23,9 +24,13 @@ use App\Http\Controllers\Api\V1\ArtistVariantDestroyController;
 use App\Http\Controllers\Api\V1\ArtistVariantStoreController;
 use App\Http\Controllers\Api\V1\ArtistVariantUpdateController;
 use App\Http\Controllers\Api\V1\ArtistVerifyController;
+use App\Http\Controllers\Api\V1\ArtworkApproveController;
 use App\Http\Controllers\Api\V1\ArtworkArchiveItemsController;
 use App\Http\Controllers\Api\V1\ArtworkDestroyController;
 use App\Http\Controllers\Api\V1\ArtworkIndexController;
+use App\Http\Controllers\Api\V1\ArtworkMergeController;
+use App\Http\Controllers\Api\V1\ArtworkPipelineShowController;
+use App\Http\Controllers\Api\V1\ArtworkPipelineUpdateController;
 use App\Http\Controllers\Api\V1\ArtworkRestoreController;
 use App\Http\Controllers\Api\V1\ArtworkShowController;
 use App\Http\Controllers\Api\V1\ArtworkStoreController;
@@ -33,6 +38,9 @@ use App\Http\Controllers\Api\V1\ArtworkUpdateController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\UserController;
+use App\Http\Controllers\Api\V1\CandidateArtworkDismissController;
+use App\Http\Controllers\Api\V1\CandidateArtworkIndexController;
+use App\Http\Controllers\Api\V1\CandidateArtworkPromoteController;
 use App\Http\Controllers\Api\V1\DashboardCompletenessController;
 use App\Http\Controllers\Api\V1\DashboardExportController;
 use App\Http\Controllers\Api\V1\DashboardRecordsController;
@@ -54,6 +62,7 @@ use App\Http\Controllers\Api\V1\ImportBatchShowController;
 use App\Http\Controllers\Api\V1\ImportBatchStoreController;
 use App\Http\Controllers\Api\V1\ImportMappingProfileIndexController;
 use App\Http\Controllers\Api\V1\ImportMappingProfileStoreController;
+use App\Http\Controllers\Api\V1\PipelineNoteSuggestionAcceptController;
 use App\Http\Controllers\Api\V1\RecordCompletenessController;
 use App\Http\Controllers\Api\V1\ReviewQueueAcknowledgeController;
 use App\Http\Controllers\Api\V1\ReviewQueueIndexController;
@@ -147,6 +156,18 @@ Route::prefix('v1')->group(function () {
 
         Route::get('review-queue', ReviewQueueIndexController::class);
         Route::post('review-queue/{reviewQueueItem}/acknowledge', ReviewQueueAcknowledgeController::class);
+
+        Route::middleware('can:artworks.manage')->group(function () {
+            Route::get('admin/artworks', AdminArtworkIndexController::class);
+            Route::post('artworks/merge', ArtworkMergeController::class);
+            Route::post('artworks/{artwork}/approve', ArtworkApproveController::class)->whereNumber('artwork');
+            Route::get('candidate-artworks', CandidateArtworkIndexController::class);
+            Route::post('candidate-artworks/{candidate}/promote', CandidateArtworkPromoteController::class);
+            Route::post('candidate-artworks/{candidate}/dismiss', CandidateArtworkDismissController::class);
+            Route::post('pipeline-note-suggestions/{suggestion}/accept', PipelineNoteSuggestionAcceptController::class);
+        });
+        Route::get('artworks/{artwork}/pipeline', ArtworkPipelineShowController::class)->whereNumber('artwork')->middleware('can:artworks.manage');
+        Route::patch('artworks/{artwork}/pipeline/{stageKey}', ArtworkPipelineUpdateController::class)->whereNumber('artwork');
 
         Route::get('activity', ActivityFeedController::class)->middleware('can:activity.view');
         Route::get('{resource}/{id}/activity', SubjectActivityController::class)

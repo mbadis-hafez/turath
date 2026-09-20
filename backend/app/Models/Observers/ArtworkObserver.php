@@ -5,6 +5,7 @@ namespace App\Models\Observers;
 use App\Models\Artwork;
 use App\Support\ArtworkSearchTextBuilder;
 use App\Support\Completeness\RecomputesCompleteness;
+use App\Support\Curation\PipelineService;
 
 class ArtworkObserver
 {
@@ -23,6 +24,10 @@ class ArtworkObserver
     {
         if ($artwork->wasRecentlyCreated || $artwork->wasChanged(self::SEARCH_AFFECTING_COLUMNS)) {
             ArtworkSearchTextBuilder::rebuildQuietly($artwork);
+        }
+
+        if ($artwork->wasRecentlyCreated) {
+            (new PipelineService)->ensureStages($artwork);
         }
 
         $this->recomputeCompleteness($artwork);

@@ -8,6 +8,7 @@ use Database\Factories\ArtworkFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Artwork extends Model
@@ -51,6 +52,14 @@ class Artwork extends Model
     public function holder(): BelongsTo
     {
         return $this->belongsTo(Holder::class);
+    }
+
+    /**
+     * @return HasMany<ArtworkPipelineStage, $this>
+     */
+    public function pipelineStages(): HasMany
+    {
+        return $this->hasMany(ArtworkPipelineStage::class);
     }
 
     /**

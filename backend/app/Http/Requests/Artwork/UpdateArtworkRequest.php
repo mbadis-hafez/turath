@@ -49,6 +49,11 @@ class UpdateArtworkRequest extends ArtworkPayloadRequest
                 'notes.ar' => ['nullable', 'string', 'max:20000'],
                 'notes.en' => ['nullable', 'string', 'max:20000'],
                 'publication_status' => ['sometimes', new Enum(PublicationStatus::class)],
+                'condition_report_link' => ['sometimes', 'nullable', 'string', 'max:500'],
+                'condition_report_status' => ['sometimes', 'nullable', 'in:not_available,pending,available'],
+                'image_quality' => ['sometimes', 'nullable', 'in:low_resolution,high_resolution,archive_source'],
+                'editing_status' => ['sometimes', 'nullable', 'string', 'max:20'],
+                'inventory_by_owner' => ['sometimes', 'nullable', 'string', 'max:120'],
                 'edit_summary' => ['nullable', 'string', 'max:255'],
             ],
         );

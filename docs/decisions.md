@@ -92,3 +92,13 @@ Numbering continues locally (D43+); the F10 spec's own D47–D57 are cross-refer
 - **D49 — Review queue is permission-targeted, not role-targeted.** Per-type permissions (`review_queue.archivist_review|data_audit|second_source_needed`) filter `/review-queue`; today editor/admin hold all three since no archivist/auditor roles exist. Mechanism is ready for finer roles. Queue items are only listed/acknowledged; nothing enqueues them yet (F7).
 - **D50 — Conflict detection compares exact JSON equality of `claimed_value`** (spec's known limitation on partial-date normalisation stands). Resolution goes through `LogsChanges` on `SourceConflict`.
 - **Not yet built:** F10 frontend (DashboardPage, CompletionSidebar, ConflictResolutionModal, per-field Sources panel), Event rules, a `/sources` listing endpoint.
+
+## F11 — Artwork Curation & Acquisition Pipeline (2026-09-20) — backend
+
+- **D51 — F7 stand-in for contributor notes (spec D90).** F7 doesn't exist, so a contributor PATCHing `status_research` with only a `note` gets `202` and a `pipeline_note_suggestions` row; an editor accepts it via `POST /pipeline-note-suggestions/{id}/accept`. Any other contributor stage write is 403. Replace with real F7 proposals later.
+- **D52 — Merge re-points only what exists.** `archive_item_links` (dropping ones that would collide on the unique key) and `field_citations`; F7 `edit_proposals`/`revisions` don't exist yet. Tombstone = soft-delete + `artworks.merged_into_id`; `GET /artworks/{old}` answers `301` to the survivor. `field_resolution` maps field → `survivor|duplicate` over a whitelist (`ArtworkMerger::MERGEABLE`).
+- **D53 — Approval = all six stages `done|not_applicable` AND no F10 blocking gap** (one itemized 422, keys `data.*` / `pipeline.*`). The spec doesn't say which stages gate; requiring all six is the conservative reading. Approve sets `publication_status = published`.
+- **D54 — D89 citation is pipeline-owned.** When `owner_pre_agreement` and `contract_draft` are both cleared, a `Source` (reference_note `pipeline:artwork:{id}`) and an `image_usage_permission` citation are created; reverting either stage deletes them. (F10's Artwork rules still don't require that citation — D45 — so this is currently informational until artwork images exist.)
+- **D55 — Stages are lazily ensured** (`PipelineService::ensureStages`) so artworks created before F11 get their six rows on first access.
+- **D56 — Candidate detection is out of scope**; only list/promote/dismiss exist. Nothing creates candidates yet (F8 extraction / F4 unmatched-row hook). Promotion links the source archive item to the new artwork with role `depicts`, category defaults to `other`.
+- **Not built:** F11 frontend (registry page, curation detail, `MergeToolModal`).
