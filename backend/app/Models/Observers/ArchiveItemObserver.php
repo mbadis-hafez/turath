@@ -5,10 +5,11 @@ namespace App\Models\Observers;
 use App\Models\ArchiveItem;
 use App\Support\ArchiveItemSearchTextBuilder;
 use App\Support\Completeness\RecomputesCompleteness;
+use App\Support\Proposals\RecordsRevisions;
 
 class ArchiveItemObserver
 {
-    use RecomputesCompleteness;
+    use RecomputesCompleteness, RecordsRevisions;
 
     private const SEARCH_AFFECTING_COLUMNS = [
         'title_ar', 'title_en', 'description_ar', 'description_en',
@@ -22,6 +23,9 @@ class ArchiveItemObserver
 
     public function saved(ArchiveItem $item): void
     {
+        // Before anything else: the search-text rebuild calls syncOriginal(), which wipes the old values.
+        $this->recordDirectEditRevision($item);
+
         if ($item->wasRecentlyCreated || $item->wasChanged(self::SEARCH_AFFECTING_COLUMNS)) {
             ArchiveItemSearchTextBuilder::rebuildQuietly($item);
         }

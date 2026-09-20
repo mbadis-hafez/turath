@@ -80,9 +80,11 @@ use App\Http\Controllers\Api\V1\ImportBatchStoreController;
 use App\Http\Controllers\Api\V1\ImportMappingProfileIndexController;
 use App\Http\Controllers\Api\V1\ImportMappingProfileStoreController;
 use App\Http\Controllers\Api\V1\PipelineNoteSuggestionAcceptController;
+use App\Http\Controllers\Api\V1\ProposalController;
 use App\Http\Controllers\Api\V1\RecordCompletenessController;
 use App\Http\Controllers\Api\V1\ReviewQueueAcknowledgeController;
 use App\Http\Controllers\Api\V1\ReviewQueueIndexController;
+use App\Http\Controllers\Api\V1\RevisionController;
 use App\Http\Controllers\Api\V1\SourceConflictResolveController;
 use App\Http\Controllers\Api\V1\SubjectActivityController;
 use App\Http\Controllers\Api\V1\ThemeController;
@@ -174,6 +176,14 @@ Route::prefix('v1')->group(function () {
         Route::get('dashboard/export', DashboardExportController::class);
 
         Route::get('records/{type}/{id}/completeness', RecordCompletenessController::class)->whereNumber('id');
+
+        Route::post('records/{type}/{id}/proposals', [ProposalController::class, 'store'])->whereNumber('id');
+        Route::get('proposals', [ProposalController::class, 'index']);
+        Route::get('proposals/{proposal}', [ProposalController::class, 'show']);
+        Route::post('proposals/{proposal}/approve', [ProposalController::class, 'approve']);
+        Route::post('proposals/{proposal}/reject', [ProposalController::class, 'reject']);
+        Route::get('records/{type}/{id}/revisions', [RevisionController::class, 'index'])->whereNumber('id');
+        Route::post('records/{type}/{id}/revisions/{revision}/rollback', [RevisionController::class, 'rollback'])->whereNumber('id');
         Route::post('records/{type}/{id}/citations', FieldCitationStoreController::class)->whereNumber('id');
         Route::delete('citations/{citation}', FieldCitationDestroyController::class);
 

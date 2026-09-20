@@ -8,10 +8,11 @@ use App\Support\ArtistSearchTextBuilder;
 use App\Support\ArtistSlugGenerator;
 use App\Support\ArtworkSearchTextBuilder;
 use App\Support\Completeness\RecomputesCompleteness;
+use App\Support\Proposals\RecordsRevisions;
 
 class ArtistObserver
 {
-    use RecomputesCompleteness;
+    use RecomputesCompleteness, RecordsRevisions;
 
     /**
      * Slugs are generated once on creation; they never change on rename and
@@ -28,6 +29,9 @@ class ArtistObserver
 
     public function saved(Artist $artist): void
     {
+        // Before anything else: the search-text rebuild calls syncOriginal(), which wipes the old values.
+        $this->recordDirectEditRevision($artist);
+
         if ($artist->wasRecentlyCreated || $artist->wasChanged(['name_ar', 'name_en', 'legacy_code'])) {
             ArtistSearchTextBuilder::rebuildQuietly($artist);
         }
