@@ -136,3 +136,37 @@ it('builds a year-bucketed timeline tagged by kind, filtered by type, range and 
     $this->getJson('/api/v1/timeline?type[]=bogus')->assertUnprocessable();
     expect($draft->id)->not->toBe($event->id);
 });
+
+it('preserves every existing artist theme tag exactly when the events migration runs over artist_themes', function () {
+    // DDL commits implicitly in MySQL, so this test cleans up after itself instead of relying on rollback.
+    $themes = [Theme::create(['label_ar' => 'أ']), Theme::create(['label_ar' => 'ب'])];
+    $artists = Artist::factory()->count(2)->create();
+    $pairs = [[$artists[0]->id, $themes[0]->id], [$artists[0]->id, $themes[1]->id], [$artists[1]->id, $themes[1]->id]];
+    foreach ($pairs as [$artistId, $themeId]) {
+        DB::table('theme_taggables')->insert(['theme_id' => $themeId, 'taggable_type' => Artist::class, 'taggable_id' => $artistId]);
+    }
+    $work = Artwork::factory()->create();
+    DB::table('theme_taggables')->insert(['theme_id' => $themes[0]->id, 'taggable_type' => Artwork::class, 'taggable_id' => $work->id]);
+
+    $migration = require database_path('migrations/2026_09_20_000027_create_events_tables.php');
+
+    try {
+        $migration->down();
+        expect(Schema::hasTable('artist_themes'))->toBeTrue()
+            ->and(DB::table('artist_themes')->orderBy('artist_id')->orderBy('theme_id')->get(['artist_id', 'theme_id'])->map(fn ($r) => [$r->artist_id, $r->theme_id])->all())
+            ->toBe([[$artists[0]->id, $themes[0]->id], [$artists[0]->id, $themes[1]->id], [$artists[1]->id, $themes[1]->id]]);
+
+        $migration->up();
+        $back = DB::table('theme_taggables')->where('taggable_type', Artist::class)->orderBy('taggable_id')->orderBy('theme_id')->get()
+            ->map(fn ($r) => [$r->taggable_id, $r->theme_id])->all();
+        expect(Schema::hasTable('artist_themes'))->toBeFalse()->and($back)->toBe([[$artists[0]->id, $themes[0]->id], [$artists[0]->id, $themes[1]->id], [$artists[1]->id, $themes[1]->id]]);
+    } finally {
+        if (! Schema::hasTable('theme_taggables')) {
+            $migration->up();
+        }
+        DB::table('theme_taggables')->whereIn('theme_id', collect($themes)->pluck('id'))->delete();
+        Theme::whereIn('id', collect($themes)->pluck('id'))->delete();
+        Artist::whereIn('id', $artists->pluck('id'))->forceDelete();
+        Artwork::whereKey($work->id)->forceDelete();
+    }
+});
