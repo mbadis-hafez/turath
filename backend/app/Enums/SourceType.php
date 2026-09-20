@@ -11,5 +11,6 @@ enum SourceType: string
     case ArchivalDocument = 'archival_document';
     case InstitutionalRecord = 'institutional_record';
     case OralInterview = 'oral_interview';
+    case ArchiveItem = 'archive_item';
     case Other = 'other';
 }

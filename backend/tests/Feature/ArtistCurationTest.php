@@ -262,3 +262,16 @@ it('rejects non-image portrait uploads', function () {
         'image' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf'),
     ], ['Accept' => 'application/json'])->assertStatus(422);
 });
+
+it('stores a contact address encrypted and never in the audit log', function () {
+    $editor = editorUser();
+    $artist = Artist::factory()->create();
+
+    $this->actingAs($editor)->patchJson("/api/v1/artists/{$artist->id}/curation", [
+        'contacts' => [['name' => 'Abdullah', 'address' => 'Al Rawand Street, Al Khawther, Saihat']],
+    ])->assertOk();
+
+    expect(DB::table('artist_contacts')->where('artist_id', $artist->id)->value('address'))->not->toContain('Rawand');
+    expect(json_encode(Activity::all()->toArray()))->not->toContain('Rawand');
+    $this->actingAs($editor)->getJson("/api/v1/artists/{$artist->id}/curation")->assertJsonPath('data.contacts.0.address', 'Al Rawand Street, Al Khawther, Saihat');
+});

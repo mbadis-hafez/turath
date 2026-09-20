@@ -191,3 +191,22 @@ it('accepts condition and inventory fields when creating an artwork', function (
     expect(Artwork::find($id)->getAttribute('condition_report_status'))->toBe('pending')
         ->and(Artwork::find($id)->getAttribute('inventory_by_owner'))->toBe('N-1');
 });
+
+it('stores the material classification and a separate conservation risk note, and rejects unknown classifications', function () {
+    $editor = editorUser();
+    $id = $this->actingAs($editor)->postJson('/api/v1/artworks', [
+        'title' => ['ar' => 'مباني'], 'category' => 'painting', 'attribution_certainty' => 'unattributed',
+        'conservation_risk_note' => 'Stored in a humid room.',
+    ])->assertCreated()->json('data.id');
+
+    $bundle = $this->actingAs($editor)->getJson("/api/v1/artworks/{$id}/curation")->json('data');
+    expect($bundle['material_classification'])->toBe('movable')->and($bundle['conservation_risk_note'])->toBe('Stored in a humid room.');
+
+    $this->actingAs($editor)->patchJson("/api/v1/artworks/{$id}", ['material_classification' => 'immovable'])->assertOk();
+    expect($this->actingAs($editor)->getJson("/api/v1/artworks/{$id}/curation")->json('data.material_classification'))->toBe('immovable');
+    $this->actingAs($editor)->patchJson("/api/v1/artworks/{$id}", ['material_classification' => 'bogus'])->assertUnprocessable();
+
+    Auth::forgetGuards();
+    $public = $this->getJson("/api/v1/artworks/{$id}")->json('data');
+    expect($public)->not->toHaveKey('conservation_risk_note');
+});

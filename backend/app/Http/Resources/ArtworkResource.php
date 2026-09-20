@@ -25,6 +25,7 @@ class ArtworkResource extends ArtworkListResource
             ],
             'weight_kg' => $artwork->weight_kg,
             'signed' => $artwork->signed,
+            'material_classification' => $artwork->getAttribute('material_classification'),
             'edition' => [
                 'number' => $artwork->edition_number,
                 'size' => $artwork->edition_size,

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Artwork;
 
 use App\Enums\ArtworkCategory;
 use App\Enums\AttributionCertainty;
+use App\Enums\MaterialClassification;
 use App\Enums\PublicationStatus;
 use App\Enums\SignedStatus;
 use Illuminate\Validation\Rules\Enum;
@@ -52,6 +53,8 @@ class StoreArtworkRequest extends ArtworkPayloadRequest
                 'condition_report_status' => ['nullable', 'in:not_available,pending,available'],
                 'image_quality' => ['nullable', 'in:low_resolution,high_resolution,archive_source'],
                 'editing_status' => ['nullable', 'string', 'max:20'],
+                'material_classification' => ['nullable', new Enum(MaterialClassification::class)],
+                'conservation_risk_note' => ['nullable', 'string', 'max:5000'],
                 'inventory_by_owner' => ['nullable', 'string', 'max:120'],
                 'edit_summary' => ['nullable', 'string', 'max:255'],
             ],

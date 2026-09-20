@@ -17,7 +17,7 @@ class ArtworkMerger
         'artist_id', 'attribution_certainty', 'title_ar', 'title_en', 'is_untitled', 'category',
         'medium_ar', 'medium_en', 'edition_number', 'edition_size', 'height_cm', 'width_cm', 'depth_cm',
         'dimensions_raw', 'frame_height_cm', 'frame_width_cm', 'frame_depth_cm', 'frame_dimensions_raw',
-        'weight_kg', 'signed', 'holder_id', 'holder_inventory_no', 'notes_ar', 'notes_en',
+        'weight_kg', 'signed', 'material_classification', 'conservation_risk_note', 'holder_id', 'holder_inventory_no', 'notes_ar', 'notes_en',
         'creation_date_display', 'creation_year_from', 'creation_year_to', 'creation_calendar', 'creation_certainty',
     ];
 

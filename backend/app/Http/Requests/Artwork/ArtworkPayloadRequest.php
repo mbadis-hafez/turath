@@ -37,7 +37,7 @@ abstract class ArtworkPayloadRequest extends FormRequest
             $attributes['title_en'] = $v['title']['en'] ?? null;
         }
 
-        foreach (['is_untitled', 'category', 'edition_number', 'edition_size', 'signed', 'holder_id', 'holder_inventory_no', 'publication_status', 'condition_report_link', 'condition_report_status', 'image_quality', 'editing_status', 'inventory_by_owner'] as $column) {
+        foreach (['is_untitled', 'category', 'edition_number', 'edition_size', 'signed', 'holder_id', 'holder_inventory_no', 'publication_status', 'condition_report_link', 'condition_report_status', 'image_quality', 'editing_status', 'inventory_by_owner', 'material_classification', 'conservation_risk_note'] as $column) {
             if (array_key_exists($column, $v)) {
                 $attributes[$column] = $v[$column];
             }

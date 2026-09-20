@@ -80,8 +80,9 @@ class RecordCompletenessController
 
         return [
             'id' => $source->id,
-            'source_type' => $source->source_type,
-            'title' => ['ar' => $source->title_ar, 'en' => $source->title_en],
+            'source_type' => $source->effectiveType(),
+            'linked_archive_item_id' => $source->linked_archive_item_id,
+            'title' => $source->displayTitle(),
             'publisher_or_outlet' => $source->publisher_or_outlet,
             'reference_note' => $source->reference_note,
             'url' => $source->url,

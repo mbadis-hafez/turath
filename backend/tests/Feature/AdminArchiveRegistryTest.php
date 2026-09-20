@@ -4,6 +4,7 @@ use App\Models\ArchiveItem;
 use App\Models\Artist;
 use App\Models\File;
 use App\Models\ReviewQueueItem;
+use App\Models\Source;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -90,4 +91,28 @@ it('edits an archive item end to end: new fields, one original file, checklist, 
 
     $this->actingAs($editor)->deleteJson("/api/v1/archive-items/{$id}/file")->assertOk()->assertJsonPath('data', null);
     $this->actingAs($editor)->post("/api/v1/archive-items/{$id}/file", ['file' => UploadedFile::fake()->create('x.exe', 10)], ['Accept' => 'application/json'])->assertUnprocessable();
+});
+
+it('accepts documentation cards, primary-documentation links, and a source that is an internal archive item', function () {
+    $editor = editorUser();
+    $artist = Artist::factory()->create();
+
+    $card = $this->actingAs($editor)->postJson('/api/v1/archive-items', [
+        'item_type' => 'documentation_card', 'title' => ['ar' => 'جذاذة: مباني'], 'access_level' => 'institution_only',
+    ])->assertCreated()->assertJsonPath('data.item_type', 'documentation_card')->json('data.id');
+
+    $this->actingAs($editor)->postJson("/api/v1/archive-items/{$card}/links", ['linkable_type' => 'artist', 'linkable_id' => $artist->id, 'role' => 'primary_documentation'])->assertCreated();
+
+    $this->actingAs($editor)->postJson("/api/v1/records/artists/{$artist->id}/citations", [
+        'field_key' => 'bio_en', 'claimed_value' => 'x', 'new_source' => ['linked_archive_item_id' => $card],
+    ])->assertCreated();
+
+    $source = Source::firstOrFail();
+    expect($source->source_type)->toBe('archive_item')
+        ->and($source->effectiveType())->toBe('documentation_card')
+        ->and($source->displayTitle()['ar'])->toBe('جذاذة: مباني');
+
+    $this->actingAs($editor)->postJson("/api/v1/records/artists/{$artist->id}/citations", [
+        'field_key' => 'bio_ar', 'claimed_value' => 'x', 'new_source' => ['title_en' => 'A book'],
+    ])->assertUnprocessable();
 });

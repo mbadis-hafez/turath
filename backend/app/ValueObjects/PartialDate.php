@@ -94,11 +94,47 @@ readonly class PartialDate
             );
         }
 
-        return new self(
+        return self::fromArabicDecade($trimmed) ?? new self(
             display: $trimmed,
             calendar: CalendarType::Gregorian,
             certainty: DateCertainty::Unknown,
         );
+    }
+
+    /**
+     * "أوائل الثمانينيات الميلادية" → circa 1980–1983. A bare decade is a
+     * range; a qualified one (early/mid/late) is circa. Hijri phrases are
+     * left unparsed rather than guessed.
+     */
+    private static function fromArabicDecade(string $text): ?self
+    {
+        $clean = preg_replace('/[\x{064B}-\x{0652}\x{0640}]/u', '', $text) ?? $text;
+
+        if (preg_match('/هـ|هجري/u', $clean)) {
+            return null;
+        }
+
+        $decades = [
+            'العشرين' => 1920, 'الثلاثين' => 1930, 'الأربعين' => 1940, 'الاربعين' => 1940, 'الخمسين' => 1950,
+            'الستين' => 1960, 'السبعين' => 1970, 'الثمانين' => 1980, 'التسعين' => 1990,
+        ];
+
+        foreach ($decades as $stem => $start) {
+            if (! preg_match('/'.$stem.'(?:ي)?ات/u', $clean)) {
+                continue;
+            }
+
+            [$from, $to, $certainty] = match (true) {
+                (bool) preg_match('/أوائل|اوائل|مطلع|بداية|بدايات/u', $clean) => [$start, $start + 3, DateCertainty::Circa],
+                (bool) preg_match('/منتصف|أواسط|اواسط|وسط/u', $clean) => [$start + 4, $start + 6, DateCertainty::Circa],
+                (bool) preg_match('/أواخر|اواخر|نهاية|نهايات/u', $clean) => [$start + 7, $start + 9, DateCertainty::Circa],
+                default => [$start, $start + 9, DateCertainty::Range],
+            };
+
+            return new self(display: $text, yearFrom: $from, yearTo: $to, calendar: CalendarType::Gregorian, certainty: $certainty);
+        }
+
+        return null;
     }
 
     /**

@@ -14,5 +14,6 @@ enum ArchiveItemType: string
     case Poster = 'poster';
     case Document = 'document';
     case Portfolio = 'portfolio';
+    case DocumentationCard = 'documentation_card';
     case Other = 'other';
 }

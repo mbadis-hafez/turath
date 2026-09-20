@@ -27,6 +27,39 @@ class Source extends Model
     }
 
     /**
+     * @return BelongsTo<ArchiveItem, $this>
+     */
+    public function linkedArchiveItem(): BelongsTo
+    {
+        return $this->belongsTo(ArchiveItem::class, 'linked_archive_item_id');
+    }
+
+    /**
+     * D110/D111: a linked source takes its title and type from the Archive
+     * Item itself, so the same document is never classified twice.
+     *
+     * @return array{ar: string|null, en: string|null}
+     */
+    public function displayTitle(): array
+    {
+        $item = $this->linked_archive_item_id !== null ? $this->linkedArchiveItem : null;
+
+        return [
+            'ar' => $this->title_ar ?? $item?->title_ar,
+            'en' => $this->title_en ?? $item?->title_en,
+        ];
+    }
+
+    public function effectiveType(): string
+    {
+        if ($this->linked_archive_item_id === null) {
+            return $this->source_type;
+        }
+
+        return $this->linkedArchiveItem->item_type ?? $this->source_type;
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function addedBy(): BelongsTo

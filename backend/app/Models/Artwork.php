@@ -123,6 +123,8 @@ class Artwork extends Model
             'creation_year_to' => ['ar' => 'سنة الإنجاز (إلى)', 'en' => 'Creation year (to)'],
             'creation_calendar' => ['ar' => 'تقويم الإنجاز', 'en' => 'Creation calendar'],
             'creation_certainty' => ['ar' => 'دقة تاريخ الإنجاز', 'en' => 'Creation date certainty'],
+            'material_classification' => ['ar' => 'التصنيف المادي', 'en' => 'Material classification'],
+            'conservation_risk_note' => ['ar' => 'ملاحظة مخاطر الحفظ', 'en' => 'Conservation risk note'],
             'holder_id' => ['ar' => 'الجهة الحائزة', 'en' => 'Holder'],
             'holder_inventory_no' => ['ar' => 'رقم جرد الحائز', 'en' => 'Holder inventory number'],
             'notes_ar' => ['ar' => 'ملاحظات (عربي)', 'en' => 'Notes (Arabic)'],

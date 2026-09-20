@@ -10,4 +10,5 @@ enum ArchiveLinkRole: string
     case AuthoredBy = 'authored_by';
     case Donor = 'donor';
     case Subject = 'subject';
+    case PrimaryDocumentation = 'primary_documentation';
 }

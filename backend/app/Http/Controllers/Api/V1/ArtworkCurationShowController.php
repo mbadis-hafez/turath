@@ -66,6 +66,8 @@ class ArtworkCurationShowController
             'weight_kg' => $artwork->weight_kg,
             'holder' => $artwork->holder ? ['id' => $artwork->holder->id, 'name' => ['ar' => $artwork->holder->name_ar, 'en' => $artwork->holder->name_en]] : null,
             'holder_inventory_no' => $artwork->holder_inventory_no,
+            'material_classification' => $artwork->getAttribute('material_classification'),
+            'conservation_risk_note' => $artwork->getAttribute('conservation_risk_note'),
             'inventory_by_owner' => $artwork->getAttribute('inventory_by_owner'),
             'condition_report_link' => $artwork->getAttribute('condition_report_link'),
             'condition_report_status' => $artwork->getAttribute('condition_report_status'),

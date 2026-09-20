@@ -40,7 +40,7 @@ class ArtistCurationShowController
             'portrait' => ArtistPortraitController::present($artist),
             'contact' => ['owner_type' => $artist->owner_type, 'ref_supervisor_note' => $artist->ref_supervisor_note],
             'contacts' => $artist->contacts->map(fn ($c) => [
-                'id' => $c->id, 'name' => $c->name, 'role_note' => $c->role_note, 'email' => $c->email, 'phone' => $c->phone,
+                'id' => $c->id, 'name' => $c->name, 'role_note' => $c->role_note, 'email' => $c->email, 'phone' => $c->phone, 'address' => $c->address,
             ])->values(),
             'pipeline' => [
                 'authorization_letter' => [

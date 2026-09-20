@@ -27,7 +27,8 @@ class FieldCitationStoreController
         if ($sourceId === null) {
             $newSource = $request->input('new_source');
             $source = Source::create([
-                'source_type' => $newSource['source_type'],
+                'source_type' => ($newSource['linked_archive_item_id'] ?? null) !== null ? 'archive_item' : $newSource['source_type'],
+                'linked_archive_item_id' => $newSource['linked_archive_item_id'] ?? null,
                 'title_ar' => $newSource['title_ar'] ?? null,
                 'title_en' => $newSource['title_en'] ?? null,
                 'publisher_or_outlet' => $newSource['publisher_or_outlet'] ?? null,

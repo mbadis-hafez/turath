@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/** Internal-only (D100). Email/phone are encrypted; changes are logged by the curation controller without values. */
+/** Internal-only (D100). Email, phone and address are encrypted; changes are logged by the curation controller without values. */
 class ArtistContact extends Model
 {
     /** @var array<int, string> */
@@ -16,7 +16,7 @@ class ArtistContact extends Model
      */
     protected function casts(): array
     {
-        return ['email' => 'encrypted', 'phone' => 'encrypted'];
+        return ['email' => 'encrypted', 'phone' => 'encrypted', 'address' => 'encrypted'];
     }
 
     /**

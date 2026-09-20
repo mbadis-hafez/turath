@@ -28,6 +28,13 @@ it('parses free-text date strings from spreadsheet cells', function (
     ['1409 hijri; 1984/1985', 1409, 1409, CalendarType::Hijri, DateCertainty::Exact],
     ['Not available', null, null, CalendarType::Gregorian, DateCertainty::Unknown],
     ['tbc', null, null, CalendarType::Gregorian, DateCertainty::Unknown],
+    // Real values from the documentation cards (Bugis and Alshalti).
+    ['أوائل الثمانينيات الميلادية', 1980, 1983, CalendarType::Gregorian, DateCertainty::Circa],
+    ['1984م', 1984, 1984, CalendarType::Gregorian, DateCertainty::Exact],
+    ['منتصف السبعينات', 1974, 1976, CalendarType::Gregorian, DateCertainty::Circa],
+    ['أواخر الستينيات', 1967, 1969, CalendarType::Gregorian, DateCertainty::Circa],
+    ['الثمانينيات', 1980, 1989, CalendarType::Gregorian, DateCertainty::Range],
+    ['السبعينات الهجرية', null, null, CalendarType::Gregorian, DateCertainty::Unknown],
 ]);
 
 it('returns null for an empty string', function () {

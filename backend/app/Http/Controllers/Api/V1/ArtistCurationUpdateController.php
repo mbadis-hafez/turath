@@ -23,6 +23,7 @@ class ArtistCurationUpdateController
             'contacts.*.role_note' => ['nullable', 'string', 'max:255'],
             'contacts.*.email' => ['nullable', 'email', 'max:255'],
             'contacts.*.phone' => ['nullable', 'string', 'max:50'],
+            'contacts.*.address' => ['nullable', 'string', 'max:500'],
             'authorization_letter_status' => ['sometimes', Rule::in(['not_started', 'pending', 'signed', 'not_applicable'])],
             'authorization_letter_file_id' => ['sometimes', 'nullable', 'integer', 'exists:files,id'],
             'owner_pre_agreement_status' => ['sometimes', Rule::in(['not_started', 'pending', 'yes', 'no', 'not_applicable'])],
@@ -42,8 +43,8 @@ class ArtistCurationUpdateController
         if ($contacts !== null) {
             $items = array_map(fn (array $c) => [
                 'id' => $c['id'] ?? null, 'name' => $c['name'] ?? null, 'role_note' => $c['role_note'] ?? null,
-                'email' => $c['email'] ?? null, 'phone' => $c['phone'] ?? null,
-            ], array_filter($contacts, fn (array $c) => ($c['name'] ?? null) !== null || ($c['email'] ?? null) !== null || ($c['phone'] ?? null) !== null));
+                'email' => $c['email'] ?? null, 'phone' => $c['phone'] ?? null, 'address' => $c['address'] ?? null,
+            ], array_filter($contacts, fn (array $c) => ($c['name'] ?? null) !== null || ($c['email'] ?? null) !== null || ($c['phone'] ?? null) !== null || ($c['address'] ?? null) !== null));
             $contactCounts = ChildSync::sync($artist->contacts(), $items);
         }
 
