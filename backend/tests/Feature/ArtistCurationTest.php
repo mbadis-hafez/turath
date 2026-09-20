@@ -169,7 +169,7 @@ it('counts a contact as met only with a name and a way to reach them', function 
     expect($met())->toBeTrue();
 });
 
-it('shows nationality, classification, dates, education, awards and exhibitions publicly, plus only public social links', function () {
+it('shows nationality, classification, dates, education and activities (awards, exhibitions, talks) publicly, plus only public social links', function () {
     $editor = editorUser();
     $artist = Artist::factory()->published()->create();
 
@@ -182,8 +182,11 @@ it('shows nationality, classification, dates, education, awards and exhibitions 
 
     $this->actingAs($editor)->putJson("/api/v1/artists/{$artist->id}/entries", [
         'educations' => [['title' => ['en' => 'BFA'], 'place' => ['en' => 'Cairo Academy'], 'year_from' => 1960, 'year_to' => 1964]],
-        'awards' => [['title' => ['ar' => 'جائزة', 'en' => 'Prize'], 'place' => ['en' => 'Ministry'], 'year_from' => 1988]],
-        'exhibitions' => [['title' => ['en' => 'Solo show'], 'place' => ['en' => 'Dar Al-Funun'], 'year_from' => 1978], ['title' => ['en' => 'Group show'], 'year_from' => 1980]],
+        'activities' => [
+            ['type' => 'award', 'title' => ['ar' => 'جائزة', 'en' => 'Prize'], 'place' => ['en' => 'Ministry'], 'year_from' => 1988],
+            ['type' => 'exhibition', 'title' => ['en' => 'Solo show'], 'place' => ['en' => 'Dar Al-Funun'], 'year_from' => 1978],
+            ['type' => 'talk', 'title' => ['en' => 'Artist talk'], 'year_from' => 1980],
+        ],
     ])->assertOk();
     $this->actingAs($editor)->putJson("/api/v1/artists/{$artist->id}/social-links", ['links' => [
         ['platform' => 'instagram', 'url' => 'https://instagram.com/pub', 'is_public' => true],
@@ -198,8 +201,8 @@ it('shows nationality, classification, dates, education, awards and exhibitions 
         ->and($public['death']['year_from'])->toBe(2016)
         ->and($public['educations'])->toHaveCount(1)
         ->and($public['educations'][0]['year_to'])->toBe(1964)
-        ->and($public['awards'][0]['title']['ar'])->toBe('جائزة')
-        ->and($public['exhibitions'])->toHaveCount(2)
+        ->and($public['activities'][0]['title']['ar'])->toBe('جائزة')
+        ->and($public['activities'])->toHaveCount(3)
         ->and($public['social_links'])->toHaveCount(1)
         ->and(json_encode($public))->not->toContain('priv');
 });
@@ -210,7 +213,7 @@ it('validates entry years and social link urls', function () {
 
     $this->actingAs($editor)->putJson("/api/v1/artists/{$artist->id}/entries", ['educations' => [['title' => ['en' => 'X'], 'year_from' => 1990, 'year_to' => 1980]]])->assertStatus(422);
     $this->actingAs($editor)->putJson("/api/v1/artists/{$artist->id}/social-links", ['links' => [['platform' => 'instagram', 'url' => 'not a url']]])->assertStatus(422);
-    $this->actingAs(makeUser('reader'))->putJson("/api/v1/artists/{$artist->id}/entries", ['awards' => []])->assertForbidden();
+    $this->actingAs(makeUser('reader'))->putJson("/api/v1/artists/{$artist->id}/entries", ['activities' => []])->assertForbidden();
 });
 
 it('syncs entries in place: unchanged rows stay unchanged and dropped rows are deleted', function () {
@@ -218,10 +221,10 @@ it('syncs entries in place: unchanged rows stay unchanged and dropped rows are d
     $artist = Artist::factory()->create();
     $url = "/api/v1/artists/{$artist->id}/entries";
 
-    $rows = $this->actingAs($editor)->putJson($url, ['awards' => [['title' => ['en' => 'One']], ['title' => ['en' => 'Two']]]])->json('data.awards');
+    $rows = $this->actingAs($editor)->putJson($url, ['activities' => [['type' => 'award', 'title' => ['en' => 'One']], ['type' => 'symposium', 'title' => ['en' => 'Two']]]])->json('data.activities');
     $before = Activity::where('subject_type', ArtistEntry::class)->count();
 
-    $this->actingAs($editor)->putJson($url, ['awards' => [['id' => $rows[0]['id'], 'title' => ['en' => 'One']]]])->assertOk()->assertJsonCount(1, 'data.awards');
+    $this->actingAs($editor)->putJson($url, ['activities' => [['id' => $rows[0]['id'], 'type' => 'award', 'title' => ['en' => 'One']]]])->assertOk()->assertJsonCount(1, 'data.activities');
 
     expect(Activity::where('subject_type', ArtistEntry::class)->count())->toBe($before + 1); // only the delete
 });

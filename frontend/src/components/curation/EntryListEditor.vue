@@ -2,13 +2,15 @@
 import { useI18n } from "vue-i18n";
 
 import ListEditor from "@/components/curation/ListEditor.vue";
-import { newEntry } from "@/composables/useArtistProfileForm";
+import { newActivity, newEntry } from "@/composables/useArtistProfileForm";
 import type { ProfileEntry } from "@/types/artistCuration";
 
 defineProps<{
   addLabel: string;
-  /** Education spans years; awards and exhibitions have a single year. */
+  /** Education spans years; activities have a single year. */
   range?: boolean;
+  /** Show a per-entry type selector (award, exhibition, talk, symposium). */
+  typed?: boolean;
 }>();
 
 const entries = defineModel<ProfileEntry[]>({ required: true });
@@ -18,9 +20,14 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-1.5 
 </script>
 
 <template>
-  <ListEditor v-model="entries" :create="newEntry" :add-label="addLabel">
+  <ListEditor v-model="entries" :create="typed ? newActivity : newEntry" :add-label="addLabel">
     <template #default="{ item }">
       <div class="grid gap-3 sm:grid-cols-2">
+        <label v-if="typed" class="text-xs text-ink-muted sm:col-span-2">{{ t("curation.profileForm.activityType") }}
+          <select v-model="item.type" data-testid="activity-type" :class="input">
+            <option v-for="k in ['award', 'exhibition', 'talk', 'symposium']" :key="k" :value="k">{{ t(`curation.profileForm.activityTypes.${k}`) }}</option>
+          </select>
+        </label>
         <label class="text-xs text-ink-muted">{{ t("curation.profileForm.entryTitleAr") }}<input v-model="item.title.ar" type="text" dir="rtl" :class="input" /></label>
         <label class="text-xs text-ink-muted">{{ t("curation.profileForm.entryTitleEn") }}<input v-model="item.title.en" type="text" dir="ltr" :class="input" /></label>
         <label class="text-xs text-ink-muted">{{ t("curation.profileForm.placeAr") }}<input v-model="item.place.ar" type="text" dir="rtl" :class="input" /></label>

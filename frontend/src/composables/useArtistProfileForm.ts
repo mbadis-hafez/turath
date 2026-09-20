@@ -20,6 +20,14 @@ export const newEntry = (): ProfileEntry => ({
   year_to: null,
   note: emptyLocalized(),
 });
+export const newActivity = (): ProfileEntry => ({
+  type: "exhibition",
+  title: emptyLocalized(),
+  place: emptyLocalized(),
+  year_from: null,
+  year_to: null,
+  note: emptyLocalized(),
+});
 export const newContact = (): ArtistContact => ({ name: null, role_note: null, email: null, phone: null });
 export const newSocial = (): SocialLink => ({ platform: "instagram", url: "", is_public: false });
 
@@ -48,7 +56,7 @@ export function useArtistProfileForm() {
     classification: emptyLocalized(),
     birthDate: "",
     deathDate: "",
-    entries: { educations: [], awards: [], exhibitions: [] } as EntryGroups,
+    entries: { educations: [], activities: [] } as EntryGroups,
     contacts: [] as ArtistContact[],
     socialLinks: [] as SocialLink[],
   });
@@ -88,6 +96,7 @@ export function useArtistProfileForm() {
         .filter((e) => blank(e.title.ar) || blank(e.title.en))
         .map((e) => ({
           ...(e.id ? { id: e.id } : {}),
+          ...(e.type ? { type: e.type } : {}),
           title: blankLocalized(e.title),
           place: blankLocalized(e.place),
           year_from: e.year_from || null,
@@ -96,8 +105,7 @@ export function useArtistProfileForm() {
         }));
     return {
       educations: clean(form.entries.educations),
-      awards: clean(form.entries.awards),
-      exhibitions: clean(form.entries.exhibitions),
+      activities: clean(form.entries.activities),
     };
   }
 

@@ -6,12 +6,12 @@ use App\Concerns\LogsChanges;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/** Education, award or exhibition line on an artist's profile. */
+/** Education, award, exhibition, talk or symposium line on an artist's profile. */
 class ArtistEntry extends Model
 {
     use LogsChanges;
 
-    public const TYPES = ['education', 'award', 'exhibition'];
+    public const TYPES = ['education', 'award', 'exhibition', 'talk', 'symposium'];
 
     /** @var array<int, string> */
     public $guarded = [];

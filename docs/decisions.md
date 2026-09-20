@@ -138,3 +138,4 @@ Numbering continues locally (D43+); the F10 spec's own D47–D57 are cross-refer
 - Portraits are stored on the private disk and streamed via the API; public only when rights are licensed/public_domain and the artist is published. `portrait_with_clear_rights` is now a real completeness check.
 - On the curation page birth/death are only sent when edited, so dates the date picker cannot represent (circa, ranges, hijri) are never overwritten.
 - Frontend type checking: use `npm run typecheck`; bare `vue-tsc --noEmit` is vacuous in this repo.
+- Awards, exhibitions, talks and symposiums share one "activities" group in the API and UI; each entry carries a `type` (`artist_entries.type`, no schema change). Education stays its own group.

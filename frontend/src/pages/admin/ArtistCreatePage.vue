@@ -210,9 +210,9 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
               </div>
             </section>
 
-            <section v-for="g in ([['educations', 'addEducation', true], ['awards', 'addAward', false], ['exhibitions', 'addExhibition', false]] as const)" :key="g[0]" :data-testid="`${g[0]}-section`">
+            <section v-for="g in ([['educations', 'addEducation', true], ['activities', 'addActivity', false]] as const)" :key="g[0]" :data-testid="`${g[0]}-section`">
               <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t(`curation.profileForm.${g[0]}`) }}</h2>
-              <div class="mt-4"><EntryListEditor v-model="profile.form.entries[g[0]]" :add-label="t(`curation.profileForm.${g[1]}`)" :range="g[2]" /></div>
+              <div class="mt-4"><EntryListEditor v-model="profile.form.entries[g[0]]" :add-label="t(`curation.profileForm.${g[1]}`)" :range="g[2]" :typed="g[0] === 'activities'" /></div>
             </section>
 
             <section data-testid="socials-section">

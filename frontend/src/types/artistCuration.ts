@@ -26,6 +26,7 @@ export interface DateValue {
 
 export interface ProfileEntry {
   id?: number;
+  type?: ActivityType;
   title: Localized;
   place: Localized;
   year_from: number | null;
@@ -33,7 +34,8 @@ export interface ProfileEntry {
   note: Localized;
 }
 
-export type EntryGroup = "educations" | "awards" | "exhibitions";
+export type ActivityType = "award" | "exhibition" | "talk" | "symposium";
+export type EntryGroup = "educations" | "activities";
 export type EntryGroups = Record<EntryGroup, ProfileEntry[]>;
 
 export interface ArtistContact {

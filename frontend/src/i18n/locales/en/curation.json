@@ -162,11 +162,7 @@
     "birthDate": "Birth date",
     "deathDate": "Date of death",
     "educations": "Education",
-    "awards": "Awards",
-    "exhibitions": "Exhibitions",
     "addEducation": "Add education",
-    "addAward": "Add award",
-    "addExhibition": "Add exhibition",
     "entryTitleAr": "Title (Arabic)",
     "entryTitleEn": "Title (English)",
     "placeAr": "Institution / venue (Arabic)",
@@ -207,6 +203,15 @@
       "snapchat": "Snapchat",
       "other": "Other"
     },
-    "portraitPublicHint": "Only shown publicly when rights are licensed or public domain."
+    "portraitPublicHint": "Only shown publicly when rights are licensed or public domain.",
+    "activities": "Awards, exhibitions, talks & symposiums",
+    "addActivity": "Add entry",
+    "activityType": "Type",
+    "activityTypes": {
+      "award": "Award",
+      "exhibition": "Exhibition",
+      "talk": "Talk",
+      "symposium": "Symposium"
+    }
   }
 }

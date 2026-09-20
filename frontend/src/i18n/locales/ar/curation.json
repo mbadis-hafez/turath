@@ -162,11 +162,7 @@
     "birthDate": "تاريخ الميلاد",
     "deathDate": "تاريخ الوفاة",
     "educations": "التعليم",
-    "awards": "الجوائز",
-    "exhibitions": "المعارض",
     "addEducation": "إضافة مؤهل",
-    "addAward": "إضافة جائزة",
-    "addExhibition": "إضافة معرض",
     "entryTitleAr": "العنوان (عربي)",
     "entryTitleEn": "العنوان (إنجليزي)",
     "placeAr": "الجهة / المكان (عربي)",
@@ -207,6 +203,15 @@
       "snapchat": "سناب شات",
       "other": "أخرى"
     },
-    "portraitPublicHint": "لا تظهر للعامة إلا إذا كانت الحقوق مرخّصة أو ملكية عامة."
+    "portraitPublicHint": "لا تظهر للعامة إلا إذا كانت الحقوق مرخّصة أو ملكية عامة.",
+    "activities": "الجوائز والمعارض والمحاضرات والندوات",
+    "addActivity": "إضافة إدخال",
+    "activityType": "النوع",
+    "activityTypes": {
+      "award": "جائزة",
+      "exhibition": "معرض",
+      "talk": "محاضرة",
+      "symposium": "ندوة"
+    }
   }
 }
