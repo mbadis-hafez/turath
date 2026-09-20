@@ -102,3 +102,14 @@ Numbering continues locally (D43+); the F10 spec's own D47–D57 are cross-refer
 - **D55 — Stages are lazily ensured** (`PipelineService::ensureStages`) so artworks created before F11 get their six rows on first access.
 - **D56 — Candidate detection is out of scope**; only list/promote/dismiss exist. Nothing creates candidates yet (F8 extraction / F4 unmatched-row hook). Promotion links the source archive item to the new artwork with role `depicts`, category defaults to `other`.
 - **Not built:** F11 frontend (registry page, curation detail, `MergeToolModal`).
+
+## F12 — Artist Curation & Documentation Pipeline (2026-09-20) — backend
+
+- **D57 — Contact data is encrypted and audit-safe.** `contact_email`/`contact_phone` use Laravel's `encrypted` cast (text columns) and are excluded from `LogsChanges` diffs so plaintext never lands in `activity_log`; `ArtistCurationUpdateController` instead writes an explicit activity entry listing `contact_fields_changed`. Other internal fields (`key_contact_name`, `owner_type`, statuses…) are logged normally. Tests assert none of the internal fields appear in the public artist show/list output or `search_text`. Read-access logging is not implemented (spec leaves it open).
+- **D58 — `owner_pre_agreement_status` also accepts `not_applicable`.** The §2 enum omits it but the §3 gate accepts it; the column allows all five values.
+- **D59 — Verify gate changes F1 behaviour.** `POST /artists/{id}/verify` with `status=verified` now returns one itemized 422 (`data.*` from F10 + `pipeline.authorization_letter`/`pipeline.owner_pre_agreement`) unless all three conditions clear; `disputed` and unverify are ungated. The existing F1 verify test was updated to satisfy the gate. `name_verified` is computed from a `field_citations` row with `field_key = 'name'`, never stored.
+- **D60 — "ظهور عام" is computed, not stored:** `public_visibility` = `visible` iff `verifyErrors()` is empty.
+- **D61 — Checklist reports `portrait` as unsupported/unmet** (no artist-portrait schema; same gap as D45). "Priority materials" has no flag in the schema, so the `has_priority_materials` filter means "has any linked archive item".
+- **D62 — Artist merge mirrors artwork merge (D52):** re-points artworks, archive links, citations, name variants (dropping duplicate names) and themes; tombstone = soft-delete + `merged_into_id`, and `GET /artists/{oldSlug}` answers `301` to the survivor. F7 proposals not moved (don't exist).
+- **D63 — `artist_staff_assignments` (optional in spec) not built;** `ref_supervisor_note` free text only. `bio_source_type` is set manually (no auto-compilation from linked materials).
+- **Not built:** F10/F11/F12 frontends.

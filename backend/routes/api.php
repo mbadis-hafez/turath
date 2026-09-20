@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\ActivityFeedController;
+use App\Http\Controllers\Api\V1\AdminArtistIndexController;
 use App\Http\Controllers\Api\V1\AdminArtworkIndexController;
 use App\Http\Controllers\Api\V1\ArchiveItemDestroyController;
 use App\Http\Controllers\Api\V1\ArchiveItemIndexController;
@@ -13,8 +14,11 @@ use App\Http\Controllers\Api\V1\ArchiveItemStoreController;
 use App\Http\Controllers\Api\V1\ArchiveItemUpdateController;
 use App\Http\Controllers\Api\V1\ArtistArchiveItemsController;
 use App\Http\Controllers\Api\V1\ArtistArtworksController;
+use App\Http\Controllers\Api\V1\ArtistCurationShowController;
+use App\Http\Controllers\Api\V1\ArtistCurationUpdateController;
 use App\Http\Controllers\Api\V1\ArtistDestroyController;
 use App\Http\Controllers\Api\V1\ArtistIndexController;
+use App\Http\Controllers\Api\V1\ArtistMergeController;
 use App\Http\Controllers\Api\V1\ArtistRestoreController;
 use App\Http\Controllers\Api\V1\ArtistShowController;
 use App\Http\Controllers\Api\V1\ArtistStoreController;
@@ -68,6 +72,7 @@ use App\Http\Controllers\Api\V1\ReviewQueueAcknowledgeController;
 use App\Http\Controllers\Api\V1\ReviewQueueIndexController;
 use App\Http\Controllers\Api\V1\SourceConflictResolveController;
 use App\Http\Controllers\Api\V1\SubjectActivityController;
+use App\Http\Controllers\Api\V1\ThemeController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -156,6 +161,16 @@ Route::prefix('v1')->group(function () {
 
         Route::get('review-queue', ReviewQueueIndexController::class);
         Route::post('review-queue/{reviewQueueItem}/acknowledge', ReviewQueueAcknowledgeController::class);
+
+        Route::middleware('can:artists.manage')->group(function () {
+            Route::get('admin/artists', AdminArtistIndexController::class);
+            Route::post('artists/merge', ArtistMergeController::class);
+            Route::get('artists/{artist}/curation', ArtistCurationShowController::class)->whereNumber('artist');
+            Route::patch('artists/{artist}/curation', ArtistCurationUpdateController::class)->whereNumber('artist');
+            Route::patch('artists/{artist}/themes', [ThemeController::class, 'sync'])->whereNumber('artist');
+            Route::get('themes', [ThemeController::class, 'index']);
+            Route::post('themes', [ThemeController::class, 'store']);
+        });
 
         Route::middleware('can:artworks.manage')->group(function () {
             Route::get('admin/artworks', AdminArtworkIndexController::class);

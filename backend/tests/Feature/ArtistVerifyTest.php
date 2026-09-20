@@ -1,11 +1,18 @@
 <?php
 
 use App\Models\Artist;
+use App\Models\FieldCitation;
 use Illuminate\Support\Facades\Auth;
 
 it('verifies and unverifies an artist', function () {
     $editor = editorUser();
-    $artist = Artist::factory()->published()->create();
+    // F12 D96: verification also needs completeness + the documentation pipeline.
+    $artist = Artist::factory()->published()->create([
+        'living_status' => 'living',
+        'authorization_letter_status' => 'signed',
+        'owner_pre_agreement_status' => 'yes',
+    ]);
+    FieldCitation::factory()->create(['citable_type' => Artist::class, 'citable_id' => $artist->id, 'field_key' => 'name']);
 
     $response = $this->actingAs($editor)->postJson("/api/v1/artists/{$artist->id}/verify", [
         'status' => 'verified',

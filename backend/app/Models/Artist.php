@@ -8,6 +8,7 @@ use Database\Factories\ArtistFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -29,6 +30,10 @@ class Artist extends Model
             'birth' => PartialDateCast::class.':birth',
             'death' => PartialDateCast::class.':death',
             'verified_at' => 'datetime',
+            'identified_through_date' => 'date',
+            'name_as_in_sources' => 'array',
+            'contact_email' => 'encrypted',
+            'contact_phone' => 'encrypted',
         ];
     }
 
@@ -46,6 +51,14 @@ class Artist extends Model
     public function artworks(): HasMany
     {
         return $this->hasMany(Artwork::class);
+    }
+
+    /**
+     * @return BelongsToMany<Theme, $this>
+     */
+    public function themes(): BelongsToMany
+    {
+        return $this->belongsToMany(Theme::class, 'artist_themes');
     }
 
     /**
@@ -71,7 +84,9 @@ class Artist extends Model
      */
     public function excludedFromActivityLog(): array
     {
-        return ['search_text', 'search_compact'];
+        // Encrypted contact data never lands in the audit diff; changes are
+        // logged by field name via the curation controller instead (D100).
+        return ['search_text', 'search_compact', 'contact_email', 'contact_phone'];
     }
 
     public function activitySubjectLabel(): string
