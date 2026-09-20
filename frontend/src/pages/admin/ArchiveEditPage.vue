@@ -288,7 +288,7 @@ const err = (key: string) => fieldErrors.value[key]?.[0];
             <div class="mt-3 flex gap-2">
               <label class="flex-1 cursor-pointer rounded-md border border-ink px-3 py-2 text-center text-sm font-medium text-ink hover:bg-neutral-soft" :class="busy ? 'opacity-50' : ''">
                 {{ filePreview ? t("archive.edit.replace") : t("archive.edit.upload") }}
-                <input type="file" class="sr-only" accept=".jpg,.jpeg,.png,.webp,.tif,.tiff,.pdf,.mp3,.wav,.mp4,.mov" :disabled="busy" data-testid="file-input" @change="onFile" />
+                <input type="file" class="sr-only" accept=".jpg,.jpeg,.png,.webp,.tif,.tiff,.pdf,.doc,.docx,.mp3,.wav,.mp4,.mov" :disabled="busy" data-testid="file-input" @change="onFile" />
               </label>
               <button v-if="filePreview" type="button" class="flex-1 rounded-md border border-danger px-3 py-2 text-sm font-medium text-danger hover:bg-danger-soft disabled:opacity-50" :disabled="busy" @click="removeFile">{{ t("archive.edit.remove") }}</button>
             </div>

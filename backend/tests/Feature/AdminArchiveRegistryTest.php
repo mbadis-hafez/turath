@@ -85,6 +85,9 @@ it('edits an archive item end to end: new fields, one original file, checklist, 
     $this->getJson($replaced['url'])->assertNotFound();
     $this->actingAs($editor)->get($replaced['url'])->assertOk();
 
+    $docx = UploadedFile::fake()->create('card.docx', 500, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    $this->actingAs($editor)->post("/api/v1/archive-items/{$id}/file", ['file' => $docx], ['Accept' => 'application/json'])->assertCreated()->assertJsonPath('data.is_image', false);
+
     $this->actingAs($editor)->deleteJson("/api/v1/archive-items/{$id}/file")->assertOk()->assertJsonPath('data', null);
     $this->actingAs($editor)->post("/api/v1/archive-items/{$id}/file", ['file' => UploadedFile::fake()->create('x.exe', 10)], ['Accept' => 'application/json'])->assertUnprocessable();
 });

@@ -28,7 +28,7 @@ class ArchiveItemFileController
     public function store(Request $request, ArchiveItem $archiveItem): JsonResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,tif,tiff,pdf,mp3,wav,mp4,mov', 'max:102400'],
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,tif,tiff,pdf,doc,docx,mp3,wav,mp4,mov', 'max:102400'],
         ]);
 
         $upload = $request->file('file');
