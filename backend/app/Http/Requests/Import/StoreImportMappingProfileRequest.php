@@ -17,7 +17,7 @@ class StoreImportMappingProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'entity_type' => ['required', 'string', 'in:artist,artwork'],
+            'entity_type' => ['required', 'string', 'in:artist,artwork,holder,archive_item'],
             'name' => ['required', 'string', 'max:255'],
             'column_map' => ['required', 'array'],
         ];

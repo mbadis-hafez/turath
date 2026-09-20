@@ -24,6 +24,8 @@ class ImportValidator
     private const IMPORTERS = [
         'artist' => ArtistImporter::class,
         'artwork' => ArtworkImporter::class,
+        'holder' => HolderImporter::class,
+        'archive_item' => ArchiveItemImporter::class,
     ];
 
     public function validate(ImportBatch $batch): void

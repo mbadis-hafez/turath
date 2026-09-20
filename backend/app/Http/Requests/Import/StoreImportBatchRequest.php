@@ -18,9 +18,7 @@ class StoreImportBatchRequest extends FormRequest
     {
         return [
             'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:51200'],
-            // Only artist/artwork importers exist so far; holder/archive_item
-            // land here once their Importer classes ship in a follow-up pass.
-            'entity_type' => ['required', 'string', 'in:artist,artwork'],
+            'entity_type' => ['required', 'string', 'in:artist,artwork,holder,archive_item'],
             'mapping_profile_id' => ['nullable', 'uuid', 'exists:import_mapping_profiles,id'],
             'column_map' => ['required_without:mapping_profile_id', 'array'],
         ];
