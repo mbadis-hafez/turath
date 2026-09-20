@@ -59,3 +59,44 @@ function artistPayload(array $overrides = []): array
         'publication_status' => 'published',
     ], $overrides);
 }
+
+/**
+ * Valid nested artwork payload, overridable per key.
+ *
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function artworkPayload(array $overrides = []): array
+{
+    return array_merge([
+        'title' => ['ar' => 'صورة زيتية مع سمك', 'en' => 'Still Life With Fish'],
+        'is_untitled' => false,
+        'category' => 'painting',
+        'medium' => ['ar' => 'زيت على قماش', 'en' => 'Oil on canvas'],
+        'attribution_certainty' => 'confirmed',
+        'dimensions' => ['raw' => '60H x 45W cm'],
+        'creation' => [
+            'display' => '1975',
+            'year_from' => 1975,
+            'year_to' => 1975,
+            'calendar' => 'gregorian',
+            'certainty' => 'exact',
+        ],
+        'publication_status' => 'published',
+    ], $overrides);
+}
+
+/**
+ * Valid nested holder payload, overridable per key.
+ *
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function holderPayload(array $overrides = []): array
+{
+    return array_merge([
+        'type' => 'institution',
+        'name' => ['ar' => 'مؤسسة تجريبية', 'en' => 'Test Foundation'],
+        'city' => ['ar' => 'جدة', 'en' => 'Jeddah'],
+    ], $overrides);
+}

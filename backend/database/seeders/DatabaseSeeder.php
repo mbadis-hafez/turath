@@ -12,6 +12,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolesAndPermissionsSeeder::class);
         $this->call(ArtistSeeder::class);
+        $this->call(HolderSeeder::class);
+        $this->call(ArtworkSeeder::class);
 
         if (! app()->environment('local')) {
             return;

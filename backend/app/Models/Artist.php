@@ -40,6 +40,14 @@ class Artist extends Model
     }
 
     /**
+     * @return HasMany<Artwork, $this>
+     */
+    public function artworks(): HasMany
+    {
+        return $this->hasMany(Artwork::class);
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function verifiedBy(): BelongsTo

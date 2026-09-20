@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\ActivityFeedController;
+use App\Http\Controllers\Api\V1\ArtistArtworksController;
 use App\Http\Controllers\Api\V1\ArtistDestroyController;
 use App\Http\Controllers\Api\V1\ArtistIndexController;
 use App\Http\Controllers\Api\V1\ArtistRestoreController;
@@ -12,10 +13,21 @@ use App\Http\Controllers\Api\V1\ArtistVariantDestroyController;
 use App\Http\Controllers\Api\V1\ArtistVariantStoreController;
 use App\Http\Controllers\Api\V1\ArtistVariantUpdateController;
 use App\Http\Controllers\Api\V1\ArtistVerifyController;
+use App\Http\Controllers\Api\V1\ArtworkDestroyController;
+use App\Http\Controllers\Api\V1\ArtworkIndexController;
+use App\Http\Controllers\Api\V1\ArtworkRestoreController;
+use App\Http\Controllers\Api\V1\ArtworkShowController;
+use App\Http\Controllers\Api\V1\ArtworkStoreController;
+use App\Http\Controllers\Api\V1\ArtworkUpdateController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\UserController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\HolderDestroyController;
+use App\Http\Controllers\Api\V1\HolderRestoreController;
+use App\Http\Controllers\Api\V1\HolderShowController;
+use App\Http\Controllers\Api\V1\HolderStoreController;
+use App\Http\Controllers\Api\V1\HolderUpdateController;
 use App\Http\Controllers\Api\V1\SubjectActivityController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,7 +38,13 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('throttle:api')->group(function () {
         Route::get('artists', ArtistIndexController::class);
+        Route::get('artists/{artist}/artworks', ArtistArtworksController::class)->whereNumber('artist');
         Route::get('artists/{slug}', ArtistShowController::class)->where('slug', '[a-z0-9-]+');
+
+        Route::get('artworks', ArtworkIndexController::class);
+        Route::get('artworks/{artwork}', ArtworkShowController::class)->whereNumber('artwork');
+
+        Route::get('holders/{holder}', HolderShowController::class)->whereNumber('holder');
     });
 
     Route::middleware('auth:sanctum')->group(function () {
@@ -46,6 +64,16 @@ Route::prefix('v1')->group(function () {
 
         Route::post('artists/{artist}/verify', ArtistVerifyController::class)->whereNumber('artist')->middleware('can:verify,artist');
         Route::delete('artists/{artist}/verify', ArtistUnverifyController::class)->whereNumber('artist')->middleware('can:verify,artist');
+
+        Route::post('artworks', ArtworkStoreController::class)->middleware('can:create,App\Models\Artwork');
+        Route::patch('artworks/{artwork}', ArtworkUpdateController::class)->whereNumber('artwork')->middleware('can:update,artwork');
+        Route::delete('artworks/{artwork}', ArtworkDestroyController::class)->whereNumber('artwork')->middleware('can:delete,artwork');
+        Route::post('artworks/{id}/restore', ArtworkRestoreController::class)->whereNumber('id')->middleware('can:restore,App\Models\Artwork');
+
+        Route::post('holders', HolderStoreController::class)->middleware('can:create,App\Models\Holder');
+        Route::patch('holders/{holder}', HolderUpdateController::class)->whereNumber('holder')->middleware('can:update,holder');
+        Route::delete('holders/{holder}', HolderDestroyController::class)->whereNumber('holder')->middleware('can:delete,holder');
+        Route::post('holders/{id}/restore', HolderRestoreController::class)->whereNumber('id')->middleware('can:restore,App\Models\Holder');
 
         Route::get('activity', ActivityFeedController::class)->middleware('can:activity.view');
         Route::get('{resource}/{id}/activity', SubjectActivityController::class)

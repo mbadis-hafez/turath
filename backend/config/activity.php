@@ -2,6 +2,8 @@
 
 use App\Models\Artist;
 use App\Models\ArtistNameVariant;
+use App\Models\Artwork;
+use App\Models\Holder;
 
 return [
     /*
@@ -25,5 +27,7 @@ return [
                 ['class' => ArtistNameVariant::class, 'fk' => 'artist_id'],
             ],
         ],
+        'artworks' => Artwork::class,
+        'holders' => Holder::class,
     ],
 ];

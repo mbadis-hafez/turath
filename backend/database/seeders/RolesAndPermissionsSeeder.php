@@ -26,13 +26,15 @@ class RolesAndPermissionsSeeder extends Seeder
         $activityView = Permission::findOrCreate('activity.view');
         $artistsManage = Permission::findOrCreate('artists.manage');
         $artistsVerify = Permission::findOrCreate('artists.verify');
+        $holdersManage = Permission::findOrCreate('holders.manage');
+        $artworksManage = Permission::findOrCreate('artworks.manage');
 
         foreach (self::ROLES as $roleName) {
             Role::findOrCreate($roleName);
         }
 
-        Role::findByName('editor')->givePermissionTo($activityView, $artistsManage, $artistsVerify);
-        Role::findByName('admin')->givePermissionTo($activityView, $artistsManage, $artistsVerify);
+        Role::findByName('editor')->givePermissionTo($activityView, $artistsManage, $artistsVerify, $holdersManage, $artworksManage);
+        Role::findByName('admin')->givePermissionTo($activityView, $artistsManage, $artistsVerify, $holdersManage, $artworksManage);
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }
