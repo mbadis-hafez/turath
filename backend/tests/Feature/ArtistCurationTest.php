@@ -3,11 +3,15 @@
 use App\Models\ArchiveItem;
 use App\Models\ArchiveItemLink;
 use App\Models\Artist;
+use App\Models\ArtistEntry;
 use App\Models\ArtistMerge;
 use App\Models\Artwork;
 use App\Models\FieldCitation;
 use App\Models\Theme;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
 
 it('defaults new artists to not_started pipeline and unspecified bio source', function () {
@@ -20,42 +24,45 @@ it('defaults new artists to not_started pipeline and unspecified bio source', fu
 
 it('never exposes internal-only fields publicly and encrypts contact data at rest', function () {
     $artist = Artist::factory()->published()->create([
-        'key_contact_name' => 'Secret Person', 'owner_type' => 'heir_or_estate',
-        'contact_email' => 'secret@example.com', 'contact_phone' => '+966500000000',
-        'ref_supervisor_note' => 'Fatima', 'authorization_letter_status' => 'signed',
+        'owner_type' => 'heir_or_estate', 'ref_supervisor_note' => 'Fatima', 'authorization_letter_status' => 'signed',
     ]);
+    $artist->contacts()->create(['name' => 'Secret Person', 'email' => 'secret@example.com', 'phone' => '+966500000000']);
+    $artist->socialLinks()->create(['platform' => 'instagram', 'url' => 'https://instagram.com/private_one', 'is_public' => false]);
 
     $body = json_encode($this->getJson("/api/v1/artists/{$artist->slug}")->assertOk()->json());
     $list = json_encode($this->getJson('/api/v1/artists')->assertOk()->json());
 
-    foreach (['Secret Person', 'secret@example.com', '+966500000000', 'heir_or_estate', 'Fatima', 'authorization_letter', 'contact_'] as $needle) {
+    foreach (['Secret Person', 'secret@example.com', '+966500000000', 'heir_or_estate', 'Fatima', 'authorization_letter', 'contact_', 'private_one'] as $needle) {
         expect($body)->not->toContain($needle)->and($list)->not->toContain($needle);
     }
     expect($artist->search_text)->not->toContain('secret');
 
-    $raw = DB::table('artists')->where('id', $artist->id)->value('contact_email');
+    $raw = DB::table('artist_contacts')->where('artist_id', $artist->id)->value('email');
     expect($raw)->not->toContain('secret@example.com');
 });
 
 it('shows contact data only through the curation endpoint, to editors', function () {
-    $artist = Artist::factory()->create(['key_contact_name' => 'Ahmad', 'contact_email' => 'a@b.co']);
+    $artist = Artist::factory()->create();
+    $artist->contacts()->create(['name' => 'Ahmad', 'email' => 'a@b.co']);
 
     $this->actingAs(makeUser('reader'))->getJson("/api/v1/artists/{$artist->id}/curation")->assertForbidden();
     $this->actingAs(editorUser())->getJson("/api/v1/artists/{$artist->id}/curation")
-        ->assertOk()->assertJsonPath('data.contact.contact_email', 'a@b.co');
+        ->assertOk()->assertJsonPath('data.contacts.0.email', 'a@b.co');
 });
 
 it('audits contact changes by field name without leaking values', function () {
     $artist = Artist::factory()->create();
 
     $this->actingAs(editorUser())->patchJson("/api/v1/artists/{$artist->id}/curation", [
-        'contact_email' => 'x@y.co', 'key_contact_name' => 'Nora', 'edit_summary' => 'call notes',
-    ])->assertOk();
+        'contacts' => [['name' => 'Nora', 'email' => 'x@y.co'], ['name' => 'Second', 'phone' => '+1 555']],
+        'owner_type' => 'gallery', 'edit_summary' => 'call notes',
+    ])->assertOk()->assertJsonCount(2, 'data.contacts');
 
     $entries = Activity::where('subject_type', Artist::class)->where('subject_id', $artist->id)->get();
     expect(json_encode($entries->map->properties))->not->toContain('x@y.co')
-        ->and(json_encode($entries->map->properties))->toContain('contact_fields_changed')
-        ->and(json_encode($entries->map->attribute_changes))->toContain('Nora');
+        ->and(json_encode($entries->map->properties))->not->toContain('+1 555')
+        ->and(json_encode($entries->map->properties))->toContain('contacts_changed')
+        ->and(json_encode($entries->map->attribute_changes))->toContain('gallery');
 });
 
 it('derives name_verified from a citation and public visibility from the verify gate', function () {
@@ -136,4 +143,119 @@ it('includes city, life dates and material years in the curation bundle', functi
         ->and($data['life_dates']['birth'])->toBe('1939')
         ->and($data['life_dates']['death'])->toBeNull()
         ->and($data['linked_materials'][0]['year'])->toBe('1978');
+});
+
+it('supports multiple contacts, updating in place and removing dropped ones', function () {
+    $editor = editorUser();
+    $artist = Artist::factory()->create();
+    $url = "/api/v1/artists/{$artist->id}/curation";
+
+    $first = $this->actingAs($editor)->patchJson($url, ['contacts' => [['name' => 'A', 'email' => 'a@x.co'], ['name' => 'B', 'phone' => '1']]])->json('data.contacts');
+    expect($first)->toHaveCount(2);
+
+    $second = $this->actingAs($editor)->patchJson($url, ['contacts' => [['id' => $first[0]['id'], 'name' => 'A2', 'email' => 'a@x.co']]])->json('data.contacts');
+    expect($second)->toHaveCount(1)->and($second[0]['id'])->toBe($first[0]['id'])->and($second[0]['name'])->toBe('A2');
+});
+
+it('counts a contact as met only with a name and a way to reach them', function () {
+    $editor = editorUser();
+    $artist = Artist::factory()->create();
+    $met = fn () => collect($this->actingAs($editor)->getJson("/api/v1/artists/{$artist->id}/curation")->json('data.checklist'))->firstWhere('key', 'contact')['met'];
+
+    expect($met())->toBeFalse();
+    $artist->contacts()->create(['name' => 'Only name']);
+    expect($met())->toBeFalse();
+    $artist->contacts()->create(['name' => 'Reachable', 'phone' => '1']);
+    expect($met())->toBeTrue();
+});
+
+it('shows nationality, classification, dates, education, awards and exhibitions publicly, plus only public social links', function () {
+    $editor = editorUser();
+    $artist = Artist::factory()->published()->create();
+
+    $this->actingAs($editor)->patchJson("/api/v1/artists/{$artist->id}", [
+        'nationality' => ['ar' => 'سعودي', 'en' => 'Saudi'],
+        'classification' => ['ar' => 'رائد', 'en' => 'Pioneer'],
+        'birth' => ['display' => '1939-05-01', 'year_from' => 1939, 'year_to' => 1939, 'calendar' => 'gregorian', 'certainty' => 'exact'],
+        'death' => ['display' => '2016-01-02', 'year_from' => 2016, 'year_to' => 2016, 'calendar' => 'gregorian', 'certainty' => 'exact'],
+    ])->assertOk();
+
+    $this->actingAs($editor)->putJson("/api/v1/artists/{$artist->id}/entries", [
+        'educations' => [['title' => ['en' => 'BFA'], 'place' => ['en' => 'Cairo Academy'], 'year_from' => 1960, 'year_to' => 1964]],
+        'awards' => [['title' => ['ar' => 'جائزة', 'en' => 'Prize'], 'place' => ['en' => 'Ministry'], 'year_from' => 1988]],
+        'exhibitions' => [['title' => ['en' => 'Solo show'], 'place' => ['en' => 'Dar Al-Funun'], 'year_from' => 1978], ['title' => ['en' => 'Group show'], 'year_from' => 1980]],
+    ])->assertOk();
+    $this->actingAs($editor)->putJson("/api/v1/artists/{$artist->id}/social-links", ['links' => [
+        ['platform' => 'instagram', 'url' => 'https://instagram.com/pub', 'is_public' => true],
+        ['platform' => 'x', 'url' => 'https://x.com/priv'],
+    ]])->assertOk();
+
+    $public = $this->getJson("/api/v1/artists/{$artist->slug}")->assertOk()->json('data');
+
+    expect($public['nationality']['en'])->toBe('Saudi')
+        ->and($public['classification']['en'])->toBe('Pioneer')
+        ->and($public['birth']['display'])->toBe('1939-05-01')
+        ->and($public['death']['year_from'])->toBe(2016)
+        ->and($public['educations'])->toHaveCount(1)
+        ->and($public['educations'][0]['year_to'])->toBe(1964)
+        ->and($public['awards'][0]['title']['ar'])->toBe('جائزة')
+        ->and($public['exhibitions'])->toHaveCount(2)
+        ->and($public['social_links'])->toHaveCount(1)
+        ->and(json_encode($public))->not->toContain('priv');
+});
+
+it('validates entry years and social link urls', function () {
+    $artist = Artist::factory()->create();
+    $editor = editorUser();
+
+    $this->actingAs($editor)->putJson("/api/v1/artists/{$artist->id}/entries", ['educations' => [['title' => ['en' => 'X'], 'year_from' => 1990, 'year_to' => 1980]]])->assertStatus(422);
+    $this->actingAs($editor)->putJson("/api/v1/artists/{$artist->id}/social-links", ['links' => [['platform' => 'instagram', 'url' => 'not a url']]])->assertStatus(422);
+    $this->actingAs(makeUser('reader'))->putJson("/api/v1/artists/{$artist->id}/entries", ['awards' => []])->assertForbidden();
+});
+
+it('syncs entries in place: unchanged rows stay unchanged and dropped rows are deleted', function () {
+    $editor = editorUser();
+    $artist = Artist::factory()->create();
+    $url = "/api/v1/artists/{$artist->id}/entries";
+
+    $rows = $this->actingAs($editor)->putJson($url, ['awards' => [['title' => ['en' => 'One']], ['title' => ['en' => 'Two']]]])->json('data.awards');
+    $before = Activity::where('subject_type', ArtistEntry::class)->count();
+
+    $this->actingAs($editor)->putJson($url, ['awards' => [['id' => $rows[0]['id'], 'title' => ['en' => 'One']]]])->assertOk()->assertJsonCount(1, 'data.awards');
+
+    expect(Activity::where('subject_type', ArtistEntry::class)->count())->toBe($before + 1); // only the delete
+});
+
+it('uploads a portrait, keeps it private until rights are clear and the artist is published, then serves it', function () {
+    Storage::fake('local');
+    $editor = editorUser();
+    $artist = Artist::factory()->published()->create();
+
+    $this->actingAs($editor)->post("/api/v1/artists/{$artist->id}/portrait", [
+        'image' => UploadedFile::fake()->image('p.jpg', 200, 200),
+    ], ['Accept' => 'application/json'])->assertCreated()->assertJsonPath('data.rights_status', 'unknown');
+
+    Auth::forgetGuards();
+    expect($this->getJson("/api/v1/artists/{$artist->slug}")->json('data.portrait_url'))->toBeNull();
+    $this->getJson("/api/v1/artists/{$artist->id}/portrait")->assertNotFound();
+    $this->actingAs($editor)->get("/api/v1/artists/{$artist->id}/portrait")->assertOk();
+
+    $this->actingAs($editor)->patchJson("/api/v1/artists/{$artist->id}/portrait", ['rights_status' => 'licensed'])->assertOk();
+
+    Auth::forgetGuards();
+    expect($this->getJson("/api/v1/artists/{$artist->slug}")->json('data.portrait_url'))->toBe("/api/v1/artists/{$artist->id}/portrait");
+    $this->get("/api/v1/artists/{$artist->id}/portrait")->assertOk();
+
+    $checklist = collect($this->actingAs($editor)->getJson("/api/v1/artists/{$artist->id}/curation")->json('data.checklist'))->firstWhere('key', 'portrait');
+    expect($checklist['met'])->toBeTrue()->and($checklist['supported'])->toBeTrue();
+
+    $this->actingAs($editor)->deleteJson("/api/v1/artists/{$artist->id}/portrait")->assertOk()->assertJsonPath('data.has_portrait', false);
+});
+
+it('rejects non-image portrait uploads', function () {
+    $artist = Artist::factory()->create();
+
+    $this->actingAs(editorUser())->post("/api/v1/artists/{$artist->id}/portrait", [
+        'image' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf'),
+    ], ['Accept' => 'application/json'])->assertStatus(422);
 });

@@ -32,8 +32,6 @@ class Artist extends Model
             'verified_at' => 'datetime',
             'identified_through_date' => 'date',
             'name_as_in_sources' => 'array',
-            'contact_email' => 'encrypted',
-            'contact_phone' => 'encrypted',
         ];
     }
 
@@ -51,6 +49,30 @@ class Artist extends Model
     public function artworks(): HasMany
     {
         return $this->hasMany(Artwork::class);
+    }
+
+    /**
+     * @return HasMany<ArtistContact, $this>
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(ArtistContact::class)->orderBy('sort')->orderBy('id');
+    }
+
+    /**
+     * @return HasMany<ArtistEntry, $this>
+     */
+    public function entries(): HasMany
+    {
+        return $this->hasMany(ArtistEntry::class)->orderBy('sort')->orderBy('id');
+    }
+
+    /**
+     * @return HasMany<ArtistSocialLink, $this>
+     */
+    public function socialLinks(): HasMany
+    {
+        return $this->hasMany(ArtistSocialLink::class)->orderBy('sort')->orderBy('id');
     }
 
     /**
@@ -84,9 +106,7 @@ class Artist extends Model
      */
     public function excludedFromActivityLog(): array
     {
-        // Encrypted contact data never lands in the audit diff; changes are
-        // logged by field name via the curation controller instead (D100).
-        return ['search_text', 'search_compact', 'contact_email', 'contact_phone'];
+        return ['search_text', 'search_compact'];
     }
 
     public function activitySubjectLabel(): string

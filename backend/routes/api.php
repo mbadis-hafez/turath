@@ -17,10 +17,13 @@ use App\Http\Controllers\Api\V1\ArtistArtworksController;
 use App\Http\Controllers\Api\V1\ArtistCurationShowController;
 use App\Http\Controllers\Api\V1\ArtistCurationUpdateController;
 use App\Http\Controllers\Api\V1\ArtistDestroyController;
+use App\Http\Controllers\Api\V1\ArtistEntriesSyncController;
 use App\Http\Controllers\Api\V1\ArtistIndexController;
 use App\Http\Controllers\Api\V1\ArtistMergeController;
+use App\Http\Controllers\Api\V1\ArtistPortraitController;
 use App\Http\Controllers\Api\V1\ArtistRestoreController;
 use App\Http\Controllers\Api\V1\ArtistShowController;
+use App\Http\Controllers\Api\V1\ArtistSocialLinksSyncController;
 use App\Http\Controllers\Api\V1\ArtistStoreController;
 use App\Http\Controllers\Api\V1\ArtistUnverifyController;
 use App\Http\Controllers\Api\V1\ArtistUpdateController;
@@ -82,6 +85,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('throttle:api')->group(function () {
         Route::get('artists', ArtistIndexController::class);
+        Route::get('artists/{artist}/portrait', [ArtistPortraitController::class, 'show'])->whereNumber('artist');
         Route::get('artists/{artist}/artworks', ArtistArtworksController::class)->whereNumber('artist');
         Route::get('artists/{slug}', ArtistShowController::class)->where('slug', '[a-z0-9-]+');
 
@@ -163,6 +167,11 @@ Route::prefix('v1')->group(function () {
         Route::post('review-queue/{reviewQueueItem}/acknowledge', ReviewQueueAcknowledgeController::class);
 
         Route::middleware('can:artists.manage')->group(function () {
+            Route::put('artists/{artist}/entries', ArtistEntriesSyncController::class)->whereNumber('artist');
+            Route::put('artists/{artist}/social-links', ArtistSocialLinksSyncController::class)->whereNumber('artist');
+            Route::post('artists/{artist}/portrait', [ArtistPortraitController::class, 'store'])->whereNumber('artist');
+            Route::patch('artists/{artist}/portrait', [ArtistPortraitController::class, 'update'])->whereNumber('artist');
+            Route::delete('artists/{artist}/portrait', [ArtistPortraitController::class, 'destroy'])->whereNumber('artist');
             Route::get('admin/artists', AdminArtistIndexController::class);
             Route::post('artists/merge', ArtistMergeController::class);
             Route::get('artists/{artist}/curation', ArtistCurationShowController::class)->whereNumber('artist');

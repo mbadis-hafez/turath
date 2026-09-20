@@ -4,7 +4,10 @@ namespace App\Support\Curation;
 
 use App\Models\ArchiveItemLink;
 use App\Models\Artist;
+use App\Models\ArtistContact;
+use App\Models\ArtistEntry;
 use App\Models\ArtistMerge;
+use App\Models\ArtistSocialLink;
 use App\Models\Artwork;
 use App\Models\FieldCitation;
 use App\Support\ArtistSearchTextBuilder;
@@ -17,7 +20,7 @@ class ArtistMerger
         'name_ar', 'name_en', 'bio_ar', 'bio_en', 'birth_place_ar', 'birth_place_en', 'death_place_ar', 'death_place_en',
         'birth_date_display', 'birth_year_from', 'birth_year_to', 'birth_calendar', 'birth_certainty',
         'death_date_display', 'death_year_from', 'death_year_to', 'death_calendar', 'death_certainty',
-        'living_status', 'key_contact_name', 'owner_type', 'identified_through_note', 'ref_supervisor_note',
+        'living_status', 'nationality_ar', 'nationality_en', 'classification_ar', 'classification_en', 'owner_type', 'identified_through_note', 'ref_supervisor_note',
     ];
 
     /**
@@ -47,6 +50,10 @@ class ArtistMerger
             foreach ($duplicate->variants as $variant) {
                 in_array($variant->name, $existingNames, true) ? $variant->delete() : $variant->update(['artist_id' => $survivor->id]);
             }
+
+            ArtistContact::where('artist_id', $duplicate->id)->update(['artist_id' => $survivor->id]);
+            ArtistEntry::where('artist_id', $duplicate->id)->update(['artist_id' => $survivor->id]);
+            ArtistSocialLink::where('artist_id', $duplicate->id)->update(['artist_id' => $survivor->id]);
 
             $survivor->themes()->syncWithoutDetaching($duplicate->themes()->pluck('themes.id')->all());
             $duplicate->themes()->detach();

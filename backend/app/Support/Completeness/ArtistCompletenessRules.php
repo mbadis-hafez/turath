@@ -7,10 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Representative rule set from the F10 spec (§3) — not a claimed-final
- * taxonomy. `portrait_with_clear_rights` from the spec's example is
- * omitted: there is no artist-portrait/file mechanism in the schema yet
- * (F3 only attaches files to archive items), so it would always be
- * artificially "missing." Documented in docs/decisions.md.
+ * taxonomy. `portrait_with_clear_rights` is satisfied by an uploaded
+ * portrait whose rights status is not `unknown`.
  */
 class ArtistCompletenessRules implements CompletenessRules
 {
@@ -30,7 +28,7 @@ class ArtistCompletenessRules implements CompletenessRules
 
     public function importantFields(): array
     {
-        return ['birth_city', 'bio_en'];
+        return ['birth_city', 'bio_en', 'portrait_with_clear_rights'];
     }
 
     public function isFieldPresent(Model $record, string $fieldKey): bool
@@ -41,6 +39,7 @@ class ArtistCompletenessRules implements CompletenessRules
             'primary_source' => true, // gated entirely by the any_citation check
             'birth_city' => $record->birth_place_ar !== null || $record->birth_place_en !== null,
             'bio_en' => $record->bio_en !== null && trim($record->bio_en) !== '',
+            'portrait_with_clear_rights' => $record->portrait_path !== null && $record->portrait_rights_status !== 'unknown',
             default => false,
         };
     }
@@ -58,6 +57,7 @@ class ArtistCompletenessRules implements CompletenessRules
             'primary_source' => ['ar' => 'مصدر أساسي', 'en' => 'Primary source'],
             'birth_city' => ['ar' => 'مدينة الميلاد', 'en' => 'Birth city'],
             'bio_en' => ['ar' => 'السيرة (إنجليزي)', 'en' => 'Biography (English)'],
+            'portrait_with_clear_rights' => ['ar' => 'صورة شخصية بحقوق واضحة', 'en' => 'Portrait with clear rights'],
             default => ['ar' => $fieldKey, 'en' => $fieldKey],
         };
     }

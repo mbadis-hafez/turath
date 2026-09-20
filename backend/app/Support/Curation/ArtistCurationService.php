@@ -42,8 +42,8 @@ class ArtistCurationService
     }
 
     /**
-     * D99: the eight mockup checklist fields. `portrait` has no schema
-     * support yet and is reported as unsupported/unmet.
+     * D99: the eight mockup checklist fields (the portrait needs an uploaded
+     * image with rights other than `unknown`).
      *
      * @return array<int, array{key: string, tier: string, met: bool, supported: bool}>
      */
@@ -56,14 +56,14 @@ class ArtistCurationService
             ['name', 'core', $artist->name_ar !== null && $artist->name_en !== null],
             ['artist_code', 'core', $artist->legacy_code !== null],
             ['city', 'important', $artist->birth_place_ar !== null || $artist->birth_place_en !== null],
-            ['contact', 'core', $artist->key_contact_name !== null && ($artist->contact_email !== null || $artist->contact_phone !== null)],
+            ['contact', 'core', $artist->contacts->contains(fn ($c) => $c->name !== null && ($c->email !== null || $c->phone !== null))],
             ['authorization_letter', 'core', in_array($artist->authorization_letter_status, ['signed', 'not_applicable'], true)],
             ['name_verified', 'core', $nameCited],
             ['life_dates', 'core', ! in_array('death_year_or_living_confirmed', $blocking, true)],
         ];
 
         $result = array_map(fn (array $i) => ['key' => $i[0], 'tier' => $i[1], 'met' => $i[2], 'supported' => true], $items);
-        $result[] = ['key' => 'portrait', 'tier' => 'important', 'met' => false, 'supported' => false];
+        $result[] = ['key' => 'portrait', 'tier' => 'important', 'met' => in_array('portrait_with_clear_rights', (new CompletenessCalculator)->evaluate($artist)['minor'], true) === false, 'supported' => true];
 
         return $result;
     }

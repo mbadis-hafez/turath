@@ -24,6 +24,7 @@ class UpdateArtistRequest extends ArtistPayloadRequest
             $this->dateRules('birth', partial: true),
             $this->dateRules('death', partial: true),
             $this->statusRules(partial: true),
+            $this->profileRules(partial: true),
             [
                 'legacy_code' => [
                     'sometimes', 'nullable', 'string', 'regex:/^[A-Z]{2}\d{3}$/',

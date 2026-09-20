@@ -34,6 +34,13 @@ abstract class ArtistPayloadRequest extends FormRequest
             $attributes['bio_en'] = $v['bio']['en'] ?? null;
         }
 
+        foreach (['nationality', 'classification'] as $group) {
+            if (array_key_exists($group, $v)) {
+                $attributes["{$group}_ar"] = $v[$group]['ar'] ?? null;
+                $attributes["{$group}_en"] = $v[$group]['en'] ?? null;
+            }
+        }
+
         foreach (['birth', 'death'] as $prefix) {
             if (! array_key_exists($prefix, $v)) {
                 continue;
@@ -166,6 +173,23 @@ abstract class ArtistPayloadRequest extends FormRequest
         return [
             'living_status' => array_merge($presence, [new Enum(LivingStatus::class)]),
             'publication_status' => array_merge($presence, [new Enum(PublicationStatus::class)]),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function profileRules(bool $partial): array
+    {
+        $presence = $partial ? ['sometimes'] : ['nullable'];
+
+        return [
+            'nationality' => array_merge($presence, ['nullable', 'array']),
+            'nationality.ar' => ['nullable', 'string', 'max:120'],
+            'nationality.en' => ['nullable', 'string', 'max:120'],
+            'classification' => array_merge($presence, ['nullable', 'array']),
+            'classification.ar' => ['nullable', 'string', 'max:120'],
+            'classification.en' => ['nullable', 'string', 'max:120'],
         ];
     }
 }

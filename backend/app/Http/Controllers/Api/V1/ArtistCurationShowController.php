@@ -30,13 +30,18 @@ class ArtistCurationShowController
             'identified_through' => ['note' => $artist->identified_through_note, 'date' => $artist->identified_through_date?->toDateString()],
             'bio' => ['ar' => $artist->bio_ar, 'en' => $artist->bio_en, 'source_type' => $artist->bio_source_type],
             'verified_status' => $artist->verified_status,
-            'contact' => [
-                'key_contact_name' => $artist->key_contact_name,
-                'owner_type' => $artist->owner_type,
-                'contact_email' => $artist->contact_email,
-                'contact_phone' => $artist->contact_phone,
-                'ref_supervisor_note' => $artist->ref_supervisor_note,
-            ],
+            'nationality' => ['ar' => $artist->nationality_ar, 'en' => $artist->nationality_en],
+            'classification' => ['ar' => $artist->classification_ar, 'en' => $artist->classification_en],
+            'birth' => $artist->birth?->toArray(),
+            'death' => $artist->death?->toArray(),
+            'living_status' => $artist->living_status,
+            'entries' => ArtistEntriesSyncController::present($artist),
+            'social_links' => ArtistSocialLinksSyncController::present($artist),
+            'portrait' => ArtistPortraitController::present($artist),
+            'contact' => ['owner_type' => $artist->owner_type, 'ref_supervisor_note' => $artist->ref_supervisor_note],
+            'contacts' => $artist->contacts->map(fn ($c) => [
+                'id' => $c->id, 'name' => $c->name, 'role_note' => $c->role_note, 'email' => $c->email, 'phone' => $c->phone,
+            ])->values(),
             'pipeline' => [
                 'authorization_letter' => [
                     'status' => $artist->authorization_letter_status,
