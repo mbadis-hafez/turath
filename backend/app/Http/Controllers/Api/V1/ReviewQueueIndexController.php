@@ -28,7 +28,7 @@ class ReviewQueueIndexController
         ));
 
         $query = ReviewQueueItem::query()
-            ->with('submittedBy')
+            ->with(['submittedBy', 'citable'])
             ->whereIn('review_type', $allowedTypes)
             ->where('status', 'pending')
             ->latest('submitted_at');

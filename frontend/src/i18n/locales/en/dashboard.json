@@ -19,7 +19,8 @@
     "reviewEmpty": "Nothing waiting for you",
     "acknowledge": "Acknowledge",
     "whyTitle": "Why does verification matter?",
-    "whyBody": "A record needs a published source for its key facts before it can be published. Citing sources is what earns the verified badge and keeps disagreements visible."
+    "whyBody": "A record needs a published source for its key facts before it can be published. Citing sources is what earns the verified badge and keeps disagreements visible.",
+    "sent": "Sent {when}"
   },
   "entity": {
     "artist": "Artists",

@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 import { acknowledgeReviewItem, listReviewQueue } from "@/api/dashboard";
+import LocalizedText from "@/components/common/LocalizedText.vue";
+import { isLocale, type AppLocale } from "@/i18n";
+import { formatRelativeTime } from "@/utils/format";
 import type {
   DashboardEntityType,
   DashboardStats,
@@ -13,7 +16,8 @@ defineProps<{
   stats: DashboardStats | null;
 }>();
 
-const { t, te } = useI18n();
+const { t, te, locale } = useI18n();
+const appLocale = computed<AppLocale>(() => (isLocale(locale.value) ? locale.value : "ar"));
 
 const TYPES: DashboardEntityType[] = ["artist", "artwork", "archive_item"];
 
@@ -80,7 +84,14 @@ onMounted(() => void loadQueue());
       </p>
       <ul v-else class="mt-3 space-y-3" data-testid="review-queue">
         <li v-for="item in queue" :key="item.id" class="text-sm">
-          <p class="font-medium text-ink">{{ t(`dashboard.review.${item.review_type}`) }}</p>
+          <p class="font-medium text-ink">
+            <LocalizedText v-if="item.title" :text="item.title" />
+            <template v-else>{{ t(`dashboard.review.${item.review_type}`) }}</template>
+          </p>
+          <p class="text-xs text-ink-muted">
+            {{ t("dashboard.sidebar.sent", { when: formatRelativeTime(item.submitted_at, appLocale) }) }}
+            · {{ t(`dashboard.review.${item.review_type}`) }}
+          </p>
           <p v-if="item.note" class="text-xs text-ink-muted">{{ item.note }}</p>
           <button
             type="button"

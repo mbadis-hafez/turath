@@ -76,6 +76,7 @@ export interface ReviewQueueItem {
   citable_type: string;
   citable_id: number;
   review_type: ReviewType;
+  title: { ar: string | null; en: string | null } | null;
   note: string | null;
   submitted_at: string;
 }

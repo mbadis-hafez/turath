@@ -71,7 +71,7 @@ class DemoDashboardSeeder extends Seeder
             'attribution_certainty' => $radwi ? 'confirmed' : 'unattributed', 'artist_id' => $radwi?->id, 'holder_id' => $holder?->id,
             'medium_ar' => 'زيت على قماش', 'medium_en' => 'Oil on canvas', 'height_cm' => 60, 'width_cm' => 90,
         ]);
-        $this->queue($palms, 'archivist_review', 'بانتظار مراجعة أمين الأرشيف');
+        $this->queue($palms, 'archivist_review', 'بانتظار مراجعة أمين الأرشيف', 3);
         $this->finish($palms);
 
         $opening = ArchiveItem::firstOrCreate(['legacy_ref' => 'DEMO_ARC_001'], [
@@ -91,8 +91,8 @@ class DemoDashboardSeeder extends Seeder
         $this->cite($season, 'publication_date', ['date' => '1979-03-17'], 'أرشيف عائلي');
         $this->finish($season, 'publication_date');
 
-        $this->queue($radwi ?? $sabban, 'data_audit', 'كتالوج بينالي القاهرة ١٩٨٤ · ٣٦ صفحة مرقمنة');
-        $this->queue($sabban, 'second_source_needed', 'جائزة الأمير فيصل بن فهد ١٩٨٨ — قائمة الفائزين');
+        $this->queue($radwi ?? $sabban, 'data_audit', 'كتالوج بينالي القاهرة ١٩٨٤ · ٣٦ صفحة مرقمنة', 6);
+        $this->queue($sabban, 'second_source_needed', 'جائزة الأمير فيصل بن فهد ١٩٨٨ — قائمة الفائزين', 11);
 
         (new DashboardStatsCalculator)->recompute($owner->id);
         auth()->logout();
@@ -125,11 +125,11 @@ class DemoDashboardSeeder extends Seeder
         }
     }
 
-    private function queue(Model $record, string $type, string $note): void
+    private function queue(Model $record, string $type, string $note, int $daysAgo = 3): void
     {
         ReviewQueueItem::firstOrCreate(
             ['citable_type' => $record::class, 'citable_id' => $record->getKey(), 'review_type' => $type],
-            ['note' => $note, 'submitted_by_user_id' => $this->owner->id],
+            ['note' => $note, 'submitted_by_user_id' => $this->owner->id, 'submitted_at' => now()->subDays($daysAgo)],
         );
     }
 

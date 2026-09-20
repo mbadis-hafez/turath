@@ -56,7 +56,7 @@ class DashboardRecordsCollector
                 $rows->push([
                     'entity_type' => $key,
                     'id' => $record->id,
-                    'slug' => $record instanceof Artist ? $record->slug : null,
+                    'slug' => $key === 'artist' ? $record->getAttribute('slug') : null,
                     'title' => $this->titleFor($key, $record),
                     'completeness_pct' => $completeness->completeness_pct ?? 0,
                     'severity' => $severity,

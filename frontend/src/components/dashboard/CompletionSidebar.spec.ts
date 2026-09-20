@@ -21,7 +21,7 @@ const stats: DashboardStats = {
 
 beforeEach(() => {
   api.listReviewQueue.mockReset().mockResolvedValue({
-    data: [{ id: "q1", citable_type: "artists", citable_id: 1, review_type: "second_source_needed", note: "needs a 2nd source", submitted_at: "2026-09-20T00:00:00Z" }],
+    data: [{ id: "q1", citable_type: "artists", citable_id: 1, review_type: "second_source_needed", title: { ar: null, en: "Taha Al-Sabban" }, note: "needs a 2nd source", submitted_at: new Date(Date.now() - 6 * 86400000).toISOString() }],
   });
   api.acknowledgeReviewItem.mockReset().mockResolvedValue({});
 });
@@ -34,6 +34,8 @@ describe("CompletionSidebar", () => {
     expect(wrapper.text()).toContain("82%");
     expect(wrapper.text()).toContain("3 of 5 need attention");
     expect(wrapper.text()).toContain("Primary source");
+    expect(wrapper.text()).toContain("Taha Al-Sabban");
+    expect(wrapper.text()).toContain("6 days ago");
     expect(wrapper.text()).toContain("Second source needed");
   });
 

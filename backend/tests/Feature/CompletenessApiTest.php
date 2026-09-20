@@ -2,6 +2,7 @@
 
 use App\Models\Artist;
 use App\Models\FieldCitation;
+use App\Models\ReviewQueueItem;
 use App\Models\Source;
 use App\Models\SourceConflict;
 use App\Support\Completeness\ConflictDetector;
@@ -109,4 +110,18 @@ it('exports the gaps report as xlsx', function () {
 it('only lists review queue items matching the user permissions', function () {
     $this->actingAs(makeUser('reader'))->getJson('/api/v1/review-queue')
         ->assertOk()->assertJsonCount(0, 'data');
+});
+
+it('returns the record title and submission time with each review queue item', function () {
+    $artist = Artist::factory()->create(['name_ar' => 'طه الصبان', 'name_en' => 'Taha Al-Sabban']);
+    ReviewQueueItem::factory()->create([
+        'citable_type' => Artist::class, 'citable_id' => $artist->id, 'review_type' => 'data_audit',
+        'submitted_at' => now()->subDays(6),
+    ]);
+
+    $this->actingAs(editorUser())->getJson('/api/v1/review-queue')
+        ->assertOk()
+        ->assertJsonPath('data.0.title.en', 'Taha Al-Sabban')
+        ->assertJsonPath('data.0.title.ar', 'طه الصبان')
+        ->assertJsonPath('data.0.citable_type', 'artists');
 });
