@@ -7,7 +7,10 @@
     "avgCompleteness": "Average completeness",
     "blockingRecords": "Blocking publication",
     "conflicts": "Source conflicts",
-    "missingFields": "Missing fields"
+    "missingFields": "Missing fields",
+    "avgHint": "Average of satisfied fields across {count} records",
+    "blockingHint": "Cannot be published until a core field is met",
+    "conflictsHint": "Dates or attributions the sources disagree on"
   },
   "sidebar": {
     "byType": "Completion by type",
@@ -60,7 +63,9 @@
     "gapsHint": "Missing",
     "conflictsHint": "{count} open conflict(s)",
     "untitled": "Untitled record",
-    "completion": "{pct}% complete"
+    "completion": "{pct}% complete",
+    "blockingNote": "Publishing is blocked until these core fields are met: {fields}.",
+    "conflictNote": "Sources disagree on {count} field(s). Choose the authoritative source."
   },
   "empty": {
     "title": "Nothing matches these filters",
@@ -75,5 +80,7 @@
     "submit": "Resolve",
     "cancel": "Cancel",
     "loading": "Loading sources…"
-  }
+  },
+  "eyebrow": "Verification & documentation",
+  "viewAll": "View all"
 }

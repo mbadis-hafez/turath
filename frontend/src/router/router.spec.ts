@@ -131,6 +131,11 @@ describe("router", () => {
     expect(router.currentRoute.value.query.redirect).toBe("/ar/admin/activity");
   });
 
+  it("sends a logged-in user away from the login page to the dashboard", async () => {
+    const { router } = await buildApp(reader, "/ar/login");
+    expect(router.currentRoute.value.name).toBe("dashboard");
+  });
+
   it("renders a 403 ErrorState for a reader without activity.view", async () => {
     const { wrapper } = await buildApp(reader, "/ar/admin/activity");
     expect(wrapper.text()).toContain("لا تملك صلاحية الوصول");

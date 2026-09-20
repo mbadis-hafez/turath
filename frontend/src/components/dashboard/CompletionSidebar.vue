@@ -43,7 +43,7 @@ onMounted(() => void loadQueue());
 <template>
   <aside class="space-y-6">
     <section class="rounded-lg border border-line bg-surface p-4">
-      <h2 class="text-sm font-semibold text-ink">{{ t("dashboard.sidebar.byType") }}</h2>
+      <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold text-ink">{{ t("dashboard.sidebar.byType") }}</h2>
       <ul class="mt-3 space-y-4">
         <template v-for="type in TYPES" :key="type">
           <li v-if="stats?.by_entity_type?.[type]?.of">
@@ -74,7 +74,7 @@ onMounted(() => void loadQueue());
     </section>
 
     <section class="rounded-lg border border-line bg-surface p-4">
-      <h2 class="text-sm font-semibold text-ink">{{ t("dashboard.sidebar.reviewQueue") }}</h2>
+      <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold text-ink">{{ t("dashboard.sidebar.reviewQueue") }}</h2>
       <p v-if="queue.length === 0" class="mt-2 text-sm text-ink-muted">
         {{ t("dashboard.sidebar.reviewEmpty") }}
       </p>

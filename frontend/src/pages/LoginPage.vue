@@ -49,7 +49,7 @@ async function submit(): Promise<void> {
     await auth.login(form.email, form.password);
     const redirect =
       typeof route.query.redirect === "string" ? route.query.redirect : null;
-    await router.push(redirect ?? localePath("home"));
+    await router.push(redirect ?? localePath("dashboard"));
   } catch (error) {
     if (error instanceof ApiError && error.kind === "validation") {
       Object.assign(fieldErrors, error.fieldErrors);

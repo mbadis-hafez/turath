@@ -117,8 +117,19 @@ const recordLink = computed(() => {
         {{ t("dashboard.row.gapsHint") }}: {{ fieldLabel(key) }}
       </li>
     </ul>
-    <p v-if="record.open_conflict_count > 0" class="mt-2 text-xs text-warn">
-      {{ t("dashboard.row.conflictsHint", { count: record.open_conflict_count }) }}
+    <p
+      v-if="record.severity === 'blocking' && record.blocking_gaps.length > 0"
+      class="mt-3 border-s-2 border-danger bg-neutral-soft px-3 py-2 text-pretty text-sm text-ink"
+      data-testid="row-note"
+    >
+      {{ t("dashboard.row.blockingNote", { fields: record.blocking_gaps.map(fieldLabel).join("، ") }) }}
+    </p>
+    <p
+      v-else-if="record.open_conflict_count > 0"
+      class="mt-3 border-s-2 border-warn bg-neutral-soft px-3 py-2 text-pretty text-sm text-ink"
+      data-testid="row-note"
+    >
+      {{ t("dashboard.row.conflictNote", { count: record.open_conflict_count }) }}
     </p>
   </li>
 </template>

@@ -7,7 +7,10 @@
     "avgCompleteness": "متوسط الاكتمال",
     "blockingRecords": "تحجب النشر",
     "conflicts": "تعارضات المصادر",
-    "missingFields": "حقول ناقصة"
+    "missingFields": "حقول ناقصة",
+    "avgHint": "متوسط الحقول المستوفاة في {count} سجلاً",
+    "blockingHint": "لن يُنشر قبل استيفاء حقل أساسي",
+    "conflictsHint": "تواريخ أو نسبة عمل مختلف عليها"
   },
   "sidebar": {
     "byType": "الاكتمال حسب النوع",
@@ -60,7 +63,9 @@
     "gapsHint": "ناقص",
     "conflictsHint": "{count} تعارض مفتوح",
     "untitled": "سجل بلا عنوان",
-    "completion": "مكتمل بنسبة {pct}٪"
+    "completion": "مكتمل بنسبة {pct}٪",
+    "blockingNote": "يُحجب النشر حتى تُستوفى هذه الحقول الأساسية: {fields}.",
+    "conflictNote": "تختلف المصادر حول {count} حقل. اختر المصدر المعتمد."
   },
   "empty": {
     "title": "لا شيء يطابق هذه العوامل",
@@ -75,5 +80,7 @@
     "submit": "حسم",
     "cancel": "إلغاء",
     "loading": "جارٍ تحميل المصادر…"
-  }
+  },
+  "eyebrow": "لوحة التحقق والتوثيق",
+  "viewAll": "عرض الكل"
 }

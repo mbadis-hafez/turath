@@ -138,7 +138,7 @@ export function createAppRouter(history: RouterHistory): Router {
     }
 
     if (to.meta.guestOnly && auth.isAuthenticated) {
-      return { name: "home", params: { locale } };
+      return { name: "dashboard", params: { locale } };
     }
 
     return true;

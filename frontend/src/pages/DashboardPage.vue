@@ -45,8 +45,9 @@ function onResolved(): void {
 
 <template>
   <section>
-    <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="flex flex-wrap items-start justify-between gap-4 border-b-2 border-ink pb-6">
       <div>
+        <p class="text-xs text-ink-muted">{{ t("dashboard.eyebrow") }}</p>
         <h1 class="text-balance text-3xl font-semibold tracking-tight text-ink">
           {{ t("dashboard.title") }}
         </h1>
@@ -63,15 +64,26 @@ function onResolved(): void {
       </a>
     </div>
 
-    <div class="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
-      <StatTile :label="t('dashboard.tiles.totalRecords')" :value="stats?.total_records ?? '—'" />
-      <StatTile :label="t('dashboard.tiles.avgCompleteness')" :value="stats ? `${stats.avg_completeness_pct}%` : '—'" />
-      <StatTile :label="t('dashboard.tiles.blockingRecords')" :value="stats?.blocking_record_count ?? '—'" />
-      <StatTile :label="t('dashboard.tiles.conflicts')" :value="stats?.conflict_count ?? '—'" />
+    <div class="grid grid-cols-2 divide-x divide-line border-b border-line rtl:divide-x-reverse lg:grid-cols-4">
+      <StatTile
+        :label="t('dashboard.tiles.avgCompleteness')"
+        :value="stats ? `${stats.avg_completeness_pct}%` : '—'"
+        :hint="stats ? t('dashboard.tiles.avgHint', { count: stats.total_records }) : undefined"
+      />
+      <StatTile
+        :label="t('dashboard.tiles.blockingRecords')"
+        :value="stats?.blocking_record_count ?? '—'"
+        :hint="t('dashboard.tiles.blockingHint')"
+      />
       <StatTile :label="t('dashboard.tiles.missingFields')" :value="stats?.missing_field_count ?? '—'" />
+      <StatTile
+        :label="t('dashboard.tiles.conflicts')"
+        :value="stats?.conflict_count ?? '—'"
+        :hint="t('dashboard.tiles.conflictsHint')"
+      />
     </div>
 
-    <div class="mt-8 grid gap-8 lg:grid-cols-[18rem_1fr]">
+    <div class="mt-8 grid gap-10 lg:grid-cols-[18rem_1fr]">
       <CompletionSidebar :stats="stats" />
 
       <div id="dashboard-results">
@@ -111,6 +123,7 @@ function onResolved(): void {
               :entity-type="type"
               :records="records"
               @resolve="resolving = $event"
+              @view-all="setEntityType(type)"
             />
           </div>
           <Pagination class="mt-8" :meta="meta" @change="setPage" />
