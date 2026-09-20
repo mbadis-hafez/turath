@@ -1,0 +1,102 @@
+{
+  "title": "الاستيراد",
+  "entityType": {
+    "artist": "الفنانون",
+    "artwork": "الأعمال الفنية",
+    "holder": "الجهات الحائزة",
+    "archive_item": "مواد الأرشيف"
+  },
+  "status": {
+    "uploaded": "تم الرفع",
+    "validated": "تم التحقق",
+    "committed": "تم الاعتماد",
+    "failed": "فشل",
+    "cancelled": "أُلغي"
+  },
+  "matchStatus": {
+    "new": "جديد",
+    "matched_exact": "مطابقة (دقيقة)",
+    "matched_suggested": "مطابقة (مقترحة)",
+    "ambiguous": "غير محسوم",
+    "error": "خطأ"
+  },
+  "confidence": {
+    "high": "عالية",
+    "medium": "متوسطة",
+    "low": "منخفضة"
+  },
+  "resolution": {
+    "pending": "بانتظار القرار",
+    "create_new": "إنشاء سجل جديد",
+    "link_existing": "ربط بسجل موجود",
+    "skip": "تجاوز"
+  },
+  "commitResult": {
+    "created": "تم الإنشاء",
+    "updated": "تم التحديث",
+    "skipped": "تم التجاوز",
+    "failed": "فشل"
+  },
+  "upload": {
+    "title": "استيراد جديد",
+    "entityType": "نوع الكيان",
+    "file": "ملف الجدول",
+    "fileHelp": "CSV أو XLSX، حتى 50 ميغابايت",
+    "mappingProfile": "قالب ربط الأعمدة",
+    "mappingProfileNone": "ربط الأعمدة يدويًا",
+    "columnMap": "ربط الأعمدة",
+    "columnMapHelp": "طابق كل عنوان عمود في الجدول بحقل في النظام",
+    "columnHeader": "عنوان العمود",
+    "systemField": "حقل النظام",
+    "addRow": "إضافة عمود",
+    "removeRow": "إزالة",
+    "saveAsProfile": "حفظ هذا الربط كقالب لإعادة الاستخدام",
+    "profileName": "اسم القالب",
+    "submit": "رفع والتحقق",
+    "submitting": "جارٍ الرفع…"
+  },
+  "batches": {
+    "title": "عمليات الاستيراد السابقة",
+    "empty": "لا توجد عمليات استيراد بعد",
+    "emptyDescription": "ارفع ملف جدول أعلاه للبدء.",
+    "filename": "الملف",
+    "entityType": "النوع",
+    "status": "الحالة",
+    "rows": "الصفوف",
+    "new": "جديد",
+    "matched": "مطابق",
+    "errors": "الأخطاء",
+    "uploadedBy": "رفعه",
+    "createdAt": "تاريخ الرفع",
+    "system": "النظام",
+    "view": "مراجعة"
+  },
+  "review": {
+    "title": "مراجعة الاستيراد",
+    "backToImports": "العودة إلى عمليات الاستيراد",
+    "summary": "{rowCount} صفوف · {newCount} جديد · {matchedCount} مطابق · {errorCount} أخطاء",
+    "filterByStatus": "تصفية حسب حالة المطابقة",
+    "allStatuses": "الكل",
+    "rowNumber": "الصف",
+    "match": "المطابقة",
+    "confidence": "درجة الثقة",
+    "mappedData": "البيانات المُعيّنة",
+    "errors": "الأخطاء",
+    "resolution": "القرار",
+    "matchedEntityId": "معرّف السجل الموجود",
+    "revalidate": "إعادة التحقق",
+    "commit": "اعتماد الاستيراد",
+    "committing": "جارٍ الاعتماد…",
+    "confirmReviewed": "راجعت جميع الصفوف والقرارات الخاصة بها",
+    "commitDisabledHint": "يجب أن يكون لكل صف قرار قبل إمكانية الاعتماد.",
+    "commitError": "بعض الصفوف ما زالت بحاجة إلى قرار قبل الاعتماد.",
+    "cancel": "إلغاء الاستيراد",
+    "cancelling": "جارٍ الإلغاء…",
+    "cancelConfirm": "إلغاء هذا الاستيراد؟ لن يمكن اعتماده بعد ذلك.",
+    "noRows": "لا توجد صفوف مطابقة لهذا التصفية",
+    "result": "النتيجة",
+    "resultingRecord": "السجل",
+    "viewRecord": "عرض السجل",
+    "committedAt": "تاريخ الاعتماد"
+  }
+}

@@ -18,6 +18,7 @@ const artistsLink = computed(() => localePath("artists.index"));
 const artworksLink = computed(() => localePath("artworks.index"));
 const archiveLink = computed(() => localePath("archive.records"));
 const activityLink = computed(() => localePath("admin.activity"));
+const importsLink = computed(() => localePath("admin.imports"));
 const loginLink = computed(() => localePath("login"));
 
 const otherLocale = computed<AppLocale>(() =>
@@ -92,6 +93,14 @@ async function logout(): Promise<void> {
               active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
             >
               {{ $t("nav.activity") }}
+            </RouterLink>
+            <RouterLink
+              v-if="auth.can('imports.manage')"
+              :to="importsLink"
+              class="text-ink-muted transition-colors hover:text-ink"
+              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
+            >
+              {{ $t("nav.imports") }}
             </RouterLink>
           </template>
           <!-- Visitors browse the landing-page sections. -->

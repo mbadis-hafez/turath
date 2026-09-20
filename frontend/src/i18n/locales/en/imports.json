@@ -1,0 +1,102 @@
+{
+  "title": "Imports",
+  "entityType": {
+    "artist": "Artists",
+    "artwork": "Artworks",
+    "holder": "Holders",
+    "archive_item": "Archive items"
+  },
+  "status": {
+    "uploaded": "Uploaded",
+    "validated": "Validated",
+    "committed": "Committed",
+    "failed": "Failed",
+    "cancelled": "Cancelled"
+  },
+  "matchStatus": {
+    "new": "New",
+    "matched_exact": "Matched (exact)",
+    "matched_suggested": "Matched (suggested)",
+    "ambiguous": "Ambiguous",
+    "error": "Error"
+  },
+  "confidence": {
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "resolution": {
+    "pending": "Pending",
+    "create_new": "Create new",
+    "link_existing": "Link to existing",
+    "skip": "Skip"
+  },
+  "commitResult": {
+    "created": "Created",
+    "updated": "Updated",
+    "skipped": "Skipped",
+    "failed": "Failed"
+  },
+  "upload": {
+    "title": "New import",
+    "entityType": "Entity type",
+    "file": "Spreadsheet file",
+    "fileHelp": "CSV or XLSX, up to 50 MB",
+    "mappingProfile": "Mapping profile",
+    "mappingProfileNone": "Map columns manually",
+    "columnMap": "Column mapping",
+    "columnMapHelp": "Match each spreadsheet column header to a system field",
+    "columnHeader": "Spreadsheet header",
+    "systemField": "System field",
+    "addRow": "Add column",
+    "removeRow": "Remove",
+    "saveAsProfile": "Save this mapping as a reusable profile",
+    "profileName": "Profile name",
+    "submit": "Upload and validate",
+    "submitting": "Uploading…"
+  },
+  "batches": {
+    "title": "Past imports",
+    "empty": "No imports yet",
+    "emptyDescription": "Upload a spreadsheet above to get started.",
+    "filename": "File",
+    "entityType": "Type",
+    "status": "Status",
+    "rows": "Rows",
+    "new": "New",
+    "matched": "Matched",
+    "errors": "Errors",
+    "uploadedBy": "Uploaded by",
+    "createdAt": "Uploaded",
+    "system": "System",
+    "view": "Review"
+  },
+  "review": {
+    "title": "Review import",
+    "backToImports": "Back to imports",
+    "summary": "{rowCount} rows · {newCount} new · {matchedCount} matched · {errorCount} errors",
+    "filterByStatus": "Filter by match status",
+    "allStatuses": "All",
+    "rowNumber": "Row",
+    "match": "Match",
+    "confidence": "Confidence",
+    "mappedData": "Mapped data",
+    "errors": "Errors",
+    "resolution": "Resolution",
+    "matchedEntityId": "Existing record id",
+    "revalidate": "Revalidate",
+    "commit": "Commit import",
+    "committing": "Committing…",
+    "confirmReviewed": "I reviewed every row and its resolution",
+    "commitDisabledHint": "Every row must have a resolution before you can commit.",
+    "commitError": "Some rows still need a resolution before this can be committed.",
+    "cancel": "Cancel import",
+    "cancelling": "Cancelling…",
+    "cancelConfirm": "Cancel this import? It won't be able to be committed afterwards.",
+    "noRows": "No rows match this filter",
+    "result": "Result",
+    "resultingRecord": "Record",
+    "viewRecord": "View record",
+    "committedAt": "Committed"
+  }
+}

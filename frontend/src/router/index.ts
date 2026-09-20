@@ -68,6 +68,26 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: "/:locale/admin/imports",
+    name: "admin.imports",
+    component: () => import("@/pages/admin/ImportsPage.vue"),
+    meta: {
+      titleKey: "imports.title",
+      requiresAuth: true,
+      requiresPermission: "imports.manage",
+    },
+  },
+  {
+    path: "/:locale/admin/imports/:id",
+    name: "admin.imports.show",
+    component: () => import("@/pages/admin/ImportBatchPage.vue"),
+    meta: {
+      titleKey: "imports.review.title",
+      requiresAuth: true,
+      requiresPermission: "imports.manage",
+    },
+  },
+  {
     path: "/:pathMatch(.*)*",
     name: "not-found",
     component: () => import("@/pages/NotFoundPage.vue"),
