@@ -74,6 +74,18 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: "/:locale/admin/artists",
+    name: "admin.artists",
+    component: () => import("@/pages/admin/ArtistsRegistryPage.vue"),
+    meta: { titleKey: "curation.registry.title", requiresAuth: true, requiresPermission: "artists.manage" },
+  },
+  {
+    path: "/:locale/admin/artists/:id(\\d+)",
+    name: "admin.artists.show",
+    component: () => import("@/pages/admin/ArtistCurationPage.vue"),
+    meta: { titleKey: "curation.registry.title", requiresAuth: true, requiresPermission: "artists.manage" },
+  },
+  {
     path: "/:locale/admin/imports",
     name: "admin.imports",
     component: () => import("@/pages/admin/ImportsPage.vue"),
