@@ -105,6 +105,7 @@ watch(query, (q) => {
           </p>
         </div>
         <div class="flex items-center gap-2">
+          <RouterLink :to="localePath('admin.archive.new')" class="rounded-md bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-ink/85" data-testid="add-item">{{ t("archive.admin.addItem") }}</RouterLink>
           <RouterLink :to="localePath('admin.imports')" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft">{{ t("archive.admin.uploadBatch") }}</RouterLink>
         </div>
       </div>
@@ -191,7 +192,7 @@ watch(query, (q) => {
                     <div class="flex items-center gap-4">
                       <span class="flex size-14 shrink-0 items-center justify-center rounded-sm bg-neutral-soft text-ink-muted"><ArchiveTypeIcon :type="i.item_type" /></span>
                       <div class="min-w-0">
-                        <p class="text-base font-semibold text-ink"><LocalizedText :text="i.title" /></p>
+                        <p class="text-base font-semibold text-ink"><RouterLink :to="localePath('admin.archive.edit', { id: i.id })" class="hover:underline"><LocalizedText :text="i.title" /></RouterLink></p>
                         <p class="text-xs text-ink-muted"><bdi dir="ltr">{{ i.legacy_ref }}</bdi> · {{ t(`archive.types.${i.item_type}`) }}</p>
                       </div>
                     </div>

@@ -65,3 +65,49 @@ export interface BulkResult {
   succeeded: number[];
   failed: { id: number; message: string }[];
 }
+
+export interface ArchiveEditFile {
+  id: number;
+  name: string | null;
+  mime_type: string;
+  size_bytes: number;
+  width_px: number | null;
+  height_px: number | null;
+  is_image: boolean;
+  url: string;
+}
+
+export interface ArchiveEditLink {
+  id?: number;
+  role: string;
+  kind: "artist" | "artwork";
+  entity_id: number;
+  label: Bilingual;
+}
+
+export interface ArchiveEdit {
+  id: number;
+  legacy_ref: string | null;
+  item_type: ArchiveItemType;
+  title: Bilingual;
+  description: Bilingual;
+  place: Bilingual;
+  content: { display: string | null; year_from: number | null; year_to: number | null; calendar: string | null; certainty: string | null } | null;
+  people_names: string[];
+  keywords: string[];
+  source_name: string | null;
+  rights_holder: Bilingual;
+  rights_status: RightsStatus;
+  license: string | null;
+  verification_reference: string | null;
+  access_level: AccessLevel;
+  publication_status: "draft" | "published" | "hidden";
+  under_review: boolean;
+  updated_at: string | null;
+  file: ArchiveEditFile | null;
+  checklist: { key: string; met: boolean }[];
+  completeness_pct: number;
+  links: ArchiveEditLink[];
+}
+
+export const LINK_ROLES = ["about", "depicts", "mentions", "authored_by", "donor", "subject"] as const;

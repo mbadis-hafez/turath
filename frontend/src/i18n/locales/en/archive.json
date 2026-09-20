@@ -68,6 +68,101 @@
       "licensed": "Licensed",
       "all_rights_reserved": "All rights reserved",
       "unknown": "Rights unknown"
+    },
+    "addItem": "+ Add item"
+  },
+  "edit": {
+    "addCrumb": "Add",
+    "editCrumb": "Edit",
+    "addTitle": "Add archive item",
+    "editTitle": "Edit archive item",
+    "lastSaved": "last saved {when}",
+    "saveDraft": "Save as draft",
+    "sendReview": "Send for review",
+    "inReview": "Under review",
+    "reviewBlocked": "Complete the publishing checklist first",
+    "partialFailure": "The item was created, but its file or links could not be saved. Add them from the item page.",
+    "openItem": "Open the item",
+    "uploadedFile": "Uploaded file",
+    "noFile": "No file uploaded yet.",
+    "replace": "Replace",
+    "upload": "Upload file",
+    "remove": "Remove",
+    "checklistTitle": "Missing before publishing",
+    "checklist": {
+      "title_ar": "Arabic title",
+      "type_and_file": "Item type and uploaded file",
+      "exact_date": "Exact date",
+      "rights_holder_license": "Rights holder and license",
+      "people_names": "Names of people"
+    },
+    "completion": "{pct}% complete — 100% required to publish",
+    "access": "Access",
+    "accessOptions": {
+      "public": {
+        "label": "Public",
+        "help": "Available to everyone in full quality."
+      },
+      "registered": {
+        "label": "Restricted",
+        "help": "Appears in search; the original is by request and needs a verified account."
+      },
+      "institution_only": {
+        "label": "Hidden",
+        "help": "Not visible outside the archive team."
+      },
+      "researcher": {
+        "label": "Researchers",
+        "help": "Available to verified researchers."
+      },
+      "embargoed": {
+        "label": "Embargoed",
+        "help": "Closed until the embargo date."
+      }
+    },
+    "identification": "Identification",
+    "titleAr": "Title (Arabic)",
+    "titleEn": "Title (English)",
+    "required": "required",
+    "itemType": "Item type",
+    "number": "Item number",
+    "date": "Date",
+    "dateHelp": "An exact date (day/month/year) is required before publishing.",
+    "dateApprox": "Currently recorded as “{date}”. An exact date is required before publishing.",
+    "place": "Place",
+    "content": "Content",
+    "descriptionAr": "Description (Arabic)",
+    "descriptionEn": "Description (English)",
+    "people": "People in the material",
+    "peoplePlaceholder": "Add names, press Enter…",
+    "peopleHelp": "Required: without it the image is not searchable by artist names.",
+    "keywords": "Keywords",
+    "keywordsPlaceholder": "Add a keyword, press Enter…",
+    "sourceRights": "Source and rights",
+    "sourceName": "Source entity",
+    "rightsHolder": "Rights holder",
+    "license": "License type",
+    "licensePlaceholder": "Choose a license…",
+    "rightsStatus": "Rights status",
+    "verification": "Verification reference",
+    "rightsHelp": "A rights holder and a license are required to lift the access restriction.",
+    "links": "Links",
+    "addLink": "+ Link a record",
+    "linkKind": "Record type",
+    "linkRole": "Relationship",
+    "linkTarget": "Record",
+    "linkSearch": "Search…",
+    "linkKinds": {
+      "artist": "Artist",
+      "artwork": "Artwork"
+    },
+    "linkRoles": {
+      "about": "About",
+      "depicts": "Depicts",
+      "mentions": "Mentions",
+      "authored_by": "Authored by",
+      "donor": "Donor",
+      "subject": "Subject"
     }
   }
 }

@@ -68,6 +68,101 @@
       "licensed": "مرخصة",
       "all_rights_reserved": "جميع الحقوق محفوظة",
       "unknown": "الحقوق غير محددة"
+    },
+    "addItem": "+ إضافة مادة"
+  },
+  "edit": {
+    "addCrumb": "إضافة",
+    "editCrumb": "تحرير",
+    "addTitle": "إضافة مادة أرشيفية",
+    "editTitle": "تحرير مادة أرشيفية",
+    "lastSaved": "آخر حفظ {when}",
+    "saveDraft": "حفظ كمسودة",
+    "sendReview": "إرسال للمراجعة",
+    "inReview": "قيد المراجعة",
+    "reviewBlocked": "أكمل قائمة متطلبات النشر أولًا",
+    "partialFailure": "أُنشئت المادة لكن تعذّر حفظ ملفها أو روابطها. أضفها من صفحة المادة.",
+    "openItem": "فتح المادة",
+    "uploadedFile": "الملف المرفوع",
+    "noFile": "لم يُرفع ملف بعد.",
+    "replace": "استبدال",
+    "upload": "رفع ملف",
+    "remove": "إزالة",
+    "checklistTitle": "ينقص للنشر",
+    "checklist": {
+      "title_ar": "عنوان عربي",
+      "type_and_file": "نوع المادة وملف مرفوع",
+      "exact_date": "تاريخ دقيق",
+      "rights_holder_license": "مالك الحقوق وترخيص",
+      "people_names": "أسماء الأشخاص"
+    },
+    "completion": "اكتمال {pct}٪ — مطلوب ١٠٠٪ للنشر",
+    "access": "الوصول",
+    "accessOptions": {
+      "public": {
+        "label": "عام",
+        "help": "متاحة للجميع بدقة كاملة."
+      },
+      "registered": {
+        "label": "مقيّدة",
+        "help": "تظهر في البحث، والأصل بطلب موثّق."
+      },
+      "institution_only": {
+        "label": "مخفية",
+        "help": "لا تظهر إلا لفريق الأرشيف."
+      },
+      "researcher": {
+        "label": "للباحثين",
+        "help": "متاحة للباحثين الموثّقين."
+      },
+      "embargoed": {
+        "label": "محظورة مؤقتًا",
+        "help": "مغلقة حتى تاريخ انتهاء الحظر."
+      }
+    },
+    "identification": "التعريف",
+    "titleAr": "العنوان (عربي)",
+    "titleEn": "العنوان (إنجليزي)",
+    "required": "مطلوب",
+    "itemType": "نوع المادة",
+    "number": "رقم المادة",
+    "date": "التاريخ",
+    "dateHelp": "مطلوب تاريخ دقيق (يوم/شهر/سنة) قبل النشر.",
+    "dateApprox": "مسجّل حاليًا: «{date}». مطلوب تاريخ دقيق قبل النشر.",
+    "place": "المكان",
+    "content": "المحتوى",
+    "descriptionAr": "الوصف (عربي)",
+    "descriptionEn": "الوصف (إنجليزي)",
+    "people": "أسماء الأشخاص في المادة",
+    "peoplePlaceholder": "أضف الأسماء ثم اضغط Enter…",
+    "peopleHelp": "حقل مطلوب: بدونه لا تُفهرس الصورة تحت أسماء الفنانين.",
+    "keywords": "الكلمات المفتاحية",
+    "keywordsPlaceholder": "أضف كلمة ثم اضغط Enter…",
+    "sourceRights": "المصدر والحقوق",
+    "sourceName": "الجهة المصدر",
+    "rightsHolder": "مالك الحقوق",
+    "license": "نوع الترخيص",
+    "licensePlaceholder": "اختر ترخيصًا…",
+    "rightsStatus": "حالة الحقوق",
+    "verification": "مرجع التحقق",
+    "rightsHelp": "مطلوب مالك الحقوق وترخيص لرفع قيد الوصول عن الملف الأصلي.",
+    "links": "الارتباطات",
+    "addLink": "+ ربط سجل",
+    "linkKind": "نوع السجل",
+    "linkRole": "العلاقة",
+    "linkTarget": "السجل",
+    "linkSearch": "ابحث…",
+    "linkKinds": {
+      "artist": "فنان",
+      "artwork": "عمل"
+    },
+    "linkRoles": {
+      "about": "يتناول",
+      "depicts": "يصوّر",
+      "mentions": "يذكر",
+      "authored_by": "من تأليف",
+      "donor": "مُهدٍ",
+      "subject": "موضوع"
     }
   }
 }
