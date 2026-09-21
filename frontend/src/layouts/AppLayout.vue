@@ -47,18 +47,18 @@ interface NavLink {
 
 const themesLink = computed(() => ({ ...localePath("home"), hash: "#themes" }));
 
-const navLinks = computed<NavLink[]>(() => {
-  const links: NavLink[] = [
-    { key: "artists", label: t("nav.artists"), to: artistsLink.value },
-    { key: "artworks", label: t("nav.artworks"), to: artworksLink.value },
-    { key: "archive", label: t("nav.archive"), to: archiveLink.value },
-    { key: "events", label: t("nav.events"), to: timelineLink.value },
-    { key: "themes", label: t("nav.themes"), to: themesLink.value, section: true },
-  ];
-  if (!auth.isAuthenticated) return links;
+const publicLinks = computed<NavLink[]>(() => [
+  { key: "artists", label: t("nav.artists"), to: artistsLink.value },
+  { key: "artworks", label: t("nav.artworks"), to: artworksLink.value },
+  { key: "archive", label: t("nav.archive"), to: archiveLink.value },
+  { key: "events", label: t("nav.events"), to: timelineLink.value },
+  { key: "themes", label: t("nav.themes"), to: themesLink.value, section: true },
+]);
 
-  const staff: [boolean, string, string, RouteLocationRaw][] = [
-    [true, "dashboard", t("nav.dashboard"), dashboardLink.value],
+/** The working tools a signed-in user's permissions allow, kept out of the top bar where they would not fit. */
+const toolLinks = computed<NavLink[]>(() => {
+  if (!auth.isAuthenticated) return [];
+  const tools: [boolean, string, string, RouteLocationRaw][] = [
     [showProposals.value, "proposals", canReviewProposals.value ? t("proposals.queueTitle") : t("proposals.mineTitle"), proposalsLink.value],
     [auth.can("activity.view"), "activity", t("nav.activity"), activityLink.value],
     [auth.can("artists.manage"), "registry", t("nav.registry"), registryLink.value],
@@ -67,7 +67,17 @@ const navLinks = computed<NavLink[]>(() => {
     [auth.can("materials.review"), "materials", t("submissions.title"), materialsLink.value],
     [auth.can("imports.manage"), "imports", t("nav.imports"), importsLink.value],
   ];
-  return [...links, ...staff.filter(([show]) => show).map(([, key, label, to], n) => ({ key, label, to, muted: n > 0 }))];
+  return tools.filter(([show]) => show).map(([, key, label, to]) => ({ key, label, to }));
+});
+
+/** One tool is just a link; several are a Workspace menu. */
+const showToolsMenu = computed(() => toolLinks.value.length >= 2);
+
+/** The top bar: public sections, then the signed-in user's own page, then (if there is only one) their one tool. */
+const barLinks = computed<NavLink[]>(() => {
+  if (!auth.isAuthenticated) return publicLinks.value;
+  const own: NavLink[] = [{ key: "dashboard", label: t("nav.dashboard"), to: dashboardLink.value }];
+  return [...publicLinks.value, ...own, ...(showToolsMenu.value ? [] : toolLinks.value)];
 });
 
 /** The current page, or anything beneath it (an artist's page keeps "Artists" lit). */
@@ -82,10 +92,30 @@ const linkClass = (link: NavLink): string =>
     : `${link.muted ? "text-ink-muted hover:text-ink" : "text-ink hover:text-accent"} transition-colors`;
 
 const menuOpen = ref(false);
-watch(() => route.fullPath, () => (menuOpen.value = false));
-const closeOnEscape = (e: KeyboardEvent) => e.key === "Escape" && (menuOpen.value = false);
-onMounted(() => window.addEventListener("keydown", closeOnEscape));
-onBeforeUnmount(() => window.removeEventListener("keydown", closeOnEscape));
+const toolsOpen = ref(false);
+const toolsRoot = ref<HTMLElement | null>(null);
+const toolsCurrent = computed(() => toolLinks.value.some(isCurrent));
+
+watch(() => route.fullPath, () => {
+  menuOpen.value = false;
+  toolsOpen.value = false;
+});
+function closeOnEscape(e: KeyboardEvent): void {
+  if (e.key !== "Escape") return;
+  menuOpen.value = false;
+  toolsOpen.value = false;
+}
+function closeOnOutsideClick(e: MouseEvent): void {
+  if (toolsOpen.value && toolsRoot.value && !toolsRoot.value.contains(e.target as Node)) toolsOpen.value = false;
+}
+onMounted(() => {
+  window.addEventListener("keydown", closeOnEscape);
+  document.addEventListener("click", closeOnOutsideClick);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", closeOnEscape);
+  document.removeEventListener("click", closeOnOutsideClick);
+});
 
 const otherLocale = computed<AppLocale>(() =>
   route.params.locale === "en" ? "ar" : "en",
@@ -125,7 +155,7 @@ async function logout(): Promise<void> {
         </RouterLink>
         <nav aria-label="Main" class="hidden items-center gap-7 text-sm font-medium md:flex" data-testid="main-nav">
           <RouterLink
-            v-for="link in navLinks"
+            v-for="link in barLinks"
             :key="link.key"
             :to="link.to"
             :class="linkClass(link)"
@@ -133,6 +163,25 @@ async function logout(): Promise<void> {
             :data-testid="`nav-${link.key}`"
             >{{ link.label }}</RouterLink
           >
+          <div v-if="showToolsMenu" ref="toolsRoot" class="relative">
+            <button
+              type="button"
+              class="flex items-center gap-1.5 transition-colors"
+              :class="toolsCurrent ? 'text-accent underline decoration-accent decoration-2 underline-offset-8' : 'text-ink hover:text-accent'"
+              :aria-expanded="toolsOpen"
+              aria-controls="tools-menu"
+              data-testid="tools-toggle"
+              @click="toolsOpen = !toolsOpen"
+            >
+              {{ $t("nav.workspace") }}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-3.5 transition-transform" :class="toolsOpen ? 'rotate-180' : ''"><path d="m6 9 6 6 6-6" /></svg>
+            </button>
+            <ul v-if="toolsOpen" id="tools-menu" class="absolute end-0 top-full z-40 mt-3 w-64 border-2 border-ink bg-paper py-2 shadow-sm" data-testid="tools-menu">
+              <li v-for="link in toolLinks" :key="link.key">
+                <RouterLink :to="link.to" class="block px-5 py-2.5" :class="linkClass({ ...link, muted: !isCurrent(link) })" :aria-current="isCurrent(link) ? 'page' : undefined" :data-testid="`nav-${link.key}`">{{ link.label }}</RouterLink>
+              </li>
+            </ul>
+          </div>
         </nav>
         <div class="flex items-center justify-self-end gap-3">
           <button
@@ -172,10 +221,18 @@ async function logout(): Promise<void> {
       </div>
       <nav v-if="menuOpen" id="mobile-menu" aria-label="Main" class="border-t border-line px-6 py-4 md:hidden" data-testid="mobile-menu">
         <ul class="flex flex-col">
-          <li v-for="link in navLinks" :key="link.key" class="border-b border-line last:border-b-0">
+          <li v-for="link in barLinks" :key="link.key" class="border-b border-line last:border-b-0">
             <RouterLink :to="link.to" class="block py-3 text-base font-medium" :class="linkClass(link)" :aria-current="isCurrent(link) ? 'page' : undefined">{{ link.label }}</RouterLink>
           </li>
         </ul>
+        <template v-if="showToolsMenu">
+          <p class="mt-4 border-t-2 border-ink pt-3 text-xs font-semibold text-ink-muted" data-testid="mobile-tools-heading">{{ $t("nav.workspace") }}</p>
+          <ul class="flex flex-col">
+            <li v-for="link in toolLinks" :key="link.key" class="border-b border-line last:border-b-0">
+              <RouterLink :to="link.to" class="block py-3 text-base font-medium" :class="linkClass({ ...link, muted: !isCurrent(link) })" :aria-current="isCurrent(link) ? 'page' : undefined">{{ link.label }}</RouterLink>
+            </li>
+          </ul>
+        </template>
       </nav>
     </header>
 

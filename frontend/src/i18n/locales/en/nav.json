@@ -15,5 +15,6 @@
   "timeline": "Timeline",
   "menu": "Menu",
   "openMenu": "Open the menu",
-  "closeMenu": "Close the menu"
+  "closeMenu": "Close the menu",
+  "workspace": "Workspace"
 }
