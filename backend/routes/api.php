@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\AdminEventIndexController;
 use App\Http\Controllers\Api\V1\AdminHolderIndexController;
 use App\Http\Controllers\Api\V1\AdminUserDestroyController;
 use App\Http\Controllers\Api\V1\AdminUserIndexController;
+use App\Http\Controllers\Api\V1\AdminUserInvitationController;
 use App\Http\Controllers\Api\V1\AdminUserShowController;
 use App\Http\Controllers\Api\V1\AdminUserStoreController;
 use App\Http\Controllers\Api\V1\AdminUserUpdateController;
@@ -278,6 +279,7 @@ Route::prefix('v1')->group(function () {
             Route::post('admin/users', AdminUserStoreController::class);
             Route::patch('admin/users/{user}', AdminUserUpdateController::class);
             Route::delete('admin/users/{user}', AdminUserDestroyController::class);
+            Route::post('admin/users/{user}/invitation', AdminUserInvitationController::class);
         });
     });
 });

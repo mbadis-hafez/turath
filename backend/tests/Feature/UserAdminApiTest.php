@@ -261,6 +261,24 @@ it('creates users without invitation when the flag is absent', function () {
     expect(User::where('email', 'plain@example.com')->firstOrFail()->must_change_password)->toBeFalse();
 });
 
+it('creates an inactive user when is_active is false', function () {
+    $admin = makeUser('admin');
+
+    $this->actingAs($admin)->postJson('/api/v1/admin/users', [
+        'name' => 'Dormant',
+        'email' => 'dormant@example.com',
+        'password' => 'secret-password',
+        'password_confirmation' => 'secret-password',
+        'role' => 'reader',
+        'is_active' => false,
+    ])->assertCreated()->assertJsonPath('data.is_active', false);
+
+    $this->postJson('/api/v1/auth/login', [
+        'email' => 'dormant@example.com',
+        'password' => 'secret-password',
+    ], ['Origin' => 'http://localhost'])->assertUnprocessable()->assertJsonValidationErrors(['email']);
+});
+
 it('locks flagged users out of everything but their profile, password change, and logout', function () {
     $flagged = User::factory()->create(['must_change_password' => true]);
 
@@ -344,4 +362,36 @@ it('validates the forced password change', function () {
 
     $flagged->refresh();
     expect($flagged->must_change_password)->toBeTrue();
+});
+
+it('resends an invitation with a fresh password and flags first-login change', function () {
+    Mail::fake();
+    $admin = makeUser('admin');
+    $target = User::factory()->create(['password' => 'old-password', 'must_change_password' => false]);
+
+    $this->actingAs($admin)->postJson("/api/v1/admin/users/{$target->id}/invitation")->assertNoContent();
+
+    $target->refresh();
+    expect($target->must_change_password)->toBeTrue()
+        ->and(Hash::check('old-password', $target->password))->toBeFalse();
+
+    Mail::assertSent(UserInvitationMail::class, fn (UserInvitationMail $mail) => $mail->hasTo($target->email)
+        && str_contains($mail->render(), $target->email));
+});
+
+it('refuses to invite yourself, a superadmin, or an inactive user', function () {
+    Mail::fake();
+    $admin = makeUser('admin');
+    $superadmin = makeUser('superadmin');
+    $inactive = User::factory()->create(['is_active' => false]);
+
+    $this->actingAs($admin)->postJson("/api/v1/admin/users/{$admin->id}/invitation")->assertForbidden();
+    $this->actingAs($admin)->postJson("/api/v1/admin/users/{$superadmin->id}/invitation")->assertForbidden();
+    $this->actingAs($admin)->postJson("/api/v1/admin/users/{$inactive->id}/invitation")->assertConflict();
+    $this->actingAs(makeUser('reader'))->postJson("/api/v1/admin/users/{$inactive->id}/invitation")->assertForbidden();
+
+    Mail::assertNothingSent();
+
+    $inactive->refresh();
+    expect($inactive->must_change_password)->toBeFalse();
 });

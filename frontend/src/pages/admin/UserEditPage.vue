@@ -3,7 +3,7 @@ import { computed, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 
-import { createUser, fetchUser, updateUser } from "@/api/users";
+import { createUser, fetchUser, sendInvitation, updateUser } from "@/api/users";
 import ErrorState from "@/components/common/ErrorState.vue";
 import Spinner from "@/components/common/Spinner.vue";
 import { useLocalePath } from "@/composables/useLocalePath";
@@ -29,7 +29,7 @@ const form = reactive({
   password: "",
   passwordConfirmation: "",
   role: "" as string,
-  isActive: true,
+  status: "active" as "active" | "inactive",
   sendInvitation: false,
 });
 
@@ -39,7 +39,7 @@ function loadForm(user: AdminUserDetail): void {
   form.password = "";
   form.passwordConfirmation = "";
   form.role = user.roles[0] ?? "";
-  form.isActive = user.is_active;
+  form.status = user.is_active ? "active" : "inactive";
 }
 
 function payload(): Record<string, string | boolean> {
@@ -47,6 +47,7 @@ function payload(): Record<string, string | boolean> {
     name: form.name.trim(),
     email: form.email.trim(),
     role: form.role,
+    is_active: form.status === "active",
   };
   if (isNew.value) {
     body.password = form.password;
@@ -54,12 +55,9 @@ function payload(): Record<string, string | boolean> {
     if (form.sendInvitation) {
       body.send_invitation = true;
     }
-  } else {
-    body.is_active = form.isActive;
-    if (form.password !== "") {
-      body.password = form.password;
-      body.password_confirmation = form.passwordConfirmation;
-    }
+  } else if (form.password !== "") {
+    body.password = form.password;
+    body.password_confirmation = form.passwordConfirmation;
   }
   return body;
 }
@@ -125,6 +123,38 @@ async function submit(): Promise<void> {
 }
 
 const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none";
+
+const inviting = ref(false);
+const invitationSent = ref(false);
+const invitationError = ref<unknown>(null);
+
+const showPassword = ref(false);
+
+function generatePassword(): void {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789#%&";
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  let generated = "";
+  for (const byte of bytes) generated += alphabet.charAt(byte % alphabet.length);
+  form.password = generated;
+  form.passwordConfirmation = generated;
+  showPassword.value = true;
+}
+
+async function invite(): Promise<void> {
+  if (id.value === null) return;
+  inviting.value = true;
+  invitationSent.value = false;
+  invitationError.value = null;
+  try {
+    await sendInvitation(id.value);
+    invitationSent.value = true;
+  } catch (err) {
+    invitationError.value = err;
+  } finally {
+    inviting.value = false;
+  }
+}
 </script>
 
 <template>
@@ -146,6 +176,20 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
             <p v-if="user" class="mt-1 text-sm text-ink-muted">{{ user.email }}</p>
           </div>
           <div class="flex items-center gap-2">
+            <button
+              v-if="!isNew"
+              type="button"
+              data-testid="send-invitation-button"
+              :disabled="inviting"
+              class="inline-flex items-center gap-1.5 rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft disabled:cursor-not-allowed disabled:opacity-60"
+              @click="invite"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true">
+                <rect width="20" height="16" x="2" y="4" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+              {{ inviting ? t("users.edit.sendingInvitation") : t("users.edit.sendInvitation") }}
+            </button>
             <RouterLink :to="localePath('admin.users')" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft">{{ t("users.edit.cancel") }}</RouterLink>
             <button type="submit" class="rounded-md bg-ink px-4 py-2 text-sm font-semibold text-paper disabled:cursor-not-allowed disabled:bg-neutral-soft disabled:text-ink-muted" data-testid="user-submit" :disabled="!canSubmit">
               {{ submitting ? t("users.edit.saving") : t("users.edit.save") }}
@@ -154,6 +198,10 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
         </div>
         <p v-if="generalError" class="mt-2 text-sm text-danger" role="alert">{{ generalError }}</p>
         <p v-if="saved" class="mt-2 text-sm text-success" data-testid="user-saved">{{ t("users.edit.saved") }}</p>
+        <p v-if="invitationError" class="mt-2 text-sm text-danger" role="alert" data-testid="invitation-error">
+          {{ invitationError instanceof Error ? invitationError.message : t("users.edit.invitationFailed") }}
+        </p>
+        <p v-if="invitationSent" class="mt-2 text-sm text-success" data-testid="invitation-sent">{{ t("users.edit.invitationSent") }}</p>
 
         <div class="mt-8 max-w-3xl">
           <section>
@@ -167,12 +215,39 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
                 <input v-model="form.email" type="email" dir="ltr" :class="input" data-testid="user-email" />
                 <span v-if="firstError('email')" class="text-danger">{{ firstError("email") }}</span>
               </label>
-              <label class="text-xs text-ink-muted">{{ t("users.edit.password") }}
-                <input v-model="form.password" type="password" dir="ltr" autocomplete="new-password" :class="input" data-testid="user-password" />
+              <label class="text-xs text-ink-muted">
+                <span class="flex items-center justify-between gap-2">
+                  <span>{{ t("users.edit.password") }}</span>
+                  <button type="button" class="text-xs font-medium text-ink underline decoration-accent underline-offset-2 hover:text-accent" data-testid="generate-password" @click="generatePassword">
+                    {{ t("users.edit.generatePassword") }}
+                  </button>
+                </span>
+                <span class="relative mt-1 block">
+                  <input v-model="form.password" :type="showPassword ? 'text' : 'password'" dir="ltr" autocomplete="new-password" class="w-full rounded-md border border-line bg-surface py-2 ps-3 pe-9 text-sm text-ink focus:border-accent focus:outline-none" data-testid="user-password" />
+                  <button
+                    type="button"
+                    :aria-label="showPassword ? t('users.edit.hidePassword') : t('users.edit.showPassword')"
+                    :aria-pressed="showPassword"
+                    class="absolute inset-y-0 end-0 flex items-center px-2 text-ink-muted transition-colors hover:text-ink"
+                    data-testid="toggle-password"
+                    @click="showPassword = !showPassword"
+                  >
+                    <svg v-if="showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true">
+                      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                      <path d="m2 2 20 20" />
+                    </svg>
+                    <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true">
+                      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </span>
                 <span v-if="firstError('password')" class="text-danger">{{ firstError("password") }}</span>
               </label>
               <label class="text-xs text-ink-muted">{{ t("users.edit.passwordConfirm") }}
-                <input v-model="form.passwordConfirmation" type="password" dir="ltr" autocomplete="new-password" :class="input" data-testid="user-password-confirmation" />
+                <input v-model="form.passwordConfirmation" :type="showPassword ? 'text' : 'password'" dir="ltr" autocomplete="new-password" :class="input" data-testid="user-password-confirmation" />
               </label>
               <p v-if="!isNew" class="text-xs text-ink-muted sm:col-span-2">{{ t("users.edit.passwordHelp") }}</p>
               <label class="text-xs text-ink-muted">{{ t("users.edit.role") }}
@@ -182,17 +257,21 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
                 </select>
                 <span v-if="firstError('role')" class="text-danger">{{ firstError("role") }}</span>
               </label>
-              <label v-if="!isNew" class="flex items-end gap-2 text-sm text-ink">
-                <input v-model="form.isActive" type="checkbox" class="size-4 accent-ink" data-testid="user-active" />
-                <span>{{ t("users.edit.isActive") }}</span>
+              <label class="text-xs text-ink-muted">{{ t("users.edit.status") }}
+                <select v-model="form.status" :class="input" data-testid="user-status">
+                  <option value="active">{{ t("users.edit.statusActive") }}</option>
+                  <option value="inactive">{{ t("users.edit.statusInactive") }}</option>
+                </select>
               </label>
-              <p v-if="!isNew" class="text-xs text-ink-muted sm:col-span-2">{{ t("users.edit.isActiveHelp") }}</p>
+              <p class="text-xs text-ink-muted sm:col-span-2">{{ t("users.edit.isActiveHelp") }}</p>
               <template v-if="isNew">
-                <label class="flex items-end gap-2 text-sm text-ink">
-                  <input v-model="form.sendInvitation" type="checkbox" class="size-4 accent-ink" data-testid="send-invitation" />
-                  <span>{{ t("users.edit.sendInvitation") }}</span>
+                <label class="flex cursor-pointer items-start gap-3 rounded-md border border-line bg-surface p-3 transition-colors has-checked:border-ink has-checked:bg-neutral-soft sm:col-span-2">
+                  <input v-model="form.sendInvitation" type="checkbox" class="mt-0.5 size-4 shrink-0 accent-ink" data-testid="send-invitation" />
+                  <span>
+                    <span class="block text-sm font-medium text-ink">{{ t("users.edit.sendInvitation") }}</span>
+                    <span class="mt-0.5 block text-xs leading-relaxed text-ink-muted">{{ t("users.edit.sendInvitationHelp") }}</span>
+                  </span>
                 </label>
-                <p class="text-xs text-ink-muted sm:col-span-2">{{ t("users.edit.sendInvitationHelp") }}</p>
               </template>
             </div>
           </section>

@@ -42,3 +42,7 @@ export function updateUser(id: number, payload: UserPayload): Promise<{ data: Ad
 export function deleteUser(id: number): Promise<void> {
   return request<void>({ method: "DELETE", url: `/api/v1/admin/users/${id}` });
 }
+
+export function sendInvitation(id: number): Promise<void> {
+  return request<void>({ method: "POST", url: `/api/v1/admin/users/${id}/invitation` });
+}

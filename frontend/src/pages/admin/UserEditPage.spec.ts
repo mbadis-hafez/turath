@@ -9,7 +9,7 @@ import { mountWithPlugins } from "@/test/utils";
 import { ApiError } from "@/types/api";
 import type { AdminUserDetail } from "@/types/user";
 
-const api = vi.hoisted(() => ({ fetchUser: vi.fn(), createUser: vi.fn(), updateUser: vi.fn() }));
+const api = vi.hoisted(() => ({ fetchUser: vi.fn(), createUser: vi.fn(), updateUser: vi.fn(), sendInvitation: vi.fn() }));
 vi.mock("@/api/users", () => api);
 
 const detail: AdminUserDetail = {
@@ -56,6 +56,7 @@ beforeEach(() => {
   api.fetchUser.mockReset();
   api.createUser.mockReset().mockResolvedValue({ data: detail });
   api.updateUser.mockReset().mockResolvedValue({ data: detail });
+  api.sendInvitation.mockReset().mockResolvedValue(undefined);
   router = makeRouter();
 });
 
@@ -83,10 +84,25 @@ describe("UserEditPage", () => {
       name: "Samar",
       email: "samar@example.com",
       role: "reviewer",
+      is_active: true,
       password: "secret-pass",
       password_confirmation: "secret-pass",
     });
     expect(router.currentRoute.value.name).toBe("admin.users");
+  });
+
+  it("sends is_active false when the new user is set inactive", async () => {
+    const wrapper = await mountNew();
+    await wrapper.get("[data-testid=user-name]").setValue("Dormant");
+    await wrapper.get("[data-testid=user-email]").setValue("dormant@example.com");
+    await wrapper.get("[data-testid=user-password]").setValue("secret-pass");
+    await wrapper.get("[data-testid=user-role]").setValue("reader");
+    await wrapper.get("[data-testid=user-status]").setValue("inactive");
+
+    await wrapper.get("[data-testid=user-submit]").trigger("submit");
+    await flushPromises();
+
+    expect(api.createUser).toHaveBeenCalledWith(expect.objectContaining({ is_active: false }));
   });
 
   it("includes send_invitation when the invitation box is checked", async () => {
@@ -132,6 +148,83 @@ describe("UserEditPage", () => {
     await flushPromises();
 
     expect(api.updateUser.mock.lastCall![1]).toMatchObject({ password: "new-secret", password_confirmation: "new-secret" });
+  });
+
+  it("sends a fresh invitation from edit mode and confirms it", async () => {
+    const wrapper = await mountEdit();
+
+    await wrapper.get("[data-testid=send-invitation-button]").trigger("click");
+    await flushPromises();
+
+    expect(api.sendInvitation).toHaveBeenCalledWith(2);
+    expect(wrapper.find("[data-testid=invitation-sent]").exists()).toBe(true);
+  });
+
+  it("shows an error when the invitation fails", async () => {
+    api.sendInvitation.mockRejectedValue(new ApiError("server", "Could not send", { status: 500 }));
+    const wrapper = await mountEdit();
+
+    await wrapper.get("[data-testid=send-invitation-button]").trigger("click");
+    await flushPromises();
+
+    expect(wrapper.find("[data-testid=invitation-error]").exists()).toBe(true);
+    expect(wrapper.text()).toContain("Could not send");
+  });
+
+  it("offers no invitation button when adding a user", async () => {
+    const wrapper = await mountNew();
+
+    expect(wrapper.find("[data-testid=send-invitation-button]").exists()).toBe(false);
+  });
+
+  it("hydrates the status select and posts the chosen value", async () => {
+    api.fetchUser.mockResolvedValue({ data: { ...detail, is_active: false } });
+    await router.push("/en/admin/users/2");
+    const wrapper = mountWithPlugins(UserEditPage, { locale: "en", router, pinia });
+    await flushPromises();
+
+    expect(wrapper.get<HTMLSelectElement>("[data-testid=user-status]").element.value).toBe("inactive");
+
+    await wrapper.get("[data-testid=user-status]").setValue("active");
+    await wrapper.get("[data-testid=user-submit]").trigger("submit");
+    await flushPromises();
+
+    expect(api.updateUser.mock.lastCall![1]).toMatchObject({ is_active: true });
+  });
+
+  it("sends is_active false when the status is set to inactive", async () => {
+    const wrapper = await mountEdit();
+    await wrapper.get("[data-testid=user-status]").setValue("inactive");
+
+    await wrapper.get("[data-testid=user-submit]").trigger("submit");
+    await flushPromises();
+
+    expect(api.updateUser.mock.lastCall![1]).toMatchObject({ is_active: false });
+  });
+
+  it("generates a password that fills both fields and reveals it", async () => {
+    const wrapper = await mountNew();
+    await wrapper.get("[data-testid=generate-password]").trigger("click");
+
+    const password = wrapper.get<HTMLInputElement>("[data-testid=user-password]");
+    const confirmation = wrapper.get<HTMLInputElement>("[data-testid=user-password-confirmation]");
+    expect(password.element.value).not.toBe("");
+    expect(password.element.value).toBe(confirmation.element.value);
+    expect(password.element.type).toBe("text");
+  });
+
+  it("toggles password visibility", async () => {
+    const wrapper = await mountNew();
+    const toggle = wrapper.get("[data-testid=toggle-password]");
+
+    expect(wrapper.get<HTMLInputElement>("[data-testid=user-password]").element.type).toBe("password");
+
+    await toggle.trigger("click");
+    expect(wrapper.get<HTMLInputElement>("[data-testid=user-password]").element.type).toBe("text");
+    expect(wrapper.get<HTMLInputElement>("[data-testid=user-password-confirmation]").element.type).toBe("text");
+
+    await toggle.trigger("click");
+    expect(wrapper.get<HTMLInputElement>("[data-testid=user-password]").element.type).toBe("password");
   });
 
   it("renders server-side field errors", async () => {

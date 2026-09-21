@@ -25,6 +25,7 @@ class StoreUserRequest extends FormRequest
             ],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'string', Rule::exists('roles', 'name')],
+            'is_active' => ['sometimes', 'boolean'],
             'send_invitation' => ['sometimes', 'boolean'],
         ];
     }

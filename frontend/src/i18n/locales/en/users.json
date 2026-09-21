@@ -25,13 +25,21 @@
     "name": "Name",
     "email": "Email",
     "password": "Password",
+    "generatePassword": "Generate",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "passwordConfirm": "Confirm password",
     "passwordHelp": "Leave the password blank to keep the current one.",
     "role": "Role",
-    "isActive": "Active",
+    "status": "Status",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
     "isActiveHelp": "Inactive users cannot log in.",
     "sendInvitation": "Send invitation email",
-    "sendInvitationHelp": "Emails the credentials to the user, who must change the password at first sign-in."
+    "sendInvitationHelp": "Emails the credentials to the user, who must change the password at first sign-in.",
+    "sendingInvitation": "Sending…",
+    "invitationSent": "Invitation sent — the user received new credentials and must set a new password at first sign-in.",
+    "invitationFailed": "The invitation could not be sent. Please try again."
   },
   "columns": {
     "name": "Name",
