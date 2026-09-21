@@ -34,6 +34,8 @@ class RolesAndPermissionsSeeder extends Seeder
         $importsManage = Permission::findOrCreate('imports.manage');
         $dashboardManage = Permission::findOrCreate('dashboard.manage');
         $sourceConflictsResolve = Permission::findOrCreate('source_conflicts.resolve');
+        $materialsReview = Permission::findOrCreate('materials.review');
+        $reviewMaterialIntake = Permission::findOrCreate('review_queue.material_intake');
         $proposalsSubmit = Permission::findOrCreate('proposals.submit');
         $reviewEditorial = Permission::findOrCreate('review_queue.editorial_review');
         $reviewArchivist = Permission::findOrCreate('review_queue.archivist_review');
@@ -47,7 +49,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $editorPermissions = [
             $activityView, $artistsManage, $artistsVerify, $holdersManage, $artworksManage, $eventsManage,
             $archiveManage, $archivePublish, $importsManage, $dashboardManage,
-            $sourceConflictsResolve, $reviewArchivist, $reviewDataAudit, $reviewSecondSource, $reviewEditorial, $proposalsSubmit,
+            $sourceConflictsResolve, $reviewArchivist, $reviewDataAudit, $reviewSecondSource, $reviewEditorial, $proposalsSubmit, $materialsReview, $reviewMaterialIntake,
         ];
 
         Role::findByName('contributor')->givePermissionTo($proposalsSubmit);

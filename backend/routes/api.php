@@ -64,12 +64,12 @@ use App\Http\Controllers\Api\V1\EventParticipantsController;
 use App\Http\Controllers\Api\V1\FieldCitationDestroyController;
 use App\Http\Controllers\Api\V1\FieldCitationStoreController;
 use App\Http\Controllers\Api\V1\HealthController;
-use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\HolderDestroyController;
 use App\Http\Controllers\Api\V1\HolderRestoreController;
 use App\Http\Controllers\Api\V1\HolderShowController;
 use App\Http\Controllers\Api\V1\HolderStoreController;
 use App\Http\Controllers\Api\V1\HolderUpdateController;
+use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\ImportBatchCancelController;
 use App\Http\Controllers\Api\V1\ImportBatchCommitController;
 use App\Http\Controllers\Api\V1\ImportBatchIndexController;
@@ -80,6 +80,7 @@ use App\Http\Controllers\Api\V1\ImportBatchShowController;
 use App\Http\Controllers\Api\V1\ImportBatchStoreController;
 use App\Http\Controllers\Api\V1\ImportMappingProfileIndexController;
 use App\Http\Controllers\Api\V1\ImportMappingProfileStoreController;
+use App\Http\Controllers\Api\V1\MaterialSubmissionController;
 use App\Http\Controllers\Api\V1\PipelineNoteSuggestionAcceptController;
 use App\Http\Controllers\Api\V1\ProposalController;
 use App\Http\Controllers\Api\V1\RecordCompletenessController;
@@ -96,6 +97,9 @@ Route::prefix('v1')->group(function () {
     Route::get('health', HealthController::class);
 
     Route::post('auth/login', LoginController::class)->middleware('throttle:login');
+
+    // D149/D154: the one anonymous write in the API, with its own tight limiter.
+    Route::post('material-submissions', [MaterialSubmissionController::class, 'store'])->middleware('throttle:submissions');
 
     Route::middleware('throttle:api')->group(function () {
         Route::get('home', HomeController::class);
@@ -208,6 +212,15 @@ Route::prefix('v1')->group(function () {
             Route::patch('artists/{artist}/themes', [ThemeController::class, 'sync'])->whereNumber('artist');
             Route::get('themes', [ThemeController::class, 'index']);
             Route::post('themes', [ThemeController::class, 'store']);
+        });
+
+        Route::middleware('can:materials.review')->group(function () {
+            Route::get('material-submissions', [MaterialSubmissionController::class, 'index']);
+            Route::get('material-submissions/{submission}', [MaterialSubmissionController::class, 'show'])->whereNumber('submission');
+            Route::patch('material-submissions/{submission}', [MaterialSubmissionController::class, 'update'])->whereNumber('submission');
+            Route::post('material-submissions/{submission}/catalog', [MaterialSubmissionController::class, 'catalog'])->whereNumber('submission');
+            Route::post('material-submissions/{submission}/reject', [MaterialSubmissionController::class, 'reject'])->whereNumber('submission');
+            Route::get('material-submissions/{submission}/files/{file}', [MaterialSubmissionController::class, 'file'])->whereNumber(['submission', 'file']);
         });
 
         Route::middleware('can:events.manage')->group(function () {

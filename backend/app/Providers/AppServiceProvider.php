@@ -50,6 +50,9 @@ class AppServiceProvider extends ServiceProvider
             ? Limit::none()
             : Limit::perMinute(120)->by($request->ip()));
 
+        // D154: a starting number, deliberately active in tests so the limit itself can be tested.
+        RateLimiter::for('submissions', fn (Request $request) => Limit::perHour(5)->by($request->ip()));
+
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(
             Str::lower((string) $request->input('email')).'|'.$request->ip(),
         ));

@@ -17,6 +17,7 @@ class ReviewQueueIndexController
         'data_audit' => 'review_queue.data_audit',
         'second_source_needed' => 'review_queue.second_source_needed',
         'editorial_review' => 'review_queue.editorial_review',
+        'material_intake' => 'review_queue.material_intake',
     ];
 
     public function __invoke(Request $request): JsonResponse

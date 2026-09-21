@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\ArchiveItem;
 use App\Models\Artist;
 use App\Models\Artwork;
+use App\Models\MaterialSubmission;
 use App\Models\ReviewQueueItem;
 use App\Support\Completeness\CitableTypeResolver;
 use Illuminate\Http\Request;
@@ -45,6 +46,7 @@ class ReviewQueueItemResource extends JsonResource
         return match (true) {
             $record instanceof Artist => ['ar' => $record->name_ar, 'en' => $record->name_en],
             $record instanceof Artwork, $record instanceof ArchiveItem => ['ar' => $record->title_ar, 'en' => $record->title_en],
+            $record instanceof MaterialSubmission => ['ar' => 'مادة مقدَّمة #'.$record->id, 'en' => 'Material submission #'.$record->id],
             default => null,
         };
     }
