@@ -41,6 +41,8 @@ export class ApiError extends Error {
   readonly kind: ApiErrorKind;
   readonly status: number | null;
   readonly fieldErrors: Record<string, string[]>;
+  /** The raw response body, for statuses that carry a structured payload (e.g. a 409 conflict). */
+  readonly body: unknown;
 
   constructor(
     kind: ApiErrorKind,
@@ -48,6 +50,7 @@ export class ApiError extends Error {
     options: {
       status?: number | null;
       fieldErrors?: Record<string, string[]>;
+      body?: unknown;
     } = {},
   ) {
     super(message);
@@ -55,6 +58,7 @@ export class ApiError extends Error {
     this.kind = kind;
     this.status = options.status ?? null;
     this.fieldErrors = options.fieldErrors ?? {};
+    this.body = options.body ?? null;
   }
 
   static fromHttp(status: number, body: unknown): ApiError {
@@ -79,6 +83,6 @@ export class ApiError extends Error {
     if (status === 404) {
       return new ApiError("not_found", message, { status });
     }
-    return new ApiError("server", message, { status });
+    return new ApiError("server", message, { status, body });
   }
 }

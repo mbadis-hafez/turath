@@ -3,24 +3,26 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 
 import type { AppLocale } from "@/i18n";
-import type { RecentItem } from "@/data/homeDemo";
+import type { HomeArchiveItem } from "@/types/home";
 
-const props = defineProps<{ item: RecentItem; locale: AppLocale }>();
+const props = defineProps<{ item: HomeArchiveItem; locale: AppLocale }>();
 
 const { t } = useI18n();
 
-const text = (value: { ar: string; en: string }) =>
-  props.locale === "ar" ? value.ar : value.en;
+const text = (value: { ar: string | null; en: string | null }) =>
+  props.locale === "ar" ? (value.ar ?? value.en ?? "") : (value.en ?? value.ar ?? "");
 
 const kindLabel = computed(() =>
-  props.item.kind === "article"
-    ? t("search.materialTypes.articles")
-    : t("search.materialTypes.photos"),
+  t(`archive.type.${props.item.item_type}`),
 );
+
+const date = computed(() => props.item.content?.display ?? "—");
+const title = computed(() => text(props.item.title) || t("archive.restricted"));
+const credit = computed(() => props.item.creator_name ?? (props.item.restricted ? t("archive.restrictedHelp") : ""));
 </script>
 
 <template>
-  <a href="#" class="flex gap-4 border-b border-line py-4.5" @click.prevent>
+  <RouterLink :to="{ name: 'archive.records', params: { locale } }" class="flex gap-4 border-b border-line py-4.5">
     <div
       class="size-[78px] shrink-0 bg-neutral-soft"
       aria-hidden="true"
@@ -33,16 +35,16 @@ const kindLabel = computed(() =>
           class="bg-sand px-2 py-0.75 font-bold text-sand-ink uppercase"
           >{{ kindLabel }}</span
         >
-        <span class="text-ink-faint tabular-nums">{{ text(item.meta) }}</span>
+        <span class="text-ink-faint tabular-nums">{{ date }}</span>
       </div>
       <h3
         class="mt-2 leading-[1.55] font-bold text-ink text-pretty font-display text-[19px]"
       >
-        {{ text(item.title) }}
+        {{ title }}
       </h3>
       <p class="mt-1.5 text-[13.5px] leading-[1.7] text-ink-muted">
-        {{ text(item.credit) }}
+        {{ credit }}
       </p>
     </div>
-  </a>
+  </RouterLink>
 </template>

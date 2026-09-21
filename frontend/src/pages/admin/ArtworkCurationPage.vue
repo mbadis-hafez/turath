@@ -8,6 +8,7 @@ import {
 } from "@/api/artworkCuration";
 import ArtworkImagesPanel from "@/components/curation/ArtworkImagesPanel.vue";
 import ArtworkFormSections from "@/components/curation/ArtworkFormSections.vue";
+import RevisionHistoryPanel from "@/components/proposals/RevisionHistoryPanel.vue";
 import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import Spinner from "@/components/common/Spinner.vue";
@@ -212,6 +213,7 @@ const stageClass = (s: PipelineStatus) =>
               </li>
             </ul>
           </section>
+          <RevisionHistoryPanel class="mt-10" type="artworks" :record-id="id" manage-permission="artworks.manage" @rolled-back="retry" />
         </div>
       </div>
     </template>

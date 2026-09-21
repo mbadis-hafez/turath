@@ -12,6 +12,7 @@ import EntryListEditor from "@/components/curation/EntryListEditor.vue";
 import PortraitPicker from "@/components/curation/PortraitPicker.vue";
 import SocialLinksEditor from "@/components/curation/SocialLinksEditor.vue";
 import { useArtistProfileForm } from "@/composables/useArtistProfileForm";
+import RevisionHistoryPanel from "@/components/proposals/RevisionHistoryPanel.vue";
 import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import Spinner from "@/components/common/Spinner.vue";
@@ -371,6 +372,7 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
               </li>
             </ul>
           </section>
+          <RevisionHistoryPanel class="mt-10" type="artists" :record-id="id" manage-permission="artists.manage" @rolled-back="retry" />
         </div>
       </div>
     </template>

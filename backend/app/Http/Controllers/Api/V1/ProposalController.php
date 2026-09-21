@@ -181,6 +181,20 @@ class ProposalController
     }
 
     /**
+     * The same bilingual column labels the activity feed uses, so a diff never
+     * shows a raw column name.
+     *
+     * @param  array<int, string>  $fields
+     * @return array<string, array{ar: string, en: string}>
+     */
+    public static function labelsFor(string $modelClass, array $fields): array
+    {
+        $all = method_exists($modelClass, 'activityFieldLabels') ? $modelClass::activityFieldLabels() : [];
+
+        return array_intersect_key($all, array_flip($fields));
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public static function present(EditProposal $proposal, ?Model $record): array
@@ -196,6 +210,7 @@ class ProposalController
             'status' => $proposal->status,
             'review_type' => $proposal->review_type,
             'field_diffs' => $proposal->field_diffs,
+            'field_labels' => self::labelsFor($proposal->citable_type, array_keys($proposal->field_diffs)),
             'rationale' => $proposal->rationale,
             'proposed_citations' => $proposal->proposed_citations ?? [],
             'proposed_by' => $proposal->relationLoaded('proposedBy') && $proposal->proposedBy

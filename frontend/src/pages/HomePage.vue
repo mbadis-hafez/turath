@@ -1,44 +1,45 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
+import { getHomeOverview } from "@/api/home";
+import EmptyState from "@/components/common/EmptyState.vue";
+import ErrorState from "@/components/common/ErrorState.vue";
+import Spinner from "@/components/common/Spinner.vue";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader.vue";
 import RecentItem from "@/components/home/RecentItem.vue";
 import ThemeCard from "@/components/home/ThemeCard.vue";
-import {
-  archiveFeature,
-  cityEntries,
-  homeStats,
-  homeThemes,
-  lastUpdate,
-  popularSearches,
-  recentItems,
-  spotlightArtists,
-  type LocalizedText,
-} from "@/data/homeDemo";
-import { formatNumber } from "@/utils/format";
+import { useLocalePath } from "@/composables/useLocalePath";
+import { useLocalized } from "@/composables/useLocalized";
+import type { Bilingual } from "@/types/artist";
+import type { HomeOverview } from "@/types/home";
+import { formatDateTime, formatNumber } from "@/utils/format";
 import type { AppLocale } from "@/i18n";
 
 const { t, locale } = useI18n();
+const { localePath, pushLocalePath } = useLocalePath();
+const { pick } = useLocalized();
 
 const appLocale = computed(() => locale.value as AppLocale);
-const text = (value: LocalizedText) =>
-  appLocale.value === "ar" ? value.ar : value.en;
+const text = (value: Bilingual) => pick(value)?.text ?? "";
 
 const query = ref("");
+const overview = ref<HomeOverview | null>(null);
+const loading = ref(true);
+const error = ref<unknown>(null);
+let controller: AbortController | null = null;
 
 const stats = computed(() =>
-  homeStats.map((stat) => ({
-    label: t(`home.stats.${stat.key}`),
-    value: formatNumber(stat.value, appLocale.value),
+  overview.value === null ? [] : Object.entries(overview.value.stats).map(([key, value]) => ({
+    label: t(`home.stats.${key}`),
+    value: formatNumber(value, appLocale.value),
   })),
 );
 
 const updateLabel = computed(() =>
-  t("home.lastUpdate", {
-    batch: lastUpdate.batch,
-    date: text(lastUpdate.date),
-  }),
+  overview.value?.updated_at
+    ? t("home.lastUpdatedAt", { date: formatDateTime(overview.value.updated_at, appLocale.value) })
+    : "",
 );
 
 const itemsLabel = (count: number) =>
@@ -46,9 +47,38 @@ const itemsLabel = (count: number) =>
     count: formatNumber(count, appLocale.value),
   });
 
-const applySuggestion = (suggestion: LocalizedText) => {
+const archiveFeature = computed(() => overview.value?.archive_feature ?? null);
+
+async function load(): Promise<void> {
+  controller?.abort();
+  const current = new AbortController();
+  controller = current;
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const response = await getHomeOverview(current.signal);
+    if (controller === current) overview.value = response.data;
+  } catch (caught) {
+    if (caught instanceof DOMException && caught.name === "AbortError") return;
+    if (controller === current) error.value = caught;
+  } finally {
+    if (controller === current) loading.value = false;
+  }
+}
+
+function search(term = query.value): void {
+  const cleaned = term.trim();
+  void pushLocalePath("archive.records", {}, cleaned === "" ? {} : { q: cleaned });
+}
+
+function applySuggestion(suggestion: Bilingual): void {
   query.value = text(suggestion);
-};
+  search(query.value);
+}
+
+onMounted(() => void load());
+onBeforeUnmount(() => controller?.abort());
 </script>
 
 <template>
@@ -77,7 +107,7 @@ const applySuggestion = (suggestion: LocalizedText) => {
         <aside
           class="w-full shrink-0 ps-9 sm:w-[330px] sm:border-s sm:border-line"
         >
-          <dl>
+          <dl v-if="overview">
             <div
               v-for="stat in stats"
               :key="stat.label"
@@ -91,6 +121,7 @@ const applySuggestion = (suggestion: LocalizedText) => {
               </dd>
             </div>
           </dl>
+          <div v-else-if="loading" class="py-8 text-center"><Spinner /></div>
           <p class="mt-3.5 text-[11px] leading-relaxed text-ink-faint font-latin">
             {{ updateLabel }}
           </p>
@@ -100,7 +131,7 @@ const applySuggestion = (suggestion: LocalizedText) => {
       <form
         role="search"
         class="mt-11 flex items-center gap-4 border-b-2 border-ink pb-4"
-        @submit.prevent
+        @submit.prevent="search()"
       >
         <svg
           viewBox="0 0 24 24"
@@ -135,13 +166,13 @@ const applySuggestion = (suggestion: LocalizedText) => {
       >
         <span>{{ t("home.popular") }}</span>
         <button
-          v-for="suggestion in popularSearches"
-          :key="suggestion.en"
+          v-for="suggestion in overview?.popular_searches ?? []"
+          :key="suggestion.term.en ?? suggestion.term.ar ?? ''"
           type="button"
           class="border border-line px-3 py-1.5 text-[13px] text-ink transition-colors hover:border-ink"
-          @click="applySuggestion(suggestion)"
+          @click="applySuggestion(suggestion.term)"
         >
-          {{ text(suggestion) }}
+          {{ text(suggestion.term) }}
         </button>
       </div>
     </section>
@@ -151,17 +182,20 @@ const applySuggestion = (suggestion: LocalizedText) => {
       <HomeSectionHeader
         :title="t('home.themes.title')"
         :link-label="t('home.themes.viewAll')"
+        :to="localePath('timeline')"
       />
       <div
+        v-if="overview && overview.themes.length > 0"
         class="grid grid-cols-1 gap-7 min-[480px]:grid-cols-2 xl:grid-cols-4"
       >
         <ThemeCard
-          v-for="theme in homeThemes"
-          :key="theme.title.en"
+          v-for="theme in overview.themes"
+          :key="theme.id"
           :theme="theme"
           :locale="appLocale"
         />
       </div>
+      <EmptyState v-else-if="!loading" :title="t('home.emptyThemes')" />
     </section>
 
     <!-- From the archive -->
@@ -169,8 +203,9 @@ const applySuggestion = (suggestion: LocalizedText) => {
       <HomeSectionHeader
         :title="t('home.archive.title')"
         :link-label="t('home.archive.browse')"
+        :to="localePath('archive.records')"
       />
-      <div class="flex flex-wrap items-start gap-11">
+      <div v-if="archiveFeature" class="flex flex-wrap items-start gap-11">
         <article class="min-w-[320px] flex-[1.4]">
           <div class="aspect-[16/10] bg-neutral-soft" aria-hidden="true"></div>
           <div
@@ -178,37 +213,33 @@ const applySuggestion = (suggestion: LocalizedText) => {
           >
             <span
               class="bg-ink px-2 py-0.75 font-bold text-paper uppercase"
-              >{{ archiveFeature.kindLabel.en }} ·
-              {{ text(archiveFeature.kindLabel) }}</span
+              >{{ t(`archive.type.${archiveFeature.item_type}`) }}</span
             >
-            <span class="text-ink-faint tabular-nums">{{
-              text(archiveFeature.meta)
-            }}</span>
+            <span class="text-ink-faint tabular-nums">{{ archiveFeature.content?.display ?? "—" }}</span>
           </div>
           <h3
             class="mt-3 max-w-[26ch] text-3xl leading-[1.45] font-bold text-balance text-ink font-display"
           >
-            {{ text(archiveFeature.title) }}
+            {{ text(archiveFeature.title) || t('archive.restricted') }}
           </h3>
           <p
             class="mt-3 max-w-[58ch] text-[15.5px] leading-[1.95] text-pretty text-ink-muted"
           >
-            {{ text(archiveFeature.body) }}
+            {{ archiveFeature.description ? text(archiveFeature.description) : t('archive.restrictedHelp') }}
           </p>
-          <p class="mt-3 text-[11.5px] text-ink-faint font-latin">
-            {{ text(archiveFeature.collection) }} · {{ archiveFeature.recordId }}
-          </p>
+          <p v-if="archiveFeature.creator_name" class="mt-3 text-[11.5px] text-ink-faint font-latin">{{ archiveFeature.creator_name }}</p>
         </article>
 
         <div class="min-w-[300px] flex-1">
           <RecentItem
-            v-for="item in recentItems"
-            :key="item.title.en"
+            v-for="item in overview?.recent_archive_items ?? []"
+            :key="item.id"
             :item="item"
             :locale="appLocale"
           />
         </div>
       </div>
+      <EmptyState v-else-if="!loading" :title="t('home.emptyArchive')" />
     </section>
 
     <!-- Artists -->
@@ -216,16 +247,17 @@ const applySuggestion = (suggestion: LocalizedText) => {
       <HomeSectionHeader
         :title="t('home.artistsSection.title')"
         :link-label="t('home.artistsSection.viewAll')"
+        :to="localePath('artists.index')"
       />
       <div
+        v-if="overview && overview.artists.length > 0"
         class="grid grid-cols-2 gap-5 min-[480px]:grid-cols-3 xl:grid-cols-6"
       >
-        <a
-          v-for="artist in spotlightArtists"
-          :key="artist.name.en"
-          href="#"
+        <RouterLink
+          v-for="artist in overview.artists"
+          :key="artist.id"
+          :to="localePath('artists.show', { slug: artist.slug })"
           class="group"
-          @click.prevent
         >
           <div
             class="aspect-[3/4] bg-neutral-soft transition-colors group-hover:bg-sand"
@@ -234,7 +266,7 @@ const applySuggestion = (suggestion: LocalizedText) => {
           <p
             class="mt-2.75 text-[19px] leading-[1.4] font-bold text-ink font-display"
           >
-            {{ text(artist.name) }}
+          {{ text(artist.name) }}
           </p>
           <p class="mt-1 text-[11px] leading-relaxed text-ink-faint font-latin">
             {{ artist.name.en }}
@@ -242,10 +274,11 @@ const applySuggestion = (suggestion: LocalizedText) => {
           <p
             class="mt-1.5 text-[11px] text-ink-muted tabular-nums font-latin"
           >
-            {{ itemsLabel(artist.items) }}
+            {{ itemsLabel(artist.materials_count) }}
           </p>
-        </a>
+        </RouterLink>
       </div>
+      <EmptyState v-else-if="!loading" :title="t('home.emptyArtists')" />
     </section>
 
     <!-- Cities + contribute -->
@@ -257,19 +290,19 @@ const applySuggestion = (suggestion: LocalizedText) => {
           >
             {{ t("home.cities.title") }}
           </h2>
-          <a
-            v-for="city in cityEntries"
-            :key="city.name.en"
-            href="#"
+          <RouterLink
+            v-for="place in overview?.places ?? []"
+            :key="`${place.name.ar}-${place.name.en}`"
+            :to="localePath('archive.records', {}, { q: text(place.name) })"
             class="flex items-center justify-between gap-4 border-b border-line py-3.25 transition-colors hover:text-accent"
-            @click.prevent
           >
-            <span class="text-[15px] text-ink">{{ text(city.name) }}</span>
+            <span class="text-[15px] text-ink">{{ text(place.name) }}</span>
             <span
               class="shrink-0 text-[12px] whitespace-nowrap text-ink-muted tabular-nums font-latin"
-              >{{ itemsLabel(city.items) }}</span
+              >{{ itemsLabel(place.materials_count) }}</span
             >
-          </a>
+          </RouterLink>
+          <EmptyState v-if="overview && overview.places.length === 0" :title="t('home.emptyPlaces')" />
         </div>
 
         <div class="min-w-[300px] flex-1 border border-ink p-8">
@@ -284,21 +317,20 @@ const applySuggestion = (suggestion: LocalizedText) => {
             {{ t("home.contribute.body") }}
           </p>
           <div class="mt-6 flex flex-wrap gap-3">
-            <a
-              href="#"
+            <RouterLink
+              :to="localePath('login')"
               class="bg-ink px-5.5 py-3 text-[14.5px] font-semibold text-paper transition-colors hover:bg-accent"
-              @click.prevent
-              >{{ t("home.contribute.submit") }}</a
+              >{{ t("home.contribute.submit") }}</RouterLink
             >
-            <a
-              href="#"
+            <RouterLink
+              :to="localePath('timeline')"
               class="border border-ink px-5.5 py-3 text-[14.5px] font-semibold text-ink transition-colors hover:bg-ink hover:text-paper"
-              @click.prevent
-              >{{ t("home.contribute.methodology") }}</a
+              >{{ t("home.contribute.methodology") }}</RouterLink
             >
           </div>
         </div>
       </div>
     </section>
   </div>
+  <div v-if="error" class="mx-auto mt-10 max-w-[90rem] px-6 sm:px-12"><ErrorState :error="error" @retry="load" /></div>
 </template>

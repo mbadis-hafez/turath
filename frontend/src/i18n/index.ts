@@ -4,6 +4,7 @@ import arActivity from "./locales/ar/activity.json";
 import arArtists from "./locales/ar/artists.json";
 import arArchive from "./locales/ar/archive.json";
 import arArtworks from "./locales/ar/artworks.json";
+import arProposals from "./locales/ar/proposals.json";
 import arEvents from "./locales/ar/events.json";
 import arAuth from "./locales/ar/auth.json";
 import arCommon from "./locales/ar/common.json";
@@ -19,6 +20,7 @@ import enActivity from "./locales/en/activity.json";
 import enArtists from "./locales/en/artists.json";
 import enArchive from "./locales/en/archive.json";
 import enArtworks from "./locales/en/artworks.json";
+import enProposals from "./locales/en/proposals.json";
 import enEvents from "./locales/en/events.json";
 import enAuth from "./locales/en/auth.json";
 import enCommon from "./locales/en/common.json";
@@ -84,6 +86,7 @@ export const i18n = createI18n({
       artists: arArtists,
       archive: arArchive,
       artworks: arArtworks,
+      proposals: arProposals,
       events: arEvents,
       dates: arDates,
       search: arSearch,
@@ -101,6 +104,7 @@ export const i18n = createI18n({
       artists: enArtists,
       archive: enArchive,
       artworks: enArtworks,
+      proposals: enProposals,
       events: enEvents,
       dates: enDates,
       search: enSearch,

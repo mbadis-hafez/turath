@@ -1,5 +1,10 @@
 <script setup lang="ts">
-defineProps<{ title: string; linkLabel: string }>();
+import type { RouteLocationRaw } from "vue-router";
+
+withDefaults(
+  defineProps<{ title: string; linkLabel?: string; to?: RouteLocationRaw }>(),
+  { linkLabel: "", to: undefined },
+);
 </script>
 
 <template>
@@ -9,13 +14,13 @@ defineProps<{ title: string; linkLabel: string }>();
     <h2 class="text-[26px] font-bold text-ink text-balance font-display">
       {{ title }}
     </h2>
-    <a
-      href="#"
+    <RouterLink
+      v-if="to && linkLabel"
+      :to="to"
       class="shrink-0 text-[12.5px] text-accent underline-offset-4 hover:text-accent-strong hover:underline"
-      @click.prevent
     >
       {{ linkLabel }}
       <span aria-hidden="true" class="inline-block rtl:-scale-x-100">→</span>
-    </a>
+    </RouterLink>
   </header>
 </template>

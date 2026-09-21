@@ -61,6 +61,7 @@ class RevisionController
             'source' => $revision->source,
             'edit_proposal_id' => $revision->edit_proposal_id,
             'field_diffs' => $revision->field_diffs,
+            'field_labels' => ProposalController::labelsFor($revision->citable_type, array_keys($revision->field_diffs)),
             'applied_by' => $revision->relationLoaded('appliedBy') && $revision->appliedBy
                 ? ['id' => $revision->appliedBy->id, 'name' => $revision->appliedBy->name] : null,
             'applied_at' => $revision->applied_at->toIso8601String(),

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import { useRoute } from "vue-router";
 
 import { listThemes } from "@/api/artistCuration";
 import { getTimeline } from "@/api/events";
@@ -17,10 +18,12 @@ import type { TimelineBucket, TimelineEntry, TimelineKind } from "@/types/event"
 const { t } = useI18n();
 const { localePath } = useLocalePath();
 const { pick } = useLocalized();
+const route = useRoute();
 
 const includeLifespans = ref(false);
 const includeArtworks = ref(false);
-const themeId = ref<number | null>(null);
+const initialTheme = Number(route.query.theme);
+const themeId = ref<number | null>(Number.isInteger(initialTheme) && initialTheme > 0 ? initialTheme : null);
 const themes = ref<Theme[]>([]);
 void listThemes().then((r) => (themes.value = r.data)).catch(() => (themes.value = []));
 
@@ -52,6 +55,10 @@ async function load(): Promise<void> {
   }
 }
 watch([kinds, themeId], () => void load(), { immediate: true });
+watch(() => route.query.theme, (value) => {
+  const parsed = Number(value);
+  themeId.value = Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+});
 onBeforeUnmount(() => controller?.abort());
 
 const decadeOf = (year: number): number => Math.floor(year / 10) * 10;

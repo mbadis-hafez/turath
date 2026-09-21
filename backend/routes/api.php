@@ -64,6 +64,7 @@ use App\Http\Controllers\Api\V1\EventParticipantsController;
 use App\Http\Controllers\Api\V1\FieldCitationDestroyController;
 use App\Http\Controllers\Api\V1\FieldCitationStoreController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\HolderDestroyController;
 use App\Http\Controllers\Api\V1\HolderRestoreController;
 use App\Http\Controllers\Api\V1\HolderShowController;
@@ -97,6 +98,7 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/login', LoginController::class)->middleware('throttle:login');
 
     Route::middleware('throttle:api')->group(function () {
+        Route::get('home', HomeController::class);
         Route::get('artists', ArtistIndexController::class);
         Route::get('artists/{artist}/portrait', [ArtistPortraitController::class, 'show'])->whereNumber('artist');
         Route::get('artists/{artist}/artworks', ArtistArtworksController::class)->whereNumber('artist');

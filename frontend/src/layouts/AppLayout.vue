@@ -21,6 +21,7 @@ const activityLink = computed(() => localePath("admin.activity"));
 const importsLink = computed(() => localePath("admin.imports"));
 const dashboardLink = computed(() => localePath("dashboard"));
 const timelineLink = computed(() => localePath("timeline"));
+const proposalsLink = computed(() => localePath("proposals"));
 const registryLink = computed(() => localePath("admin.artists"));
 const artworkRegistryLink = computed(() => localePath("admin.artworks"));
 const eventsRegistryLink = computed(() => localePath("admin.events"));
@@ -98,6 +99,13 @@ async function logout(): Promise<void> {
               active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
               >{{ $t("nav.dashboard") }}</RouterLink
             >
+            <RouterLink
+              :to="proposalsLink"
+              class="text-ink-muted transition-colors hover:text-ink"
+              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
+            >
+              {{ $t("proposals.queueTitle") }}
+            </RouterLink>
             <RouterLink
               v-if="auth.can('activity.view')"
               :to="activityLink"

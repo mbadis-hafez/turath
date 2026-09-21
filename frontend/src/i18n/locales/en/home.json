@@ -10,6 +10,7 @@
     "sources": "Cities and sources"
   },
   "lastUpdate": "Last update of batch {batch} · {date}",
+  "lastUpdatedAt": "Last updated {date}",
   "searchLabel": "Search the archive",
   "searchPlaceholder": "Search for an artist, artwork, article, photograph…",
   "searchButton": "Search",
@@ -31,6 +32,10 @@
   "cities": {
     "title": "Cities and collections"
   },
+  "emptyThemes": "No thematic axes have been recorded yet.",
+  "emptyArchive": "No published archive material yet.",
+  "emptyArtists": "No published artists yet.",
+  "emptyPlaces": "No places have been recorded yet.",
   "contribute": {
     "title": "Have material from this period?",
     "body": "The archive is gathered from artists, their families, associations, and private collections. Ownership stays with the holder, the source is recorded with every item, and the owner sets the access level.",
