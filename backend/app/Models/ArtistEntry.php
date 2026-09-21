@@ -24,6 +24,26 @@ class ArtistEntry extends Model
         return $this->belongsTo(Artist::class);
     }
 
+    /**
+     * The event auto-created from an exhibition, talk or symposium line (null for awards and educations).
+     *
+     * @return BelongsTo<Event, $this>
+     */
+    public function event(): BelongsTo
+    {
+        return $this->belongsTo(Event::class);
+    }
+
+    /**
+     * Machine-maintained link, never audited.
+     *
+     * @return array<int, string>
+     */
+    public function excludedFromActivityLog(): array
+    {
+        return ['event_id'];
+    }
+
     public function activitySubjectLabel(): string
     {
         return ucfirst($this->type).': '.($this->title_en ?? $this->title_ar ?? $this->getKey());

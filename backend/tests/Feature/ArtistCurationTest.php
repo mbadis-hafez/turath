@@ -6,6 +6,7 @@ use App\Models\Artist;
 use App\Models\ArtistEntry;
 use App\Models\ArtistMerge;
 use App\Models\Artwork;
+use App\Models\Event;
 use App\Models\FieldCitation;
 use App\Models\Theme;
 use Illuminate\Http\UploadedFile;
@@ -227,6 +228,75 @@ it('syncs entries in place: unchanged rows stay unchanged and dropped rows are d
     $this->actingAs($editor)->putJson($url, ['activities' => [['id' => $rows[0]['id'], 'type' => 'award', 'title' => ['en' => 'One']]]])->assertOk()->assertJsonCount(1, 'data.activities');
 
     expect(Activity::where('subject_type', ArtistEntry::class)->count())->toBe($before + 1); // only the delete
+});
+
+it('mirrors exhibition, talk and symposium lines into the events registry, but not awards', function () {
+    $editor = editorUser();
+    $artist = Artist::factory()->create();
+    $url = "/api/v1/artists/{$artist->id}/entries";
+
+    $this->actingAs($editor)->putJson($url, ['activities' => [
+        ['type' => 'award', 'title' => ['en' => 'Prize'], 'year_from' => 1988],
+        ['type' => 'exhibition', 'title' => ['ar' => 'معرض فردي', 'en' => 'Solo show'], 'place' => ['en' => 'Dar Al-Funun'], 'year_from' => 1978, 'year_to' => 1979],
+        ['type' => 'talk', 'title' => ['en' => 'Artist talk'], 'year_from' => 1980],
+        ['type' => 'symposium', 'title' => ['en' => 'Symposium X']],
+    ]])->assertOk();
+
+    expect(Event::count())->toBe(3);
+
+    $show = Event::where('event_type', 'exhibition')->firstOrFail();
+    expect($show->title_en)->toBe('Solo show')
+        ->and($show->title_ar)->toBe('معرض فردي')
+        ->and($show->venue_name)->toBe('Dar Al-Funun')
+        ->and($show->start_year_from)->toBe(1978)
+        ->and($show->start_year_to)->toBe(1979)
+        ->and($show->publication_status)->toBe('draft')
+        ->and($show->participants()->count())->toBe(1)
+        ->and($show->participants()->first()->participant_type)->toBe(Artist::class)
+        ->and($show->participants()->first()->participant_id)->toBe($artist->id)
+        ->and(ArtistEntry::where('type', 'award')->firstOrFail()->event_id)->toBeNull()
+        ->and(ArtistEntry::where('type', 'exhibition')->firstOrFail()->event_id)->toBe($show->id);
+});
+
+it('updates the linked event when the line changes, and re-syncing creates no duplicates', function () {
+    $editor = editorUser();
+    $artist = Artist::factory()->create();
+    $url = "/api/v1/artists/{$artist->id}/entries";
+
+    $rows = $this->actingAs($editor)->putJson($url, ['activities' => [
+        ['type' => 'exhibition', 'title' => ['en' => 'Solo show'], 'year_from' => 1978],
+    ]])->assertOk()->json('data.activities');
+
+    expect(Event::count())->toBe(1);
+
+    $this->actingAs($editor)->putJson($url, ['activities' => [
+        ['id' => $rows[0]['id'], 'type' => 'exhibition', 'title' => ['en' => 'Renamed'], 'year_from' => 1979],
+    ]])->assertOk();
+
+    expect(Event::count())->toBe(1)
+        ->and(Event::firstOrFail()->title_en)->toBe('Renamed')
+        ->and(Event::firstOrFail()->start_year_from)->toBe(1979);
+});
+
+it('deletes the auto-created draft when the line is removed, but keeps a published one', function () {
+    $editor = editorUser();
+    $artist = Artist::factory()->create();
+    $url = "/api/v1/artists/{$artist->id}/entries";
+
+    $this->actingAs($editor)->putJson($url, ['activities' => [
+        ['type' => 'exhibition', 'title' => ['en' => 'Draft show']],
+        ['type' => 'talk', 'title' => ['en' => 'Kept talk']],
+    ]])->assertOk();
+
+    $kept = Event::where('title_en', 'Kept talk')->firstOrFail();
+    $kept->publication_status = 'published';
+    $kept->save();
+
+    $this->actingAs($editor)->putJson($url, ['activities' => []])->assertOk();
+
+    expect(Event::count())->toBe(1)
+        ->and(Event::firstOrFail()->id)->toBe($kept->id)
+        ->and(Event::firstOrFail()->publication_status)->toBe('published');
 });
 
 it('uploads a portrait, keeps it private until rights are clear and the artist is published, then serves it', function () {

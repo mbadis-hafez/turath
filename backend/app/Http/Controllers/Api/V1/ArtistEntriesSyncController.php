@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Models\Artist;
 use App\Models\ArtistEntry;
 use App\Support\Curation\ChildSync;
+use App\Support\Events\ArtistActivityEventSync;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -45,7 +46,15 @@ class ArtistEntriesSyncController
                 'note_ar' => $i['note']['ar'] ?? null, 'note_en' => $i['note']['en'] ?? null,
             ], array_filter($data[$group], fn (array $i) => ($i['title']['ar'] ?? null) !== null || ($i['title']['en'] ?? null) !== null));
 
+            $before = $group === 'activities'
+                ? $artist->entries()->whereIn('type', $types)->get()
+                : null;
+
             ChildSync::sync($artist->entries()->whereIn('type', $types), $items);
+
+            if ($before !== null) {
+                ArtistActivityEventSync::reconcile($artist, $before);
+            }
         }
 
         return response()->json(['data' => self::present($artist->refresh())]);
