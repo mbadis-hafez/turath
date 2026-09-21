@@ -16,7 +16,9 @@ class RolesAndPermissionsSeeder extends Seeder
         'institution',
         'artist_claimed',
         'editor',
+        'reviewer',
         'admin',
+        'superadmin',
     ];
 
     public function run(): void
@@ -55,6 +57,16 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::findByName('contributor')->givePermissionTo($proposalsSubmit);
         Role::findByName('editor')->givePermissionTo($editorPermissions);
         Role::findByName('admin')->givePermissionTo($editorPermissions);
+
+        // Reviewers work the queues and settle source conflicts; they do not edit or publish records.
+        Role::findByName('reviewer')->givePermissionTo([
+            $activityView, $sourceConflictsResolve, $reviewArchivist, $reviewDataAudit, $reviewSecondSource, $reviewEditorial, $reviewMaterialIntake,
+        ]);
+
+        // Every permission that exists, so the API reports them all to the interface. A permission added
+        // later reaches this role the next time this seeder runs.
+        $superadmin = Role::findByName('superadmin');
+        $superadmin->syncPermissions(Permission::where('guard_name', $superadmin->guard_name)->get());
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }

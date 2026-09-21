@@ -16,10 +16,14 @@ it('seeds all roles and the activity view permission', function () {
         'editor',
         'institution',
         'reader',
+        'reviewer',
+        'superadmin',
         'verified_researcher',
     ])->and(Permission::where('name', 'activity.view')->exists())->toBeTrue()
         ->and(Role::findByName('editor')->hasPermissionTo('activity.view'))->toBeTrue()
         ->and(Role::findByName('admin')->hasPermissionTo('activity.view'))->toBeTrue()
+        ->and(Role::findByName('superadmin')->hasPermissionTo('activity.view'))->toBeTrue()
+        ->and(Role::findByName('reviewer')->hasPermissionTo('activity.view'))->toBeTrue()
         ->and(Role::findByName('reader')->hasPermissionTo('activity.view'))->toBeFalse();
 });
 

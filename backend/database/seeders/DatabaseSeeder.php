@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(DemoArtistSeeder::class);
+        $this->call(TeamUserSeeder::class);
 
         $admin = User::firstOrCreate(
             ['email' => 'admin@bidayaat.test'],
