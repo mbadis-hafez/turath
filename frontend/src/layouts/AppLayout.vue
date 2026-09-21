@@ -22,6 +22,8 @@ const importsLink = computed(() => localePath("admin.imports"));
 const dashboardLink = computed(() => localePath("dashboard"));
 const timelineLink = computed(() => localePath("timeline"));
 const proposalsLink = computed(() => localePath("proposals"));
+const submitLink = computed(() => localePath("submit"));
+const materialsLink = computed(() => localePath("admin.materials"));
 const canReviewProposals = computed(() =>
   ["artists.manage", "artworks.manage", "archive.manage", "events.manage"].some((p) => auth.can(p)),
 );
@@ -142,6 +144,14 @@ async function logout(): Promise<void> {
               active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
             >
               {{ $t("events.nav") }}
+            </RouterLink>
+            <RouterLink
+              v-if="auth.can('materials.review')"
+              :to="materialsLink"
+              class="text-ink-muted transition-colors hover:text-ink"
+              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
+            >
+              {{ $t("submissions.title") }}
             </RouterLink>
             <RouterLink
               v-if="auth.can('imports.manage')"
@@ -268,9 +278,9 @@ async function logout(): Promise<void> {
             <a href="#" class="transition-colors hover:text-ink" @click.prevent>{{
               $t("home.footer.researchers")
             }}</a>
-            <a href="#" class="transition-colors hover:text-ink" @click.prevent>{{
+            <RouterLink :to="submitLink" class="transition-colors hover:text-ink">{{
               $t("home.footer.owners")
-            }}</a>
+            }}</RouterLink>
             <a href="#" class="transition-colors hover:text-ink" @click.prevent>{{
               $t("home.footer.institutions")
             }}</a>

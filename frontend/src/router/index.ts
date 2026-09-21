@@ -94,6 +94,12 @@ const routes: RouteRecordRaw[] = [
     meta: { titleKey: "proposals.suggestEdit", requiresAuth: true, requiresPermission: "proposals.submit" },
   },
   {
+    path: "/:locale/submit",
+    name: "submit",
+    component: () => import("@/pages/MaterialSubmissionPage.vue"),
+    meta: { titleKey: "submission.crumb" },
+  },
+  {
     path: "/:locale/proposals",
     name: "proposals",
     component: () => import("@/pages/ProposalsPage.vue"),
@@ -168,6 +174,12 @@ const routes: RouteRecordRaw[] = [
     name: "admin.events.edit",
     component: () => import("@/pages/admin/EventEditPage.vue"),
     meta: { titleKey: "events.edit.editTitle", requiresAuth: true, requiresPermission: "events.manage" },
+  },
+  {
+    path: "/:locale/admin/materials",
+    name: "admin.materials",
+    component: () => import("@/pages/admin/MaterialSubmissionsPage.vue"),
+    meta: { titleKey: "submissions.title", requiresAuth: true, requiresPermission: "materials.review" },
   },
   {
     path: "/:locale/admin/imports",

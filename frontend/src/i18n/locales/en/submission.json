@@ -1,0 +1,65 @@
+{
+  "crumbParent": "Contribute",
+  "crumb": "Register material",
+  "eyebrow": "Register material",
+  "title": "Do you have material about the beginnings of the art movement?",
+  "intro": "Photographs, press clippings, catalogues, invitations, certificates, recordings. It doesn't need to be complete or in order — the documentation team handles inspection and numbering.",
+  "afterHeading": "What happens after you send",
+  "formTitle": "Registration form",
+  "required": "required",
+  "name": "Name",
+  "namePlaceholder": "Full name",
+  "contact": "Email or phone",
+  "contactPlaceholder": "So we can reach you about the material",
+  "role": "Your role",
+  "rolePlaceholder": "Artist · artist's family · association · private collection · researcher",
+  "city": "City",
+  "cityPlaceholder": "The city where the material is",
+  "description": "Brief description of the material",
+  "descriptionPlaceholder": "Roughly what kind, how many items, and what period do they cover?",
+  "files": "Files",
+  "dropTitle": "Drag files here or choose them",
+  "dropHint": "JPG · TIFF · PDF · MP3 — up to 2 GB per submission",
+  "remove": "Remove",
+  "removeFile": "Remove {name}",
+  "attestation": "I confirm that I own this material or am authorized to submit it, and I understand that nothing is published before an authorization letter is signed.",
+  "send": "Send",
+  "sending": "Sending…",
+  "next": "Next",
+  "roles": {
+    "artist": "Artist",
+    "artist_family": "Artist's family",
+    "private_collection": "Private collection",
+    "association": "Association",
+    "researcher": "Researcher",
+    "other": "Other"
+  },
+  "steps": {
+    "review": {
+      "title": "Initial review",
+      "body": "The documentation team contacts you within a week to confirm what we received and what is missing."
+    },
+    "catalog": {
+      "title": "Inspection and numbering",
+      "body": "The material is inspected and digitized in high quality, and each item is given an identification code."
+    },
+    "authorization": {
+      "title": "Signed authorization",
+      "body": "You decide the access level: fully available, preview only, or by research request."
+    },
+    "publish": {
+      "title": "Publication",
+      "body": "The material appears in the archive under your name or your group's name, and can be amended later."
+    }
+  },
+  "errors": {
+    "type": "“{name}” is not a supported file type. Use JPG, TIFF, PDF or MP3.",
+    "size": "Adding “{name}” would go over the 2 GB limit for one submission.",
+    "invalid": "Please check the form and try again.",
+    "throttled": "You have sent several submissions in a short time. Please try again in an hour."
+  },
+  "confirmationReference": "Reference number {id}",
+  "confirmationTitle": "Thank you. We have your submission.",
+  "confirmationBody": "Nothing you sent is public. The documentation team will contact you using the details you gave, and nothing is published without your signed authorization.",
+  "backHome": "Back to the home page"
+}
