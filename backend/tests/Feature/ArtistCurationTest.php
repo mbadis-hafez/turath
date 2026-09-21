@@ -276,9 +276,9 @@ it('stores a contact address encrypted and never in the audit log', function () 
     $this->actingAs($editor)->getJson("/api/v1/artists/{$artist->id}/curation")->assertJsonPath('data.contacts.0.address', 'Al Rawand Street, Al Khawther, Saihat');
 });
 
-it('shows the public profile its themes, owner category and record date, but never the source note or contact details', function () {
+it('shows the public profile its themes and record date, but never the owner type, source note or contact details', function () {
     $artist = Artist::factory()->create([
-        'publication_status' => 'published', 'owner_type' => 'artist',
+        'publication_status' => 'published', 'owner_type' => 'gallery',
         'identified_through_note' => 'Site visit with the Al-Ahsa family, phone 0505000000', 'identified_through_date' => '2024-12-06',
         'ref_supervisor_note' => 'Ask Faisal.',
     ]);
@@ -290,8 +290,8 @@ it('shows the public profile its themes, owner category and record date, but nev
     $data = $res->json('data');
 
     expect($data['themes'])->toBe([['id' => $theme->id, 'label' => ['ar' => 'الأحساء', 'en' => 'Alahsa']]])
-        ->and($data['owner_type'])->toBe('artist')->and($data['record_date'])->toBe('2024-12-06');
+        ->and($data)->not->toHaveKey('owner_type')->and($data['record_date'])->toBe('2024-12-06');
 
     $body = $res->getContent();
-    expect($body)->not->toContain('Site visit')->not->toContain('0505000000')->not->toContain('Faisal')->not->toContain('Secret Person')->not->toContain('secret@example.com');
+    expect($body)->not->toContain('gallery')->not->toContain('Site visit')->not->toContain('0505000000')->not->toContain('Faisal')->not->toContain('Secret Person')->not->toContain('secret@example.com');
 });

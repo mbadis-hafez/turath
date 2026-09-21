@@ -42,7 +42,6 @@
   "record": {
     "title": "About this record",
     "source": "Record date",
-    "owner": "Owner",
     "nameVerification": "Name verification",
     "verified": "Verified",
     "unverified": "Under verification — no published source attached yet",

@@ -41,8 +41,7 @@ class ArtistResource extends ArtistListResource
                 ->values()
                 ->all(),
             'themes' => $artist->themes->map(fn ($t) => ['id' => $t->id, 'label' => ['ar' => $t->label_ar, 'en' => $t->label_en]])->values()->all(),
-            // Category only (artist, estate, gallery...). The free-text source note and every contact field stay internal.
-            'owner_type' => $artist->owner_type,
+            // Just the date. owner_type, the free-text source note and every contact field stay internal (D100).
             'record_date' => $artist->identified_through_date?->toDateString(),
             'nationality' => ['ar' => $artist->nationality_ar, 'en' => $artist->nationality_en],
             'classification' => ['ar' => $artist->classification_ar, 'en' => $artist->classification_en],

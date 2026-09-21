@@ -7,7 +7,6 @@ import AlsoKnownAs from "@/components/artists/AlsoKnownAs.vue";
 import LifeDates from "@/components/artists/LifeDates.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import { useLocalePath } from "@/composables/useLocalePath";
-import { useLocalized } from "@/composables/useLocalized";
 import { useAuthStore } from "@/stores/auth";
 import type { AppLocale } from "@/i18n";
 import type { Artist, Bilingual } from "@/types/artist";
@@ -19,7 +18,6 @@ const { t, locale } = useI18n();
 const route = useRoute();
 const auth = useAuthStore();
 const { localePath } = useLocalePath();
-const { pick } = useLocalized();
 
 const hasText = (v: Bilingual | null | undefined) => Boolean(v?.ar?.trim() || v?.en?.trim());
 const life = (d: Artist["birth"] | null) => (d && formatLifeDates(d, locale.value as "ar" | "en") !== null ? d : null);
@@ -28,8 +26,6 @@ const death = computed(() => life(props.artist.death));
 const hasLifeDates = computed(() => birth.value !== null || death.value !== null);
 
 const verified = computed(() => props.artist.verified_status === "verified");
-const owner = computed(() => (props.artist.owner_type ? t(`curation.ownerTypes.${props.artist.owner_type}`) : null));
-const ownerCity = computed(() => pick(props.artist.birth?.place ?? { ar: null, en: null }));
 const recordDate = computed(() => (props.artist.record_date ? new Intl.DateTimeFormat(locale.value, { dateStyle: "medium" }).format(new Date(props.artist.record_date)) : null));
 
 /** Signed-in contributors go straight to the suggestion form; visitors sign in first and come back to it. */
@@ -45,7 +41,6 @@ const canCorrect = computed(() => !auth.isAuthenticated || auth.can("proposals.s
     <h2 class="border-b-2 border-ink pb-2 text-xs font-semibold text-ink-muted">{{ t("artists.record.title") }}</h2>
     <dl class="divide-y divide-line text-sm">
       <div v-if="recordDate" class="py-4"><dt class="text-xs text-ink-muted">{{ t("artists.record.source") }}</dt><dd class="mt-1 text-lg text-ink" data-testid="record-date">{{ recordDate }}</dd></div>
-      <div v-if="owner" class="py-4"><dt class="text-xs text-ink-muted">{{ t("artists.record.owner") }}</dt><dd class="mt-1 text-lg text-ink" data-testid="record-owner">{{ owner }}<template v-if="ownerCity"> — {{ ownerCity.text }}</template></dd></div>
       <div class="py-4">
         <dt class="text-xs text-ink-muted">{{ t("artists.record.nameVerification") }}</dt>
         <dd class="mt-1 text-lg" :class="verified ? 'text-success' : 'text-danger'" data-testid="record-verification">{{ verified ? t("artists.record.verified") : t("artists.record.unverified") }}</dd>

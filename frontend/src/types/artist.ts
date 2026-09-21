@@ -54,7 +54,6 @@ export interface Artist extends ArtistListItem {
   events?: PublicEventRef[];
   themes?: { id: number; label: Bilingual }[];
   nationality?: Bilingual;
-  owner_type?: string | null;
   record_date?: string | null;
   bio: Bilingual;
   birth: (PartialDate & { place: Bilingual }) | null;
