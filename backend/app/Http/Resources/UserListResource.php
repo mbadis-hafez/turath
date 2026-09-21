@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class UserResource extends JsonResource
+class UserListResource extends JsonResource
 {
     /**
      * @return array<string, mixed>
@@ -21,9 +21,7 @@ class UserResource extends JsonResource
             'name' => $user->name,
             'email' => $user->email,
             'roles' => $user->getRoleNames()->all(),
-            'permissions' => $user->getAllPermissions()->pluck('name')->all(),
             'is_active' => $user->is_active,
-            'must_change_password' => $user->must_change_password,
         ];
     }
 }

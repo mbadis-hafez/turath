@@ -20,6 +20,14 @@ class LoginController
             ]);
         }
 
+        if (! Auth::guard('web')->user()->is_active) {
+            Auth::guard('web')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => [__('auth.disabled')],
+            ]);
+        }
+
         $request->session()->regenerate();
 
         return response()->json(['data' => new UserResource(Auth::guard('web')->user())]);

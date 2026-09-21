@@ -47,6 +47,7 @@ const editor: User = {
   email: "editor@example.com",
   roles: ["editor"],
   permissions: ["activity.view"],
+  must_change_password: false,
 };
 
 const reader: User = {
@@ -55,6 +56,7 @@ const reader: User = {
   email: "reader@example.com",
   roles: ["reader"],
   permissions: [],
+  must_change_password: false,
 };
 
 type AppRouterInstance = ReturnType<typeof createAppRouter>;

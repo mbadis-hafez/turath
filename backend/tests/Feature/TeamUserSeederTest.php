@@ -64,6 +64,10 @@ it('gives admins and the editor the working permissions, but not everything', fu
         $user = member($email);
         expect($user->can('artists.manage'))->toBeTrue()->and($user->can('archive.publish'))->toBeTrue();
     }
+
+    expect(member('mali@hafezgallery.com')->can('users.manage'))->toBeTrue()
+        ->and(member('fidha.fatma@hafezgallery.com')->can('users.manage'))->toBeFalse()
+        ->and(member('samar@hafezgallery.com')->can('users.manage'))->toBeFalse();
 });
 
 it('lets the reviewer work the queue and refuses them the editing routes', function () {
@@ -90,6 +94,29 @@ it('is safe to run again: nothing is duplicated, a password someone chose surviv
     $mali = member('mali@hafezgallery.com');
     expect(Hash::check('the one mali picked', $mali->password))->toBeTrue()->and($mali->getRoleNames()->all())->toBe(['admin']);
     expect(member('samar@hafezgallery.com')->getRoleNames()->all())->toBe(['reviewer']);
+});
+
+it('reactivates the superadmin when seeded, even after deactivation', function () {
+    seedTeam();
+    member('mbadis@hafezgallery.com')->update(['is_active' => false]);
+
+    seedTeam();
+
+    expect(member('mbadis@hafezgallery.com')->is_active)->toBeTrue();
+});
+
+it('revives a soft-deleted team account when seeded instead of failing on the unique email', function () {
+    seedTeam();
+    $valeria = member('valeria@hafezgallery.com');
+    $valeria->delete();
+    expect(User::find($valeria->id))->toBeNull();
+
+    seedTeam();
+
+    $valeria->refresh();
+    expect($valeria->trashed())->toBeFalse()
+        ->and(User::where('email', 'valeria@hafezgallery.com')->count())->toBe(1)
+        ->and($valeria->getRoleNames()->all())->toBe(['admin']);
 });
 
 it('adopts an account that already exists instead of failing on it', function () {

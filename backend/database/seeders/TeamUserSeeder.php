@@ -9,7 +9,8 @@ use Illuminate\Support\Str;
 
 /**
  * The Bidayaat team's accounts. Safe to run again: existing accounts keep their password and are only
- * brought back to the role listed here.
+ * brought back to the role listed here. The superadmin is always reactivated, so seeding can never
+ * leave the platform without a way back in.
  */
 class TeamUserSeeder extends Seeder
 {
@@ -31,8 +32,13 @@ class TeamUserSeeder extends Seeder
         $created = [];
 
         foreach (self::TEAM as $member) {
-            $user = User::firstOrNew(['email' => $member['email']]);
+            // withTrashed: a soft-deleted account is adopted and revived, not re-created on the unique email.
+            $user = User::withTrashed()->firstOrNew(['email' => $member['email']]);
             $isNew = ! $user->exists;
+
+            if ($user->trashed()) {
+                $user->restore();
+            }
 
             if ($isNew) {
                 $password = $this->passwordForNewAccount($configured);
@@ -42,6 +48,9 @@ class TeamUserSeeder extends Seeder
             }
 
             $user->email_verified_at ??= now();
+            if ($member['role'] === 'superadmin') {
+                $user->is_active = true;
+            }
             $user->save();
             $user->syncRoles([$member['role']]);
         }

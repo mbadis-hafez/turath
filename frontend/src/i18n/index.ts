@@ -19,6 +19,7 @@ import arHome from "./locales/ar/home.json";
 import arImports from "./locales/ar/imports.json";
 import arNav from "./locales/ar/nav.json";
 import arSearch from "./locales/ar/search.json";
+import arUsers from "./locales/ar/users.json";
 import enActivity from "./locales/en/activity.json";
 import enArtists from "./locales/en/artists.json";
 import enArchive from "./locales/en/archive.json";
@@ -38,6 +39,7 @@ import enHome from "./locales/en/home.json";
 import enImports from "./locales/en/imports.json";
 import enNav from "./locales/en/nav.json";
 import enSearch from "./locales/en/search.json";
+import enUsers from "./locales/en/users.json";
 
 export const SUPPORTED_LOCALES = ["ar", "en"] as const;
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number];
@@ -99,6 +101,7 @@ export const i18n = createI18n({
       events: arEvents,
       dates: arDates,
       search: arSearch,
+      users: arUsers,
       imports: arImports,
       dashboard: arDashboard,
       curation: arCuration,
@@ -120,6 +123,7 @@ export const i18n = createI18n({
       events: enEvents,
       dates: enDates,
       search: enSearch,
+      users: enUsers,
       imports: enImports,
       dashboard: enDashboard,
       curation: enCuration,

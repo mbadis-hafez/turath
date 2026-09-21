@@ -18,6 +18,7 @@ const artistsLink = computed(() => localePath("artists.index"));
 const artworksLink = computed(() => localePath("artworks.index"));
 const archiveLink = computed(() => localePath(auth.can("archive.manage") ? "admin.archive" : "archive.records"));
 const activityLink = computed(() => localePath("admin.activity"));
+const usersLink = computed(() => localePath("admin.users"));
 const importsLink = computed(() => localePath("admin.imports"));
 const dashboardLink = computed(() => localePath("dashboard"));
 const timelineLink = computed(() => localePath("timeline"));
@@ -61,6 +62,7 @@ const toolLinks = computed<NavLink[]>(() => {
   const tools: [boolean, string, string, RouteLocationRaw][] = [
     [showProposals.value, "proposals", canReviewProposals.value ? t("proposals.queueTitle") : t("proposals.mineTitle"), proposalsLink.value],
     [auth.can("activity.view"), "activity", t("nav.activity"), activityLink.value],
+    [auth.can("users.manage"), "users", t("nav.users"), usersLink.value],
     [auth.can("artists.manage"), "registry", t("nav.registry"), registryLink.value],
     [auth.can("artworks.manage"), "artworkRegistry", t("nav.artworkRegistry"), artworkRegistryLink.value],
     [auth.can("events.manage"), "eventsRegistry", t("events.nav"), eventsRegistryLink.value],

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\ForceJsonResponse;
+use App\Http\Middleware\RequirePasswordChange;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->prependToGroup('api', ForceJsonResponse::class);
         $middleware->appendToGroup('api', SetLocale::class);
+
+        $middleware->alias([
+            'password.changed' => RequirePasswordChange::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

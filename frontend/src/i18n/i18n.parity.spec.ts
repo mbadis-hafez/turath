@@ -23,6 +23,7 @@ const namespaces = {
   errors: loadLocales("errors"),
   home: loadLocales("home"),
   nav: loadLocales("nav"),
+  users: loadLocales("users"),
 } as const;
 
 function collectKeys(value: unknown, prefix: string, into: Set<string>): void {

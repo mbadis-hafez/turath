@@ -18,6 +18,7 @@ const user: User = {
   email: "editor@example.com",
   roles: ["editor"],
   permissions: ["activity.view"],
+  must_change_password: false,
 };
 
 describe("stores/auth", () => {

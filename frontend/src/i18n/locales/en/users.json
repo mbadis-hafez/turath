@@ -1,0 +1,52 @@
+{
+  "title": "Users",
+  "subtitle": "{count} users",
+  "searchPlaceholder": "Search by name or email",
+  "allRoles": "All roles",
+  "empty": "No users found",
+  "emptyHelp": "Try a different search or role filter.",
+  "clear": "Clear filters",
+  "add": "Add user",
+  "editLink": "Edit",
+  "delete": "Delete",
+  "deleting": "Deleting…",
+  "deleteTitle": "Delete {name}?",
+  "deleteDescription": "The account is deactivated and hidden from the directory. You can re-add the same email later to restore it.",
+  "inactive": "Inactive",
+  "edit": {
+    "addTitle": "Add user",
+    "editTitle": "Edit user",
+    "back": "Users",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "account": "Account",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "passwordConfirm": "Confirm password",
+    "passwordHelp": "Leave the password blank to keep the current one.",
+    "role": "Role",
+    "isActive": "Active",
+    "isActiveHelp": "Inactive users cannot log in.",
+    "sendInvitation": "Send invitation email",
+    "sendInvitationHelp": "Emails the credentials to the user, who must change the password at first sign-in."
+  },
+  "columns": {
+    "name": "Name",
+    "email": "Email",
+    "roles": "Roles"
+  },
+  "roles": {
+    "reader": "Reader",
+    "contributor": "Contributor",
+    "verified_researcher": "Verified researcher",
+    "institution": "Institution",
+    "artist_claimed": "Claimed artist",
+    "editor": "Editor",
+    "reviewer": "Reviewer",
+    "admin": "Admin",
+    "superadmin": "Superadmin"
+  }
+}

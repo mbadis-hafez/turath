@@ -43,6 +43,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $reviewArchivist = Permission::findOrCreate('review_queue.archivist_review');
         $reviewDataAudit = Permission::findOrCreate('review_queue.data_audit');
         $reviewSecondSource = Permission::findOrCreate('review_queue.second_source_needed');
+        $usersManage = Permission::findOrCreate('users.manage');
 
         foreach (self::ROLES as $roleName) {
             Role::findOrCreate($roleName);
@@ -57,6 +58,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::findByName('contributor')->givePermissionTo($proposalsSubmit);
         Role::findByName('editor')->givePermissionTo($editorPermissions);
         Role::findByName('admin')->givePermissionTo($editorPermissions);
+        Role::findByName('admin')->givePermissionTo($usersManage);
 
         // Reviewers work the queues and settle source conflicts; they do not edit or publish records.
         Role::findByName('reviewer')->givePermissionTo([

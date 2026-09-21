@@ -6,6 +6,11 @@ use App\Http\Controllers\Api\V1\AdminArtistIndexController;
 use App\Http\Controllers\Api\V1\AdminArtworkIndexController;
 use App\Http\Controllers\Api\V1\AdminEventIndexController;
 use App\Http\Controllers\Api\V1\AdminHolderIndexController;
+use App\Http\Controllers\Api\V1\AdminUserDestroyController;
+use App\Http\Controllers\Api\V1\AdminUserIndexController;
+use App\Http\Controllers\Api\V1\AdminUserShowController;
+use App\Http\Controllers\Api\V1\AdminUserStoreController;
+use App\Http\Controllers\Api\V1\AdminUserUpdateController;
 use App\Http\Controllers\Api\V1\ArchiveItemBulkController;
 use App\Http\Controllers\Api\V1\ArchiveItemDestroyController;
 use App\Http\Controllers\Api\V1\ArchiveItemEditController;
@@ -50,6 +55,7 @@ use App\Http\Controllers\Api\V1\ArtworkRestoreController;
 use App\Http\Controllers\Api\V1\ArtworkShowController;
 use App\Http\Controllers\Api\V1\ArtworkStoreController;
 use App\Http\Controllers\Api\V1\ArtworkUpdateController;
+use App\Http\Controllers\Api\V1\Auth\ChangePasswordController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\UserController;
@@ -125,9 +131,10 @@ Route::prefix('v1')->group(function () {
         Route::get('artists/{artist}/archive-items', ArtistArchiveItemsController::class)->whereNumber('artist');
     });
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'password.changed'])->group(function () {
         Route::get('auth/user', UserController::class);
         Route::post('auth/logout', LogoutController::class);
+        Route::post('auth/password', ChangePasswordController::class)->middleware('throttle:api');
 
         Route::post('artists', ArtistStoreController::class)->middleware('can:create,App\Models\Artist');
         Route::patch('artists/{artist}', ArtistUpdateController::class)->whereNumber('artist')->middleware('can:update,artist');
@@ -264,5 +271,13 @@ Route::prefix('v1')->group(function () {
         Route::get('{resource}/{id}/activity', SubjectActivityController::class)
             ->whereNumber('id')
             ->middleware('can:activity.view');
+
+        Route::middleware('can:users.manage')->group(function () {
+            Route::get('admin/users', AdminUserIndexController::class);
+            Route::get('admin/users/{user}', AdminUserShowController::class);
+            Route::post('admin/users', AdminUserStoreController::class);
+            Route::patch('admin/users/{user}', AdminUserUpdateController::class);
+            Route::delete('admin/users/{user}', AdminUserDestroyController::class);
+        });
     });
 });

@@ -25,3 +25,14 @@ export function logout(): Promise<void> {
     () => undefined,
   );
 }
+
+export function changePassword(
+  password: string,
+  passwordConfirmation: string,
+): Promise<User> {
+  return request<LoginResponse>({
+    method: "POST",
+    url: "/api/v1/auth/password",
+    data: { password, password_confirmation: passwordConfirmation },
+  }).then((res) => res.data);
+}

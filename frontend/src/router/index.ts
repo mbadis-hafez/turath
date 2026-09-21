@@ -29,6 +29,12 @@ const routes: RouteRecordRaw[] = [
     meta: { titleKey: "nav.login", guestOnly: true, bare: true },
   },
   {
+    path: "/:locale/set-password",
+    name: "set-password",
+    component: () => import("@/pages/SetPasswordPage.vue"),
+    meta: { titleKey: "auth.setPassword.title", requiresAuth: true, bare: true },
+  },
+  {
     path: "/:locale/artists",
     name: "artists.index",
     component: () => import("@/pages/ArtistsPage.vue"),
@@ -133,6 +139,24 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       requiresPermission: "activity.view",
     },
+  },
+  {
+    path: "/:locale/admin/users",
+    name: "admin.users",
+    component: () => import("@/pages/admin/UsersPage.vue"),
+    meta: { titleKey: "users.title", requiresAuth: true, requiresPermission: "users.manage" },
+  },
+  {
+    path: "/:locale/admin/users/new",
+    name: "admin.users.new",
+    component: () => import("@/pages/admin/UserEditPage.vue"),
+    meta: { titleKey: "users.edit.addTitle", requiresAuth: true, requiresPermission: "users.manage" },
+  },
+  {
+    path: "/:locale/admin/users/:id(\\d+)",
+    name: "admin.users.edit",
+    component: () => import("@/pages/admin/UserEditPage.vue"),
+    meta: { titleKey: "users.edit.editTitle", requiresAuth: true, requiresPermission: "users.manage" },
   },
   {
     path: "/:locale/admin/artists",
@@ -260,6 +284,14 @@ export function createAppRouter(history: RouterHistory): Router {
     const auth = useAuthStore();
     if (!auth.initialized) {
       await auth.fetchUser();
+    }
+
+    if (auth.user?.must_change_password && to.name !== "set-password") {
+      return {
+        name: "set-password",
+        params: { locale },
+        query: { redirect: to.fullPath },
+      };
     }
 
     if (to.meta.requiresAuth && !auth.isAuthenticated) {
