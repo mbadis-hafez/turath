@@ -11,7 +11,7 @@ const NAMES: [string, string][] = [
   ["home", ""], ["artists.index", "/artists"], ["artists.show", "/artists/:slug"], ["artworks.index", "/artworks"], ["archive.records", "/archive"],
   ["admin.archive", "/admin/archive"], ["timeline", "/timeline"], ["dashboard", "/dashboard"], ["proposals", "/proposals"], ["admin.activity", "/admin/activity"],
   ["admin.artists", "/admin/artists"], ["admin.artworks", "/admin/artworks"], ["admin.events", "/admin/events"], ["admin.materials", "/admin/materials"],
-  ["admin.imports", "/admin/imports"], ["login", "/login"], ["submit", "/submit"],
+  ["admin.imports", "/admin/imports"], ["login", "/login"], ["submit", "/submit"], ["methodology", "/about/methodology"],
 ];
 
 let router: Router;
@@ -141,3 +141,15 @@ describe("AppLayout mobile menu", () => {
     expect(wrapper.find("[data-testid=mobile-menu]").exists()).toBe(false);
   });
 });
+
+describe("AppLayout footer", () => {
+  it("links Methodology to its page, and For owners to the submission form", async () => {
+    const wrapper = await mountAt("/en");
+    const footer = wrapper.get("footer");
+    const hrefOf = (text: string) => footer.findAll("a").find((a) => a.text() === text)?.attributes("href");
+
+    expect(hrefOf("Methodology")).toBe("/en/about/methodology");
+    expect(hrefOf("For owners")).toBe("/en/submit");
+  });
+});
+

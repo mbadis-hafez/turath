@@ -23,6 +23,7 @@ const dashboardLink = computed(() => localePath("dashboard"));
 const timelineLink = computed(() => localePath("timeline"));
 const proposalsLink = computed(() => localePath("proposals"));
 const submitLink = computed(() => localePath("submit"));
+const methodologyLink = computed(() => localePath("methodology"));
 const materialsLink = computed(() => localePath("admin.materials"));
 const canReviewProposals = computed(() =>
   ["artists.manage", "artworks.manage", "archive.manage", "events.manage"].some((p) => auth.can(p)),
@@ -215,9 +216,9 @@ async function logout(): Promise<void> {
             >
               {{ $t("home.footer.about") }}
             </h2>
-            <a href="#" class="transition-colors hover:text-ink" @click.prevent>{{
+            <RouterLink :to="methodologyLink" class="transition-colors hover:text-ink">{{
               $t("home.footer.methodology")
-            }}</a>
+            }}</RouterLink>
             <a href="#" class="transition-colors hover:text-ink" @click.prevent>{{
               $t("home.footer.rights")
             }}</a>

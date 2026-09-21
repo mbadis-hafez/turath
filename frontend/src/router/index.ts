@@ -95,6 +95,12 @@ const routes: RouteRecordRaw[] = [
     meta: { titleKey: "proposals.suggestEdit", requiresAuth: true, requiresPermission: "proposals.submit" },
   },
   {
+    path: "/:locale/about/methodology",
+    name: "methodology",
+    component: () => import("@/pages/MethodologyPage.vue"),
+    meta: { titleKey: "methodology.crumb" },
+  },
+  {
     path: "/:locale/submit",
     name: "submit",
     component: () => import("@/pages/MaterialSubmissionPage.vue"),

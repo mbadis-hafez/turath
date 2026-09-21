@@ -1,0 +1,51 @@
+{
+  "crumbParent": "About the platform",
+  "crumb": "Methodology",
+  "eyebrow": "Methodology",
+  "title": "How this archive is built",
+  "intro": "The platform brings together material scattered among artists, their families and community associations, and records where each item came from, who owns it and how far it is open. What has not been verified appears labelled, never hidden.",
+  "steps": {
+    "collect": {
+      "title": "Collection",
+      "body": "Field visits to artists, their families and associations, recording what they hold."
+    },
+    "digitize": {
+      "title": "Digitization",
+      "body": "High-resolution photography or scanning, and a uniform code that ties each item to its artist and source."
+    },
+    "document": {
+      "title": "Documentation",
+      "body": "The title, year, place and people are extracted and matched against a published source where one exists."
+    },
+    "access": {
+      "title": "Access",
+      "body": "A signed authorization from the owner, a decision on the level of access, then publication."
+    }
+  },
+  "labels": {
+    "heading": "What the labels mean",
+    "verified": {
+      "name": "Verified",
+      "body": "The core fields are complete, and the name or date is confirmed by a published source attached to the record."
+    },
+    "underVerification": {
+      "name": "Under verification",
+      "body": "The item is published but one of its fields has not yet been matched to a source; that field is labelled on the page."
+    },
+    "restricted": {
+      "name": "Restricted access",
+      "body": "The item exists and is catalogued, but the original file is not available to download, by the owner's decision or because the rights are not settled."
+    },
+    "approximate": {
+      "name": "Approximate year",
+      "body": "The date is inferred from the item itself or from neighbouring material, and is not stated in the source."
+    }
+  },
+  "rights": {
+    "heading": "Rights and access",
+    "body": "Ownership of the material stays with its owners. The platform obtains a signed authorization before publishing, and the owner decides whether an item is fully available, available as a low-resolution preview, or available on research request. Material whose rights are not yet settled appears in search results with a “Restricted access” label, without the original file being made available.",
+    "policy": "Rights policy",
+    "researchers": "For researchers",
+    "soon": "Coming soon"
+  }
+}
