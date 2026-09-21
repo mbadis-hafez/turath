@@ -166,5 +166,7 @@
       "primary_documentation": "Primary documentation",
       "event_documentation": "Event documentation"
     }
-  }
+  },
+  "artistFilter": "Showing material linked to one artist.",
+  "clearArtist": "Show everything"
 }

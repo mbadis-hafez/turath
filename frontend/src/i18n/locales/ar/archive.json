@@ -166,5 +166,7 @@
       "primary_documentation": "التوثيق الأساسي",
       "event_documentation": "توثيق فعالية"
     }
-  }
+  },
+  "artistFilter": "تُعرض المواد المرتبطة بفنان واحد.",
+  "clearArtist": "عرض الكل"
 }

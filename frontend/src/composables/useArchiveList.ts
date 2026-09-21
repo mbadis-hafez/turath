@@ -11,6 +11,7 @@ export interface ArchiveListQuery {
   q: string;
   type: ArchiveItemType | "";
   includeUnpublished: boolean;
+  artistId: number | null;
   page: number;
 }
 
@@ -23,6 +24,7 @@ export function parseArchiveQuery(query: LocationQueryRaw): ArchiveListQuery {
     q: str(query.q),
     type: (ARCHIVE_ITEM_TYPES as readonly string[]).includes(type) ? (type as ArchiveItemType) : "",
     includeUnpublished: str(query.status) === "all",
+    artistId: Number.parseInt(str(query.artist_id), 10) > 0 ? Number.parseInt(str(query.artist_id), 10) : null,
     page: Number.isFinite(page) && page > 0 ? page : 1,
   };
 }
@@ -50,6 +52,7 @@ export function useArchiveList() {
     if (next.q) target.q = next.q;
     if (next.type) target.type = next.type;
     if (next.includeUnpublished) target.status = "all";
+    if (next.artistId) target.artist_id = String(next.artistId);
     if (next.page > 1) target.page = String(next.page);
     void router.push({ query: target });
   }
@@ -72,7 +75,7 @@ export function useArchiveList() {
     try {
       const q = query.value;
       const response = await listArchiveItems(
-        { q: q.q || undefined, item_type: q.type || undefined, status: q.includeUnpublished ? "all" : undefined, page: q.page },
+        { q: q.q || undefined, item_type: q.type || undefined, artist_id: q.artistId ?? undefined, status: q.includeUnpublished ? "all" : undefined, page: q.page },
         self.signal,
       );
       if (controller !== self) return;
@@ -98,6 +101,7 @@ export function useArchiveList() {
   return {
     items, meta, loading, error, query, searchInput, retry: load, setSearch,
     setType: (v: ArchiveItemType | "") => push({ type: v, page: 1 }),
+    clearArtist: () => push({ artistId: null, page: 1 }),
     setIncludeUnpublished: (v: boolean) => push({ includeUnpublished: v, page: 1 }),
     setPage: (page: number) => push({ page }),
     clear: () => void router.push({ query: {} }),

@@ -30,6 +30,7 @@ export interface ArchiveItem {
 export interface ArchiveQueryParams {
   q?: string;
   item_type?: ArchiveItemType;
+  artist_id?: number;
   status?: "all";
   sort?: "-created_at" | "created_at" | "content_year_from" | "-content_year_from";
   page?: number;

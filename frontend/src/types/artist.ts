@@ -50,7 +50,12 @@ export interface NameVariant {
 
 export interface Artist extends ArtistListItem {
   legacy_code: string | null;
+  portrait_url?: string | null;
   events?: PublicEventRef[];
+  themes?: { id: number; label: Bilingual }[];
+  nationality?: Bilingual;
+  owner_type?: string | null;
+  record_date?: string | null;
   bio: Bilingual;
   birth: (PartialDate & { place: Bilingual }) | null;
   death: (PartialDate & { place: Bilingual }) | null;

@@ -21,5 +21,38 @@
   "overview": "Overview",
   "tabArtworks": "Artworks",
   "tabEvents": "Events",
-  "noEvents": "No events recorded yet"
+  "noEvents": "No events recorded yet",
+  "stats": {
+    "archive": "{count} archive items",
+    "works": "{count} works mentioned",
+    "events": "{count} events",
+    "unverified": "Name under verification"
+  },
+  "career": {
+    "title": "Career",
+    "empty": "No dated material has been linked to this artist yet.",
+    "yearUncertain": "Year uncertain"
+  },
+  "archive": {
+    "title": "Archive materials",
+    "viewAll": "View all →",
+    "restricted": "Restricted access",
+    "unavailable": "n/a"
+  },
+  "record": {
+    "title": "About this record",
+    "source": "Record date",
+    "owner": "Owner",
+    "nameVerification": "Name verification",
+    "verified": "Verified",
+    "unverified": "Under verification — no published source attached yet",
+    "lifeDates": "Life dates",
+    "notRecorded": "Not recorded",
+    "updated": "Last updated"
+  },
+  "correction": {
+    "title": "Know more about this artist?",
+    "body": "The dates and works on this page are drawn from archival material. If you have a source that corrects it, or that adds to it, send it to us.",
+    "send": "Send a correction"
+  }
 }

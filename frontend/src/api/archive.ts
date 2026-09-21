@@ -72,3 +72,11 @@ export function addArchiveLink(id: number, link: { linkable_type: "artist" | "ar
 export function removeArchiveLink(id: number, linkId: number): Promise<unknown> {
   return request({ method: "DELETE", url: `/api/v1/archive-items/${id}/links/${linkId}` });
 }
+
+export function listArtistArchiveItems(
+  artistId: number,
+  params: { per_page?: number } = {},
+  signal?: AbortSignal,
+): Promise<PaginatedResponse<ArchiveItem>> {
+  return request<PaginatedResponse<ArchiveItem>>({ method: "GET", url: `/api/v1/artists/${artistId}/archive-items`, params, signal });
+}

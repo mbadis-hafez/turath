@@ -16,7 +16,7 @@ const { t } = useI18n();
 const { pick } = useLocalized();
 const auth = useAuthStore();
 
-const { items, meta, loading, error, query, searchInput, retry, setSearch, setType, setIncludeUnpublished, setPage, clear } = useArchiveList();
+const { items, meta, loading, error, query, searchInput, retry, setSearch, setType, setIncludeUnpublished, clearArtist, setPage, clear } = useArchiveList();
 
 const canManage = computed(() => auth.can("archive.manage"));
 const hasFilters = computed(() => Object.values(query.value).some((v) => v && v !== 1));
@@ -44,6 +44,11 @@ const yearOf = (i: (typeof items.value)[number]): string | null =>
         {{ t("archive.includeUnpublished") }}
       </button>
     </div>
+
+    <p v-if="query.artistId" class="mt-4 flex items-center gap-3 text-sm text-ink-muted" data-testid="artist-filter">
+      {{ t("archive.artistFilter") }}
+      <button type="button" class="text-accent-strong hover:underline" data-testid="clear-artist" @click="clearArtist">{{ t("archive.clearArtist") }}</button>
+    </p>
 
     <div class="mt-6">
       <ErrorState v-if="error" :error="error" @retry="retry" />
