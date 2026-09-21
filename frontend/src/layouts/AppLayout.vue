@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter, type RouteLocationRaw } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 import { useAuthStore } from "@/stores/auth";
@@ -32,6 +32,58 @@ const registryLink = computed(() => localePath("admin.artists"));
 const artworkRegistryLink = computed(() => localePath("admin.artworks"));
 const eventsRegistryLink = computed(() => localePath("admin.events"));
 const loginLink = computed(() => localePath("login"));
+
+interface NavLink {
+  key: string;
+  label: string;
+  to: RouteLocationRaw;
+  /** Secondary links are the working tools of signed-in staff; they read lighter than the public ones. */
+  muted?: boolean;
+  /** A link to a section of another page never counts as "the current page". */
+  section?: boolean;
+}
+
+const themesLink = computed(() => ({ ...localePath("home"), hash: "#themes" }));
+
+const navLinks = computed<NavLink[]>(() => {
+  const links: NavLink[] = [
+    { key: "artists", label: t("nav.artists"), to: artistsLink.value },
+    { key: "artworks", label: t("nav.artworks"), to: artworksLink.value },
+    { key: "archive", label: t("nav.archive"), to: archiveLink.value },
+    { key: "events", label: t("nav.events"), to: timelineLink.value },
+    { key: "themes", label: t("nav.themes"), to: themesLink.value, section: true },
+  ];
+  if (!auth.isAuthenticated) return links;
+
+  const staff: [boolean, string, string, RouteLocationRaw][] = [
+    [true, "dashboard", t("nav.dashboard"), dashboardLink.value],
+    [showProposals.value, "proposals", canReviewProposals.value ? t("proposals.queueTitle") : t("proposals.mineTitle"), proposalsLink.value],
+    [auth.can("activity.view"), "activity", t("nav.activity"), activityLink.value],
+    [auth.can("artists.manage"), "registry", t("nav.registry"), registryLink.value],
+    [auth.can("artworks.manage"), "artworkRegistry", t("nav.artworkRegistry"), artworkRegistryLink.value],
+    [auth.can("events.manage"), "eventsRegistry", t("events.nav"), eventsRegistryLink.value],
+    [auth.can("materials.review"), "materials", t("submissions.title"), materialsLink.value],
+    [auth.can("imports.manage"), "imports", t("nav.imports"), importsLink.value],
+  ];
+  return [...links, ...staff.filter(([show]) => show).map(([, key, label, to], n) => ({ key, label, to, muted: n > 0 }))];
+});
+
+/** The current page, or anything beneath it (an artist's page keeps "Artists" lit). */
+function isCurrent(link: NavLink): boolean {
+  if (link.section) return false;
+  const target = router.resolve(link.to).path;
+  return route.path === target || route.path.startsWith(`${target}/`);
+}
+const linkClass = (link: NavLink): string =>
+  isCurrent(link)
+    ? "text-accent underline decoration-accent decoration-2 underline-offset-8"
+    : `${link.muted ? "text-ink-muted hover:text-ink" : "text-ink hover:text-accent"} transition-colors`;
+
+const menuOpen = ref(false);
+watch(() => route.fullPath, () => (menuOpen.value = false));
+const closeOnEscape = (e: KeyboardEvent) => e.key === "Escape" && (menuOpen.value = false);
+onMounted(() => window.addEventListener("keydown", closeOnEscape));
+onBeforeUnmount(() => window.removeEventListener("keydown", closeOnEscape));
 
 const otherLocale = computed<AppLocale>(() =>
   route.params.locale === "en" ? "ar" : "en",
@@ -69,132 +121,29 @@ async function logout(): Promise<void> {
         >
           <img src="/logo.png" :alt="$t('home.heading')" class="h-12 w-auto" width="113" height="48" />
         </RouterLink>
-        <nav
-          aria-label="Main"
-          class="hidden items-center gap-7 text-sm font-medium md:flex"
-        >
-          <!-- Contributors navigate to working backend pages. -->
-          <template v-if="auth.isAuthenticated">
-            <RouterLink
-              :to="artistsLink"
-              class="text-ink transition-colors hover:text-accent"
-              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
-              >{{ $t("nav.artists") }}</RouterLink
-            >
-            <RouterLink
-              :to="artworksLink"
-              class="text-ink transition-colors hover:text-accent"
-              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
-              >{{ $t("nav.artworks") }}</RouterLink
-            >
-            <RouterLink
-              :to="archiveLink"
-              class="text-ink transition-colors hover:text-accent"
-              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
-              >{{ $t("nav.archive") }}</RouterLink
-            >
-            <RouterLink
-              :to="timelineLink"
-              class="text-ink transition-colors hover:text-accent"
-              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
-              >{{ $t("nav.timeline") }}</RouterLink
-            >
-            <RouterLink
-              :to="dashboardLink"
-              class="text-ink transition-colors hover:text-accent"
-              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
-              >{{ $t("nav.dashboard") }}</RouterLink
-            >
-            <RouterLink
-              v-if="showProposals"
-              :to="proposalsLink"
-              class="text-ink-muted transition-colors hover:text-ink"
-              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
-            >
-              {{ canReviewProposals ? $t("proposals.queueTitle") : $t("proposals.mineTitle") }}
-            </RouterLink>
-            <RouterLink
-              v-if="auth.can('activity.view')"
-              :to="activityLink"
-              class="text-ink-muted transition-colors hover:text-ink"
-              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
-            >
-              {{ $t("nav.activity") }}
-            </RouterLink>
-            <RouterLink
-              v-if="auth.can('artists.manage')"
-              :to="registryLink"
-              class="text-ink-muted transition-colors hover:text-ink"
-              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
-            >
-              {{ $t("nav.registry") }}
-            </RouterLink>
-            <RouterLink
-              v-if="auth.can('artworks.manage')"
-              :to="artworkRegistryLink"
-              class="text-ink-muted transition-colors hover:text-ink"
-              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
-            >
-              {{ $t("nav.artworkRegistry") }}
-            </RouterLink>
-            <RouterLink
-              v-if="auth.can('events.manage')"
-              :to="eventsRegistryLink"
-              class="text-ink-muted transition-colors hover:text-ink"
-              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
-            >
-              {{ $t("events.nav") }}
-            </RouterLink>
-            <RouterLink
-              v-if="auth.can('materials.review')"
-              :to="materialsLink"
-              class="text-ink-muted transition-colors hover:text-ink"
-              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
-            >
-              {{ $t("submissions.title") }}
-            </RouterLink>
-            <RouterLink
-              v-if="auth.can('imports.manage')"
-              :to="importsLink"
-              class="text-ink-muted transition-colors hover:text-ink"
-              active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
-            >
-              {{ $t("nav.imports") }}
-            </RouterLink>
-          </template>
-          <!-- Visitors browse the landing-page sections. -->
-          <template v-else>
-            <RouterLink
-              :to="artistsLink"
-              class="text-ink transition-colors hover:text-accent"
-              active-class="!text-accent-strong font-medium"
-              >{{ $t("nav.artists") }}</RouterLink
-            >
-            <a
-              href="#works"
-              class="text-ink transition-colors hover:text-accent"
-              >{{ $t("nav.artworks") }}</a
-            >
-            <a
-              href="#materials"
-              class="text-accent underline decoration-accent decoration-2 underline-offset-8"
-              aria-current="page"
-              >{{ $t("nav.archive") }}</a
-            >
-            <RouterLink
-              :to="timelineLink"
-              class="text-ink transition-colors hover:text-accent"
-              active-class="!text-accent-strong font-medium"
-              >{{ $t("nav.timeline") }}</RouterLink
-            >
-            <a
-              href="#themes"
-              class="text-ink transition-colors hover:text-accent"
-              >{{ $t("nav.themes") }}</a
-            >
-          </template>
+        <nav aria-label="Main" class="hidden items-center gap-7 text-sm font-medium md:flex" data-testid="main-nav">
+          <RouterLink
+            v-for="link in navLinks"
+            :key="link.key"
+            :to="link.to"
+            :class="linkClass(link)"
+            :aria-current="isCurrent(link) ? 'page' : undefined"
+            :data-testid="`nav-${link.key}`"
+            >{{ link.label }}</RouterLink
+          >
         </nav>
         <div class="flex items-center justify-self-end gap-3">
+          <button
+            type="button"
+            class="border border-ink px-3 py-1.5 text-sm font-medium text-ink md:hidden"
+            :aria-expanded="menuOpen"
+            aria-controls="mobile-menu"
+            :aria-label="menuOpen ? $t('nav.closeMenu') : $t('nav.openMenu')"
+            data-testid="menu-toggle"
+            @click="menuOpen = !menuOpen"
+          >
+            {{ $t("nav.menu") }}
+          </button>
           <RouterLink
             :to="otherLocaleLink"
             class="border border-ink px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
@@ -219,6 +168,13 @@ async function logout(): Promise<void> {
           </button>
         </div>
       </div>
+      <nav v-if="menuOpen" id="mobile-menu" aria-label="Main" class="border-t border-line px-6 py-4 md:hidden" data-testid="mobile-menu">
+        <ul class="flex flex-col">
+          <li v-for="link in navLinks" :key="link.key" class="border-b border-line last:border-b-0">
+            <RouterLink :to="link.to" class="block py-3 text-base font-medium" :class="linkClass(link)" :aria-current="isCurrent(link) ? 'page' : undefined">{{ link.label }}</RouterLink>
+          </li>
+        </ul>
+      </nav>
     </header>
 
     <main

@@ -4,6 +4,7 @@ import {
   type Router,
   type RouterHistory,
   type RouteRecordRaw,
+  type RouterScrollBehavior,
 } from "vue-router";
 
 import { applyLocale, getStoredLocale, isLocale, type AppLocale } from "@/i18n";
@@ -214,8 +215,20 @@ export function currentRouteLocale(params: Record<string, unknown>): AppLocale {
   return isLocale(value) ? value : getStoredLocale();
 }
 
+/** Section links scroll to their section; a filter change on the same page never moves the scroll. */
+export const scrollBehavior: RouterScrollBehavior = (to, from, saved) => {
+  if (saved) return saved;
+  if (to.hash) return { el: to.hash, top: 96, behavior: "smooth" };
+  if (to.path === from.path) return false;
+  return { top: 0 };
+};
+
 export function createAppRouter(history: RouterHistory): Router {
-  const router = createRouter({ history, routes });
+  const router = createRouter({
+    history,
+    routes,
+    scrollBehavior,
+  });
 
   router.beforeEach(async (to) => {
     const localeParam = to.params.locale;

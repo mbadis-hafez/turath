@@ -12,5 +12,8 @@
   "dashboard": "لوحتي",
   "registry": "سجل الفنانين",
   "artworkRegistry": "سجل الأعمال",
-  "timeline": "الخط الزمني"
+  "timeline": "الخط الزمني",
+  "menu": "القائمة",
+  "openMenu": "فتح القائمة",
+  "closeMenu": "إغلاق القائمة"
 }

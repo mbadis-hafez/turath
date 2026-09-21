@@ -217,3 +217,10 @@ Numbering continues locally (D43+); the F10 spec's own D47–D57 are cross-refer
 - **Every card now carries its published artists and place, restricted items included.** The restricted shape still omits the description and the files. Draft or merged artists never appear on a card; a test covers it.
 - The URL holds filters and view but never a page, so a shared link always opens at the top; results accumulate in memory and de-duplicate an item that moves between pages.
 - Not shown: card thumbnails (no image derivatives exist yet), matching the artist page.
+
+## Header menu
+- **Bug:** the visitor menu's "Artworks" and "Archive" were `#works` and `#materials` anchors, and the home page has no such sections (its ids are `themes`, `archive`, `artists`), so both did nothing. "Archive" was also hard-coded as the current page everywhere. "Themes" worked only on the home page, there was no way to reach the artworks page from the visitor menu, and below the `md` breakpoint the menu did not exist at all.
+- The menu is now one list of links rendered twice, as the desktop bar and as a mobile panel behind a Menu button (closes on navigation and on Escape), so the two cannot drift apart. Visitors and signed-in users share the same five public links (Artists, Artworks, Archive, Events, Themes); signed-in users get the staff tools their permissions allow after them. A manager's "Archive" is the working registry.
+- **Current page** is computed from the URL (the page itself or anything beneath it), so an artist's page keeps "Artists" lit and "Archive" is lit only on the archive. Section links such as "Themes" are never marked current.
+- **"Events" points at the Timeline page.** The mockups label the menu item "Events" (الفعاليات), and the timeline is where public events are browsed. The page itself is still titled "Timeline"; rename one or the other if that mismatch bothers you.
+- **"Themes" links to the Themes section of the home page** (`/#themes`). There is still no themes page, and the router now scrolls to a hash target from any page. It also stops a query-only change (ticking an archive filter) from jumping the page to the top.

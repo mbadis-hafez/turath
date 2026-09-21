@@ -12,5 +12,8 @@
   "dashboard": "Dashboard",
   "registry": "Artists registry",
   "artworkRegistry": "Artworks registry",
-  "timeline": "Timeline"
+  "timeline": "Timeline",
+  "menu": "Menu",
+  "openMenu": "Open the menu",
+  "closeMenu": "Close the menu"
 }
