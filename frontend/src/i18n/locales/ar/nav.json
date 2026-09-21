@@ -17,5 +17,10 @@
   "menu": "القائمة",
   "openMenu": "فتح القائمة",
   "closeMenu": "إغلاق القائمة",
-  "workspace": "مساحة العمل"
+  "workspace": "مساحة العمل",
+  "groups": {
+    "review": "المراجعة",
+    "catalog": "الفهرس",
+    "administration": "الإدارة"
+  }
 }

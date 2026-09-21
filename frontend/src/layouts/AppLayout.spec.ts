@@ -9,7 +9,7 @@ import { mountWithPlugins } from "@/test/utils";
 
 const NAMES: [string, string][] = [
   ["home", ""], ["artists.index", "/artists"], ["artists.show", "/artists/:slug"], ["artworks.index", "/artworks"], ["archive.records", "/archive"],
-  ["admin.archive", "/admin/archive"], ["timeline", "/timeline"], ["dashboard", "/dashboard"], ["proposals", "/proposals"], ["admin.activity", "/admin/activity"],
+  ["admin.archive", "/admin/archive"], ["timeline", "/timeline"], ["dashboard", "/dashboard"], ["proposals", "/proposals"], ["admin.activity", "/admin/activity"], ["admin.users", "/admin/users"],
   ["admin.artists", "/admin/artists"], ["admin.artworks", "/admin/artworks"], ["admin.events", "/admin/events"], ["admin.materials", "/admin/materials"],
   ["admin.imports", "/admin/imports"], ["login", "/login"], ["submit", "/submit"], ["methodology", "/about/methodology"],
 ];
@@ -111,7 +111,7 @@ describe("AppLayout main menu (signed in)", () => {
     expect(nav(wrapper).findAll("[data-testid=tools-toggle]")).toHaveLength(1);
   });
 
-  it("opens the Workspace menu on click with exactly the tools the permissions allow", async () => {
+  it("opens the Workspace menu on click with exactly the tools the permissions allow, grouped by area", async () => {
     signIn(["artists.manage", "archive.manage", "materials.review"]);
     const wrapper = await mountAt("/en");
     const toggle = wrapper.get("[data-testid=tools-toggle]");
@@ -121,10 +121,23 @@ describe("AppLayout main menu (signed in)", () => {
 
     await toggle.trigger("click");
     expect(toggle.attributes("aria-expanded")).toBe("true");
-    expect(tools(wrapper).findAll("a").map((a) => a.text())).toEqual(["Review queue", "Artists registry", "Submitted material"]);
-    expect(tools(wrapper).find("[data-testid=nav-imports]").exists()).toBe(false);
-    expect(tools(wrapper).find("[data-testid=nav-artworkRegistry]").exists()).toBe(false);
-    expect(tools(wrapper).get("[data-testid=nav-registry]").attributes("href")).toBe("/en/admin/artists");
+    const menu = tools(wrapper);
+    expect(menu.findAll("a").map((a) => a.text())).toEqual(["Review queue", "Submitted material", "Artists registry", "Archive"]);
+    expect(menu.findAll("[data-testid=tools-menu] > li > p").map((p) => p.text())).toEqual(["Review", "Catalog"]);
+    expect(menu.find("[data-testid=nav-imports]").exists()).toBe(false);
+    expect(menu.find("[data-testid=nav-artworkRegistry]").exists()).toBe(false);
+    expect(menu.get("[data-testid=nav-registry]").attributes("href")).toBe("/en/admin/artists");
+    expect(menu.get("[data-testid=nav-archive]").attributes("href")).toBe("/en/admin/archive");
+  });
+
+  it("gives administration its own group for user managers", async () => {
+    signIn(["users.manage", "activity.view"]);
+    const wrapper = await mountAt("/en");
+    await wrapper.get("[data-testid=tools-toggle]").trigger("click");
+
+    const menu = tools(wrapper);
+    expect(menu.findAll("a").map((a) => a.text())).toEqual(["Users", "Activity log"]);
+    expect(menu.findAll("[data-testid=tools-menu] > li > p").map((p) => p.text())).toEqual(["Administration"]);
   });
 
   it("closes the Workspace menu on Escape, on a click elsewhere, and after choosing a tool", async () => {
@@ -228,6 +241,7 @@ describe("AppLayout mobile menu (signed in)", () => {
     const labels = menu.findAll("a").map((a) => a.text());
     expect(labels.slice(0, 6)).toEqual(["Artists", "Artworks", "Archive", "Events", "Themes", "Dashboard"]);
     expect(labels.slice(6)).toEqual(expect.arrayContaining(["Review queue", "Activity log", "Artists registry", "Artworks registry", "Events registry", "Submitted material", "Imports"]));
+    expect(menu.findAll("p").map((p) => p.text())).toEqual(expect.arrayContaining(["Workspace", "Review", "Catalog", "Administration"]));
   });
 });
 

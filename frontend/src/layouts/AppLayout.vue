@@ -17,6 +17,7 @@ const homeLink = computed(() => localePath("home"));
 const artistsLink = computed(() => localePath("artists.index"));
 const artworksLink = computed(() => localePath("artworks.index"));
 const archiveLink = computed(() => localePath(auth.can("archive.manage") ? "admin.archive" : "archive.records"));
+const adminArchiveLink = computed(() => localePath("admin.archive"));
 const activityLink = computed(() => localePath("admin.activity"));
 const usersLink = computed(() => localePath("admin.users"));
 const importsLink = computed(() => localePath("admin.imports"));
@@ -57,20 +58,41 @@ const publicLinks = computed<NavLink[]>(() => [
 ]);
 
 /** The working tools a signed-in user's permissions allow, kept out of the top bar where they would not fit. */
-const toolLinks = computed<NavLink[]>(() => {
+interface ToolGroup {
+  key: string;
+  label: string;
+  links: NavLink[];
+}
+
+const toolGroups = computed<ToolGroup[]>(() => {
   if (!auth.isAuthenticated) return [];
-  const tools: [boolean, string, string, RouteLocationRaw][] = [
-    [showProposals.value, "proposals", canReviewProposals.value ? t("proposals.queueTitle") : t("proposals.mineTitle"), proposalsLink.value],
-    [auth.can("activity.view"), "activity", t("nav.activity"), activityLink.value],
-    [auth.can("users.manage"), "users", t("nav.users"), usersLink.value],
-    [auth.can("artists.manage"), "registry", t("nav.registry"), registryLink.value],
-    [auth.can("artworks.manage"), "artworkRegistry", t("nav.artworkRegistry"), artworkRegistryLink.value],
-    [auth.can("events.manage"), "eventsRegistry", t("events.nav"), eventsRegistryLink.value],
-    [auth.can("materials.review"), "materials", t("submissions.title"), materialsLink.value],
-    [auth.can("imports.manage"), "imports", t("nav.imports"), importsLink.value],
+  const groups: [string, [boolean, string, string, RouteLocationRaw][]][] = [
+    ["review", [
+      [showProposals.value, "proposals", canReviewProposals.value ? t("proposals.queueTitle") : t("proposals.mineTitle"), proposalsLink.value],
+      [auth.can("materials.review"), "materials", t("submissions.title"), materialsLink.value],
+    ]],
+    ["catalog", [
+      [auth.can("artists.manage"), "registry", t("nav.registry"), registryLink.value],
+      [auth.can("artworks.manage"), "artworkRegistry", t("nav.artworkRegistry"), artworkRegistryLink.value],
+      [auth.can("archive.manage"), "archive", t("nav.archive"), adminArchiveLink.value],
+      [auth.can("events.manage"), "eventsRegistry", t("events.nav"), eventsRegistryLink.value],
+      [auth.can("imports.manage"), "imports", t("nav.imports"), importsLink.value],
+    ]],
+    ["administration", [
+      [auth.can("users.manage"), "users", t("nav.users"), usersLink.value],
+      [auth.can("activity.view"), "activity", t("nav.activity"), activityLink.value],
+    ]],
   ];
-  return tools.filter(([show]) => show).map(([, key, label, to]) => ({ key, label, to }));
+  return groups
+    .map(([key, items]) => ({
+      key,
+      label: t(`nav.groups.${key}`),
+      links: items.filter(([show]) => show).map(([, linkKey, label, to]) => ({ key: linkKey, label, to })),
+    }))
+    .filter((group) => group.links.length > 0);
 });
+
+const toolLinks = computed<NavLink[]>(() => toolGroups.value.flatMap((group) => group.links));
 
 /** One tool is just a link; several are a Workspace menu. */
 const showToolsMenu = computed(() => toolLinks.value.length >= 2);
@@ -179,8 +201,13 @@ async function logout(): Promise<void> {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-3.5 transition-transform" :class="toolsOpen ? 'rotate-180' : ''"><path d="m6 9 6 6 6-6" /></svg>
             </button>
             <ul v-if="toolsOpen" id="tools-menu" class="absolute end-0 top-full z-40 mt-3 w-64 border-2 border-ink bg-paper py-2 shadow-sm" data-testid="tools-menu">
-              <li v-for="link in toolLinks" :key="link.key">
-                <RouterLink :to="link.to" class="block px-5 py-2.5" :class="linkClass({ ...link, muted: !isCurrent(link) })" :aria-current="isCurrent(link) ? 'page' : undefined" :data-testid="`nav-${link.key}`">{{ link.label }}</RouterLink>
+              <li v-for="(group, index) in toolGroups" :key="group.key" :class="index > 0 ? 'mt-1 border-t border-line pt-1' : ''">
+                <p class="px-5 pt-1.5 pb-1 text-[10.5px] font-semibold tracking-widest text-ink-faint uppercase">{{ group.label }}</p>
+                <ul>
+                  <li v-for="link in group.links" :key="link.key">
+                    <RouterLink :to="link.to" class="block px-5 py-2.5" :class="linkClass({ ...link, muted: !isCurrent(link) })" :aria-current="isCurrent(link) ? 'page' : undefined" :data-testid="`nav-${link.key}`">{{ link.label }}</RouterLink>
+                  </li>
+                </ul>
               </li>
             </ul>
           </div>
@@ -229,11 +256,14 @@ async function logout(): Promise<void> {
         </ul>
         <template v-if="showToolsMenu">
           <p class="mt-4 border-t-2 border-ink pt-3 text-xs font-semibold text-ink-muted" data-testid="mobile-tools-heading">{{ $t("nav.workspace") }}</p>
-          <ul class="flex flex-col">
-            <li v-for="link in toolLinks" :key="link.key" class="border-b border-line last:border-b-0">
-              <RouterLink :to="link.to" class="block py-3 text-base font-medium" :class="linkClass({ ...link, muted: !isCurrent(link) })" :aria-current="isCurrent(link) ? 'page' : undefined">{{ link.label }}</RouterLink>
-            </li>
-          </ul>
+          <template v-for="(group, index) in toolGroups" :key="group.key">
+            <p class="px-1 pt-3 pb-0.5 text-[10.5px] font-semibold tracking-widest text-ink-faint uppercase" :class="index > 0 ? 'mt-1 border-t border-line' : ''">{{ group.label }}</p>
+            <ul class="flex flex-col">
+              <li v-for="link in group.links" :key="link.key" class="border-b border-line last:border-b-0">
+                <RouterLink :to="link.to" class="block py-3 text-base font-medium" :class="linkClass({ ...link, muted: !isCurrent(link) })" :aria-current="isCurrent(link) ? 'page' : undefined">{{ link.label }}</RouterLink>
+              </li>
+            </ul>
+          </template>
         </template>
       </nav>
     </header>

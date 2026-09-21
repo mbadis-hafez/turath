@@ -17,5 +17,10 @@
   "menu": "Menu",
   "openMenu": "Open the menu",
   "closeMenu": "Close the menu",
-  "workspace": "Workspace"
+  "workspace": "Workspace",
+  "groups": {
+    "review": "Review",
+    "catalog": "Catalog",
+    "administration": "Administration"
+  }
 }
