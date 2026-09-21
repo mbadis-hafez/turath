@@ -11,6 +11,8 @@ import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import NotFoundPage from "@/pages/NotFoundPage.vue";
 import Tabs from "@/components/common/Tabs.vue";
+import { useAuthStore } from "@/stores/auth";
+import { useLocalePath } from "@/composables/useLocalePath";
 import PublicEventsList from "@/components/events/PublicEventsList.vue";
 import { useArtist } from "@/composables/useArtist";
 import { useArtistArtworks } from "@/composables/useArtistArtworks";
@@ -20,6 +22,8 @@ import { ApiError } from "@/types/api";
 
 const route = useRoute();
 const { t } = useI18n();
+const auth = useAuthStore();
+const { localePath } = useLocalePath();
 const { pick } = useLocalized();
 
 const slug = computed(() => String(route.params.slug ?? ""));
@@ -95,6 +99,15 @@ const tabs = computed(() => [
 
   <article v-else-if="artist">
     <ArtistHeader :artist="artist" />
+
+    <RouterLink
+      v-if="auth.can('proposals.submit')"
+      :to="localePath('suggest', { type: 'artists', id: artist.id })"
+      class="mt-4 inline-block rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft"
+      data-testid="suggest-edit"
+    >
+      {{ $t("proposals.suggestEdit") }}
+    </RouterLink>
 
     <Tabs v-model:active-key="activeTab" :tabs="tabs" class="mt-8">
       <template #overview>

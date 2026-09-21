@@ -60,5 +60,31 @@
   "preview": "What you're changing",
   "noChanges": "Change at least one field to submit.",
   "submitted": "Thanks — your suggestion is now with a reviewer.",
-  "viewMine": "See my suggestions"
+  "viewMine": "See my suggestions",
+  "fields": {
+    "artists": {
+      "name_ar": "Name (Arabic)",
+      "name_en": "Name (English)",
+      "bio_ar": "Biography (Arabic)",
+      "bio_en": "Biography (English)",
+      "birth_year_from": "Birth year",
+      "death_year_from": "Death year",
+      "living_status": "Living status",
+      "birth_place_ar": "Birth place (Arabic)",
+      "birth_place_en": "Birth place (English)",
+      "nationality_ar": "Nationality (Arabic)",
+      "nationality_en": "Nationality (English)"
+    },
+    "artworks": {
+      "title_ar": "Title (Arabic)",
+      "title_en": "Title (English)",
+      "medium_ar": "Medium (Arabic)",
+      "medium_en": "Medium (English)",
+      "creation_year_from": "Year",
+      "height_cm": "Height (cm)",
+      "width_cm": "Width (cm)",
+      "notes_ar": "Notes (Arabic)",
+      "notes_en": "Notes (English)"
+    }
+  }
 }

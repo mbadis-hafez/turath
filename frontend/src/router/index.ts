@@ -88,6 +88,12 @@ const routes: RouteRecordRaw[] = [
     meta: { titleKey: "archive.edit.editTitle", requiresAuth: true, requiresPermission: "archive.manage" },
   },
   {
+    path: "/:locale/suggest/:type(artists|artworks)/:id",
+    name: "suggest",
+    component: () => import("@/pages/SuggestEditPage.vue"),
+    meta: { titleKey: "proposals.suggestEdit", requiresAuth: true, requiresPermission: "proposals.submit" },
+  },
+  {
     path: "/:locale/proposals",
     name: "proposals",
     component: () => import("@/pages/ProposalsPage.vue"),

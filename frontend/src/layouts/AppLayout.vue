@@ -22,6 +22,10 @@ const importsLink = computed(() => localePath("admin.imports"));
 const dashboardLink = computed(() => localePath("dashboard"));
 const timelineLink = computed(() => localePath("timeline"));
 const proposalsLink = computed(() => localePath("proposals"));
+const canReviewProposals = computed(() =>
+  ["artists.manage", "artworks.manage", "archive.manage", "events.manage"].some((p) => auth.can(p)),
+);
+const showProposals = computed(() => canReviewProposals.value || auth.can("proposals.submit"));
 const registryLink = computed(() => localePath("admin.artists"));
 const artworkRegistryLink = computed(() => localePath("admin.artworks"));
 const eventsRegistryLink = computed(() => localePath("admin.events"));
@@ -100,11 +104,12 @@ async function logout(): Promise<void> {
               >{{ $t("nav.dashboard") }}</RouterLink
             >
             <RouterLink
+              v-if="showProposals"
               :to="proposalsLink"
               class="text-ink-muted transition-colors hover:text-ink"
               active-class="!text-accent underline decoration-accent decoration-2 underline-offset-8"
             >
-              {{ $t("proposals.queueTitle") }}
+              {{ canReviewProposals ? $t("proposals.queueTitle") : $t("proposals.mineTitle") }}
             </RouterLink>
             <RouterLink
               v-if="auth.can('activity.view')"
