@@ -9,7 +9,7 @@ const LABELS = [
   { key: "verified", badge: "bg-info-soft text-info" },
   { key: "underVerification", badge: "bg-warn-soft text-warn" },
   { key: "restricted", badge: "border border-dashed border-ink-muted bg-surface text-ink-muted" },
-  { key: "approximate", badge: "border border-dashed border-ink-muted bg-surface text-ink-muted" },
+  { key: "yearUncertain", badge: "border border-dashed border-ink-muted bg-surface text-ink-muted" },
 ] as const;
 </script>
 

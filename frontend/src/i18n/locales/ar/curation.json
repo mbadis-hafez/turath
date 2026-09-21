@@ -236,7 +236,7 @@
       "untitled": "بلا عنوان",
       "missing_dimensions": "مقاسات ناقصة",
       "holder_missing": "مالك غير محدد",
-      "year_uncertain": "سنة غير مؤكدة"
+      "year_uncertain": "@:common.labels.yearUncertain"
     },
     "add": "+ عمل فني",
     "merge": "دمج سجلات مكررة",

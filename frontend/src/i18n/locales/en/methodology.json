@@ -36,9 +36,9 @@
       "name": "Restricted access",
       "body": "The item exists and is catalogued, but the original file is not available to download, by the owner's decision or because the rights are not settled."
     },
-    "approximate": {
-      "name": "Approximate year",
-      "body": "The date is inferred from the item itself or from neighbouring material, and is not stated in the source."
+    "yearUncertain": {
+      "name": "@:common.labels.yearUncertain",
+      "body": "The year is approximate, inferred from the item itself or from neighbouring material, or not stated in the source."
     }
   },
   "rights": {

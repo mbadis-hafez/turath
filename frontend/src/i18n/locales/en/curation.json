@@ -236,7 +236,7 @@
       "untitled": "Untitled",
       "missing_dimensions": "Missing dimensions",
       "holder_missing": "Owner not set",
-      "year_uncertain": "Year uncertain"
+      "year_uncertain": "@:common.labels.yearUncertain"
     },
     "add": "+ Add artwork",
     "merge": "Merge duplicates",

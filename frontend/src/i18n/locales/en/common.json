@@ -29,5 +29,8 @@
     "note": "Reason for the approximation",
     "needsReason": "An approximate date needs a stated reason (for example where the wording comes from).",
     "help": "Enter a full date, or a four-digit year."
+  },
+  "labels": {
+    "yearUncertain": "Year uncertain"
   }
 }

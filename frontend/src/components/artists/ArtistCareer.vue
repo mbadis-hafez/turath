@@ -15,7 +15,7 @@ const yearLabel = (i: ArchiveItem): string | null =>
 <template>
   <ol class="border-t-2 border-ink" data-testid="career">
     <li v-for="i in items" :key="i.id" class="grid grid-cols-[5.5rem_minmax(0,1fr)_auto] items-baseline gap-x-6 border-b border-line py-4" data-testid="career-row">
-      <span class="text-sm tabular-nums" :class="yearLabel(i) ? 'text-ink-muted' : 'text-ink-faint'" data-testid="career-year">{{ yearLabel(i) ?? t("artists.career.yearUncertain") }}</span>
+      <span class="text-sm tabular-nums" :class="yearLabel(i) ? 'text-ink-muted' : 'text-ink-faint'" data-testid="career-year">{{ yearLabel(i) ?? t("common.labels.yearUncertain") }}</span>
       <span class="text-lg text-ink"><LocalizedText :text="i.title" /></span>
       <span v-if="i.legacy_ref" class="text-xs text-ink-faint" dir="ltr">{{ i.legacy_ref }}</span>
     </li>
