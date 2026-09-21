@@ -130,4 +130,5 @@ it('tags archive items with the shared themes only for archive managers', functi
 
     $this->actingAs(editorUser())->patchJson("/api/v1/archive-items/{$item->id}/themes", ['theme_ids' => [$theme->id]])->assertOk()->assertJsonPath('data.theme_ids.0', $theme->id);
     expect($item->themes()->count())->toBe(1);
+    expect($this->actingAs(editorUser())->getJson("/api/v1/admin/archive-items/{$item->id}")->json('data.theme_ids'))->toBe([$theme->id]);
 });

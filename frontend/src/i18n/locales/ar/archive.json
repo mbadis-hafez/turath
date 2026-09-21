@@ -165,8 +165,33 @@
       "subject": "موضوع",
       "primary_documentation": "التوثيق الأساسي",
       "event_documentation": "توثيق فعالية"
-    }
+    },
+    "themes": "المحاور",
+    "themesHelp": "تظهر المحاور كعامل تصفية في صفحة الأرشيف العامة."
   },
   "artistFilter": "تُعرض المواد المرتبطة بفنان واحد.",
-  "clearArtist": "عرض الكل"
+  "clearArtist": "عرض الكل",
+  "browse": {
+    "title": "تصفّح الأرشيف",
+    "summary": "{count} مادة · مرتّبة حسب الأحدث إضافة",
+    "view": "العرض",
+    "grid": "شبكة",
+    "list": "قائمة",
+    "filter": "تصفية",
+    "clear": "مسح",
+    "restricted": "وصول مقيّد",
+    "unavailable": "غير متوفر",
+    "loadMore": "تحميل المزيد",
+    "loading": "جارٍ التحميل…",
+    "groups": {
+      "type": "نوع المادة",
+      "place": "المكان",
+      "theme": "المحاور",
+      "access": "الإتاحة"
+    },
+    "access": {
+      "full": "متاحة بالكامل",
+      "preview": "معاينة فقط"
+    }
+  }
 }

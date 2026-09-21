@@ -11,16 +11,17 @@ import type { ArchiveEdit } from "@/types/archive";
 const api = vi.hoisted(() => ({
   getAdminArchiveItem: vi.fn(), createArchiveItem: vi.fn(), updateArchiveItem: vi.fn(), uploadArchiveFile: vi.fn(),
   deleteArchiveFile: vi.fn(), submitArchiveReview: vi.fn(), addArchiveLink: vi.fn(), removeArchiveLink: vi.fn(),
+  syncArchiveItemThemes: vi.fn(), listThemes: vi.fn(),
 }));
 vi.mock("@/api/archive", () => api);
-vi.mock("@/api/artistCuration", () => ({ listAdminArtists: vi.fn() }));
+vi.mock("@/api/artistCuration", () => ({ listAdminArtists: vi.fn(), listThemes: api.listThemes }));
 vi.mock("@/api/artworkCuration", () => ({ searchHolders: vi.fn(), listAdminArtworks: vi.fn() }));
 vi.mock("@/api/events", () => ({ listAdminEvents: vi.fn() }));
 
 function bundle(patch: Partial<ArchiveEdit> = {}): ArchiveEdit {
   return {
     id: 5, legacy_ref: "ARC-1979-0412", item_type: "image", title: { ar: "افتتاح معرض", en: null }, description: { ar: null, en: null },
-    place: { ar: null, en: null }, date_note: null, content: { display: "1979 (approx.)", year_from: 1979, year_to: 1979, calendar: "gregorian", certainty: "circa" },
+    place: { ar: null, en: null }, date_note: null, theme_ids: [2], content: { display: "1979 (approx.)", year_from: 1979, year_to: 1979, calendar: "gregorian", certainty: "circa" },
     people_names: [], keywords: [], source_name: null, rights_holder: { ar: null, en: null }, rights_status: "unknown", license: null,
     verification_reference: null, access_level: "registered", publication_status: "draft", under_review: false, updated_at: null,
     file: { id: 1, name: "a.tif", mime_type: "image/tiff", size_bytes: 2048, width_px: 4200, height_px: 3100, is_image: false, url: "/f" },
@@ -53,6 +54,8 @@ beforeEach(() => {
   api.updateArchiveItem.mockReset().mockResolvedValue({});
   api.uploadArchiveFile.mockReset().mockResolvedValue({ data: {} });
   api.addArchiveLink.mockReset().mockResolvedValue({});
+  api.syncArchiveItemThemes.mockReset().mockResolvedValue({});
+  api.listThemes.mockReset().mockResolvedValue({ data: [{ id: 2, label: { ar: "التأسيس", en: "Founding" } }, { id: 3, label: { ar: "الطبيعة", en: "Nature" } }] });
   api.submitArchiveReview.mockReset().mockResolvedValue({ data: bundle({ under_review: true }) });
   router = createRouter({
     history: createMemoryHistory(),
@@ -100,6 +103,31 @@ describe("ArchiveEditPage (edit)", () => {
     expect(api.updateArchiveItem).toHaveBeenCalledBefore(api.submitArchiveReview);
     expect(api.submitArchiveReview).toHaveBeenCalledWith(5);
     expect(wrapper.get("[data-testid=send-review]").text()).toBe("Under review");
+  });
+});
+
+describe("ArchiveEditPage (themes)", () => {
+  it("shows the item's themes ticked and saves the changed selection", async () => {
+    const wrapper = await mountAt("/en/admin/archive/5");
+    const boxes = () => wrapper.findAll("[data-testid=themes] input").map((b) => (b.element as HTMLInputElement).checked);
+    expect(boxes()).toEqual([true, false]);
+
+    await wrapper.findAll("[data-testid=themes] input")[1].setValue(true);
+    await wrapper.get("[data-testid=save-draft]").trigger("click");
+    await flushPromises();
+
+    expect(api.syncArchiveItemThemes).toHaveBeenCalledWith(5, [2, 3]);
+  });
+
+  it("tags a new item with the chosen themes right after creating it", async () => {
+    const wrapper = await mountAt("/en/admin/archive/new");
+    await wrapper.findAll("[data-testid=themes] input")[0].setValue(true);
+    api.getAdminArchiveItem.mockResolvedValue({ data: bundle() });
+
+    await wrapper.get("[data-testid=save-draft]").trigger("click");
+    await flushPromises();
+
+    expect(api.syncArchiveItemThemes).toHaveBeenCalledWith(5, [2]);
   });
 });
 

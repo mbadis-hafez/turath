@@ -25,11 +25,33 @@ export interface ArchiveItem {
   rights_status?: RightsStatus;
   creator_name?: string | null;
   links?: ArchiveLink[];
+  place?: Bilingual;
+  artists?: { id: number; slug: string; name: Bilingual }[];
+}
+
+export type AccessFacet = "full" | "preview";
+
+export interface FacetValue<T = string> {
+  value: T;
+  count: number;
+  label?: Bilingual;
+}
+
+export interface ArchiveFacets {
+  item_type: FacetValue[];
+  place: FacetValue[];
+  theme_id: FacetValue<number>[];
+  access: FacetValue<AccessFacet>[];
 }
 
 export interface ArchiveQueryParams {
   q?: string;
-  item_type?: ArchiveItemType;
+  item_type?: ArchiveItemType[];
+  place?: string[];
+  theme_id?: number[];
+  access?: AccessFacet[];
+  include_facets?: 1;
+  per_page?: number;
   artist_id?: number;
   status?: "all";
   sort?: "-created_at" | "created_at" | "content_year_from" | "-content_year_from";
@@ -94,6 +116,7 @@ export interface ArchiveEdit {
   description: Bilingual;
   place: Bilingual;
   date_note: string | null;
+  theme_ids: number[];
   content: { display: string | null; year_from: number | null; year_to: number | null; calendar: string | null; certainty: string | null } | null;
   people_names: string[];
   keywords: string[];

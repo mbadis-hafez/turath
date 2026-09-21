@@ -1,18 +1,20 @@
 import { request } from "@/api/http";
 import type { PaginatedResponse, PaginationMeta } from "@/types/api";
 import type {
-  AdminArchiveQuery, AdminArchiveRow, ArchiveEdit, ArchiveEditFile, ArchiveItem, ArchiveQueryParams, BulkResult,
+  AdminArchiveQuery, AdminArchiveRow, ArchiveEdit, ArchiveFacets, ArchiveEditFile, ArchiveItem, ArchiveQueryParams, BulkResult,
 } from "@/types/archive";
 
 export function listArchiveItems(
   params: ArchiveQueryParams = {},
   signal?: AbortSignal,
-): Promise<PaginatedResponse<ArchiveItem>> {
-  const clean: Record<string, string | number> = {};
+): Promise<PaginatedResponse<ArchiveItem> & { meta: { facets?: ArchiveFacets } }> {
+  const clean: Record<string, string | number | (string | number)[]> = {};
   for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== "") clean[k] = v as string | number;
+    if (v === undefined || v === "" || (Array.isArray(v) && v.length === 0)) continue;
+    clean[k] = v as string | number | (string | number)[];
   }
-  return request<PaginatedResponse<ArchiveItem>>({ method: "GET", url: "/api/v1/archive-items", params: clean, signal });
+  // Arrays go out as key[]=a&key[]=b, which Laravel reads as arrays.
+  return request({ method: "GET", url: "/api/v1/archive-items", params: clean, paramsSerializer: { indexes: false }, signal });
 }
 
 export async function listAdminArchive(
@@ -79,4 +81,8 @@ export function listArtistArchiveItems(
   signal?: AbortSignal,
 ): Promise<PaginatedResponse<ArchiveItem>> {
   return request<PaginatedResponse<ArchiveItem>>({ method: "GET", url: `/api/v1/artists/${artistId}/archive-items`, params, signal });
+}
+
+export function syncArchiveItemThemes(id: number, themeIds: number[]): Promise<unknown> {
+  return request({ method: "PATCH", url: `/api/v1/archive-items/${id}/themes`, data: { theme_ids: themeIds } });
 }

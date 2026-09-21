@@ -165,8 +165,33 @@
       "subject": "Subject",
       "primary_documentation": "Primary documentation",
       "event_documentation": "Event documentation"
-    }
+    },
+    "themes": "Themes",
+    "themesHelp": "Themes appear as a filter on the public archive page."
   },
   "artistFilter": "Showing material linked to one artist.",
-  "clearArtist": "Show everything"
+  "clearArtist": "Show everything",
+  "browse": {
+    "title": "Browse the archive",
+    "summary": "{count} items · sorted by most recently added",
+    "view": "View",
+    "grid": "Grid",
+    "list": "List",
+    "filter": "Filter",
+    "clear": "Clear",
+    "restricted": "Restricted access",
+    "unavailable": "n/a",
+    "loadMore": "Load more",
+    "loading": "Loading…",
+    "groups": {
+      "type": "Material type",
+      "place": "Place",
+      "theme": "Themes",
+      "access": "Access"
+    },
+    "access": {
+      "full": "Fully available",
+      "preview": "Preview only"
+    }
+  }
 }

@@ -5,8 +5,9 @@ import { useI18n } from "vue-i18n";
 
 import {
   addArchiveLink, createArchiveItem, deleteArchiveFile, getAdminArchiveItem, removeArchiveLink,
-  submitArchiveReview, updateArchiveItem, uploadArchiveFile,
+  submitArchiveReview, syncArchiveItemThemes, updateArchiveItem, uploadArchiveFile,
 } from "@/api/archive";
+import { listThemes } from "@/api/artistCuration";
 import { listAdminArtworks } from "@/api/artworkCuration";
 import { listAdminEvents } from "@/api/events";
 import ErrorState from "@/components/common/ErrorState.vue";
@@ -19,8 +20,10 @@ import FuzzyDateField from "@/components/curation/FuzzyDateField.vue";
 import TagsInput from "@/components/curation/TagsInput.vue";
 import { useArchiveForm } from "@/composables/useArchiveForm";
 import { useLocalePath } from "@/composables/useLocalePath";
+import { useLocalized } from "@/composables/useLocalized";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
+import type { Theme } from "@/types/artistCuration";
 import { ARCHIVE_ITEM_TYPES, LINK_ROLES, type ArchiveEdit, type ArchiveEditLink, type RightsStatus } from "@/types/archive";
 import { formatRelativeTime } from "@/utils/format";
 import type { AppLocale } from "@/i18n";
@@ -29,6 +32,7 @@ const route = useRoute();
 const router = useRouter();
 const { t, locale } = useI18n();
 const { localePath } = useLocalePath();
+const { pick } = useLocalized();
 const auth = useAuthStore();
 
 const forbidden = new ApiError("forbidden", "Forbidden", { status: 403 });
@@ -37,6 +41,11 @@ const id = computed(() => (route.params.id ? Number(route.params.id) : null));
 const isNew = computed(() => id.value === null);
 
 const { form, date, load: loadForm, payload, checklist: liveChecklist } = useArchiveForm();
+
+const themes = ref<Theme[]>([]);
+const themeIds = ref<number[]>([]);
+void listThemes().then((r) => (themes.value = r.data)).catch(() => (themes.value = []));
+const toggleTheme = (id: number) => (themeIds.value = themeIds.value.includes(id) ? themeIds.value.filter((x) => x !== id) : [...themeIds.value, id]);
 
 const item = ref<ArchiveEdit | null>(null);
 const loading = ref(false);
@@ -55,6 +64,7 @@ async function loadItem(): Promise<void> {
     if (controller !== self) return;
     item.value = response.data;
     loadForm(response.data);
+    themeIds.value = [...response.data.theme_ids];
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") return;
     loadError.value = err;
@@ -150,6 +160,7 @@ async function saveDraft(): Promise<void> {
     }
     let failed = false;
     try {
+      if (themeIds.value.length) await syncArchiveItemThemes(newId, themeIds.value);
       if (pendingFile.value) await uploadArchiveFile(newId, pendingFile.value);
       for (const l of pendingLinks.value) await addArchiveLink(newId, { linkable_type: l.kind, linkable_id: l.entity_id, role: l.role });
     } catch {
@@ -162,6 +173,7 @@ async function saveDraft(): Promise<void> {
   }
   try {
     await updateArchiveItem(id.value!, payload("update"));
+    await syncArchiveItemThemes(id.value!, themeIds.value);
     await loadItem();
     saved.value = true;
   } catch (err) {
@@ -310,6 +322,15 @@ const err = (key: string) => fieldErrors.value[key]?.[0];
             </ul>
             <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-neutral-soft"><div class="h-full rounded-full" :class="complete ? 'bg-success' : 'bg-danger'" :style="{ width: `${pct}%` }" /></div>
             <p class="mt-1 text-xs tabular-nums" :class="complete ? 'text-ink-muted' : 'text-danger'" data-testid="pct">{{ t("archive.edit.completion", { pct }) }}</p>
+          </section>
+
+          <section class="rounded-lg border border-line bg-surface p-4" data-testid="themes-section">
+            <h2 class="text-xs font-semibold text-ink-muted">{{ t("archive.edit.themes") }}</h2>
+            <p v-if="themes.length === 0" class="mt-2 text-sm text-ink-muted">{{ t("events.edit.noThemes") }}</p>
+            <ul v-else class="mt-3 space-y-2" data-testid="themes">
+              <li v-for="th in themes" :key="th.id"><label class="flex cursor-pointer items-center gap-2 text-sm text-ink"><input type="checkbox" class="size-4 accent-ink" :checked="themeIds.includes(th.id)" @change="toggleTheme(th.id)" />{{ pick(th.label)?.text }}</label></li>
+            </ul>
+            <p class="mt-2 text-xs text-ink-muted">{{ t("archive.edit.themesHelp") }}</p>
           </section>
 
           <section class="rounded-lg border border-line bg-surface p-4">

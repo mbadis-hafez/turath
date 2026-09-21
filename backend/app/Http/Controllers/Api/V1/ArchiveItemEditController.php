@@ -57,6 +57,7 @@ class ArchiveItemEditController
             'description' => ['ar' => $item->description_ar, 'en' => $item->description_en],
             'place' => ['ar' => $item->getAttribute('place_ar'), 'en' => $item->getAttribute('place_en')],
             'content' => $date instanceof PartialDate ? $date->toArray() : null,
+            'theme_ids' => $item->themes()->pluck('themes.id')->all(),
             'date_note' => $item->getAttribute('content_date_note'),
             'people_names' => $item->people_names ?? [],
             'keywords' => $item->keywords ?? [],
