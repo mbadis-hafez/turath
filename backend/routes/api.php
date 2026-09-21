@@ -236,6 +236,7 @@ Route::prefix('v1')->group(function () {
             Route::get('admin/archive-items', AdminArchiveItemIndexController::class);
             Route::post('admin/archive-items/bulk', ArchiveItemBulkController::class);
             Route::get('admin/archive-items/{archiveItem}', [ArchiveItemEditController::class, 'show'])->whereNumber('archiveItem');
+            Route::patch('archive-items/{archiveItem}/themes', [ThemeController::class, 'syncArchiveItem'])->whereNumber('archiveItem');
             Route::post('archive-items/{archiveItem}/submit-review', [ArchiveItemEditController::class, 'submitReview'])->whereNumber('archiveItem');
             Route::post('archive-items/{archiveItem}/file', [ArchiveItemFileController::class, 'store'])->whereNumber('archiveItem');
             Route::delete('archive-items/{archiveItem}/file', [ArchiveItemFileController::class, 'destroy'])->whereNumber('archiveItem');

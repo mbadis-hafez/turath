@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Models\ArchiveItem;
 use App\Models\Artist;
 use App\Models\Artwork;
 use App\Models\Event;
@@ -38,13 +39,18 @@ class ThemeController
         return $this->syncFor($request, $event);
     }
 
+    public function syncArchiveItem(Request $request, ArchiveItem $archiveItem): JsonResponse
+    {
+        return $this->syncFor($request, $archiveItem);
+    }
+
     public function syncArtwork(Request $request, Artwork $artwork): JsonResponse
     {
         return $this->syncFor($request, $artwork);
     }
 
     /** D123: one taxonomy for artists, artworks and events. */
-    private function syncFor(Request $request, Artist|Event|Artwork $record): JsonResponse
+    private function syncFor(Request $request, Artist|Event|Artwork|ArchiveItem $record): JsonResponse
     {
         $data = $request->validate(['theme_ids' => ['present', 'array'], 'theme_ids.*' => ['integer', 'exists:themes,id'], 'edit_summary' => ['nullable', 'string', 'max:255']]);
         $changes = $record->themes()->sync($data['theme_ids']);

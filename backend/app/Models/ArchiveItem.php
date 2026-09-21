@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ArchiveItem extends Model
@@ -47,6 +48,14 @@ class ArchiveItem extends Model
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+    /**
+     * @return MorphToMany<Theme, $this>
+     */
+    public function themes(): MorphToMany
+    {
+        return $this->morphToMany(Theme::class, 'taggable', 'theme_taggables');
     }
 
     /**

@@ -71,6 +71,7 @@ class ArchiveItemResource extends JsonResource
             ],
             'license' => $item->license,
             'publication_status' => $item->publication_status,
+            'artists' => $this->publicArtists($item),
             'restricted' => false,
             'files' => $item->relationLoaded('files')
                 ? $item->files->map(fn ($file) => [
@@ -100,11 +101,35 @@ class ArchiveItemResource extends JsonResource
                 'en' => $item->title_en,
             ],
             'content' => self::date($item->content),
+            // Descriptive metadata only: who it is about and where, never the description or the files.
+            'place' => ['ar' => $item->getAttribute('place_ar'), 'en' => $item->getAttribute('place_en')],
+            'artists' => $this->publicArtists($item),
             'access_level' => $item->access_level,
             'publication_status' => $item->publication_status,
             'restricted' => true,
             'restricted_reason' => 'access_level',
         ];
+    }
+
+    /**
+     * Names of the published artists this item is linked to. Draft or merged artists never surface
+     * here, even on the item's own card.
+     *
+     * @return array<int, array{id: int, slug: string, name: array{ar: string|null, en: string|null}}>
+     */
+    private function publicArtists(ArchiveItem $item): array
+    {
+        if (! $item->relationLoaded('links')) {
+            return [];
+        }
+
+        return $item->links
+            ->map(fn ($link) => $link->linkable)
+            ->filter(fn ($e) => $e instanceof Artist && $e->publication_status === 'published' && $e->merged_into_id === null)
+            ->unique('id')
+            ->map(fn (Artist $a) => ['id' => $a->id, 'slug' => $a->slug, 'name' => ['ar' => $a->name_ar, 'en' => $a->name_en]])
+            ->values()
+            ->all();
     }
 
     /**
