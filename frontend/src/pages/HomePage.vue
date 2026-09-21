@@ -67,9 +67,10 @@ async function load(): Promise<void> {
   }
 }
 
+/** The box says "artist, artwork, article, photograph", so it searches all of them, not just the archive. */
 function search(term = query.value): void {
   const cleaned = term.trim();
-  void pushLocalePath("archive.records", {}, cleaned === "" ? {} : { q: cleaned });
+  void pushLocalePath(cleaned === "" ? "archive.records" : "search", {}, cleaned === "" ? {} : { q: cleaned });
 }
 
 function applySuggestion(suggestion: Bilingual): void {
@@ -293,7 +294,7 @@ onBeforeUnmount(() => controller?.abort());
           <RouterLink
             v-for="place in overview?.places ?? []"
             :key="`${place.name.ar}-${place.name.en}`"
-            :to="localePath('archive.records', {}, { q: text(place.name) })"
+            :to="localePath('archive.records', {}, { place: text(place.name) })"
             class="flex items-center justify-between gap-4 border-b border-line py-3.25 transition-colors hover:text-accent"
           >
             <span class="text-[15px] text-ink">{{ text(place.name) }}</span>
@@ -318,12 +319,12 @@ onBeforeUnmount(() => controller?.abort());
           </p>
           <div class="mt-6 flex flex-wrap gap-3">
             <RouterLink
-              :to="localePath('login')"
+              :to="localePath('submit')"
               class="bg-ink px-5.5 py-3 text-[14.5px] font-semibold text-paper transition-colors hover:bg-accent"
               >{{ t("home.contribute.submit") }}</RouterLink
             >
             <RouterLink
-              :to="localePath('timeline')"
+              :to="localePath('methodology')"
               class="border border-ink px-5.5 py-3 text-[14.5px] font-semibold text-ink transition-colors hover:bg-ink hover:text-paper"
               >{{ t("home.contribute.methodology") }}</RouterLink
             >

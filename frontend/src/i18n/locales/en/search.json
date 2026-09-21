@@ -70,5 +70,7 @@
     "events": "{count} events",
     "viewProfile": "View artist profile"
   },
-  "restricted": "Restricted access"
+  "restricted": "Restricted access",
+  "prompt": "Search across artists, artworks, archival materials and events.",
+  "tooShort": "Type at least {min} characters to search."
 }

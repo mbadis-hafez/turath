@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import type { RouteLocationRaw } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 import { formatNumber } from "@/utils/format";
 import type { AppLocale } from "@/i18n";
 
-const props = defineProps<{ title: string; count?: number }>();
+const props = defineProps<{ title: string; count?: number; to?: RouteLocationRaw }>();
 
 const { t, locale } = useI18n();
 
@@ -28,13 +29,14 @@ const formattedCount = computed(() =>
         >{{ formattedCount }}</span
       >
     </h2>
-    <a
-      href="#"
+    <RouterLink
+      v-if="to"
+      :to="to"
       class="shrink-0 text-sm text-accent underline-offset-4 hover:text-accent-strong hover:underline"
-      @click.prevent
+      data-testid="view-all"
     >
       {{ t("search.viewAll") }}
       <span aria-hidden="true" class="inline-block rtl:-scale-x-100">→</span>
-    </a>
+    </RouterLink>
   </header>
 </template>

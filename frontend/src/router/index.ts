@@ -101,6 +101,12 @@ const routes: RouteRecordRaw[] = [
     meta: { titleKey: "methodology.crumb" },
   },
   {
+    path: "/:locale/search",
+    name: "search",
+    component: () => import("@/pages/SearchPage.vue"),
+    meta: { titleKey: "search.searchLabel" },
+  },
+  {
     path: "/:locale/submit",
     name: "submit",
     component: () => import("@/pages/MaterialSubmissionPage.vue"),
