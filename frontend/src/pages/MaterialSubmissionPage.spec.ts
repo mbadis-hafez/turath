@@ -50,6 +50,27 @@ beforeEach(() => {
   });
 });
 
+describe("MaterialSubmissionPage (arriving from a link)", () => {
+  it("pre-selects the researcher role from ?role=researcher, and the visitor can still change it", async () => {
+    await router.push("/en/submit?role=researcher");
+    const wrapper = mountWithPlugins(MaterialSubmissionPage, { locale: "en", router });
+    await flushPromises();
+
+    const role = wrapper.get("[data-testid=role]");
+    expect((role.element as HTMLSelectElement).value).toBe("researcher");
+    await role.setValue("artist");
+    expect((role.element as HTMLSelectElement).value).toBe("artist");
+  });
+
+  it("ignores a role it does not recognise and leaves the choice empty", async () => {
+    await router.push("/en/submit?role=admin");
+    const wrapper = mountWithPlugins(MaterialSubmissionPage, { locale: "en", router });
+    await flushPromises();
+
+    expect((wrapper.get("[data-testid=role]").element as HTMLSelectElement).value).toBe("");
+  });
+});
+
 describe("MaterialSubmissionPage", () => {
   it("explains the four steps beside the form", async () => {
     const wrapper = await mountPage();

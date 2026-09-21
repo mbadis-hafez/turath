@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from "vue";
+import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 import { submitMaterial } from "@/api/submissions";
@@ -9,9 +10,12 @@ import { ApiError } from "@/types/api";
 import { MAX_TOTAL_BYTES, SUBMITTER_ROLES } from "@/types/submission";
 
 const { t } = useI18n();
+const route = useRoute();
 const { localePath } = useLocalePath();
 
-const form = reactive({ name: "", contact: "", role: "", city: "", description: "", attested: false });
+/** A link such as "For researchers" arrives with the role already chosen; anything unrecognised is ignored. */
+const linkedRole = SUBMITTER_ROLES.find((r) => r === route.query.role) ?? "";
+const form = reactive({ name: "", contact: "", role: linkedRole as string, city: "", description: "", attested: false });
 const files = ref<File[]>([]);
 const fileProblems = ref<string[]>([]);
 const dragging = ref(false);

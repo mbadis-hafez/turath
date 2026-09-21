@@ -24,6 +24,7 @@ const timelineLink = computed(() => localePath("timeline"));
 const proposalsLink = computed(() => localePath("proposals"));
 const submitLink = computed(() => localePath("submit"));
 const methodologyLink = computed(() => localePath("methodology"));
+const researcherLink = computed(() => localePath("submit", {}, { role: "researcher" }));
 const materialsLink = computed(() => localePath("admin.materials"));
 const canReviewProposals = computed(() =>
   ["artists.manage", "artworks.manage", "archive.manage", "events.manage"].some((p) => auth.can(p)),
@@ -232,9 +233,9 @@ async function logout(): Promise<void> {
             >
               {{ $t("home.footer.contact") }}
             </h2>
-            <a href="#" class="transition-colors hover:text-ink" @click.prevent>{{
+            <RouterLink :to="researcherLink" class="transition-colors hover:text-ink">{{
               $t("home.footer.researchers")
-            }}</a>
+            }}</RouterLink>
             <RouterLink :to="submitLink" class="transition-colors hover:text-ink">{{
               $t("home.footer.owners")
             }}</RouterLink>

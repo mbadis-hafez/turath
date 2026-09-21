@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 
+import { useLocalePath } from "@/composables/useLocalePath";
+
 const { t } = useI18n();
+const { localePath } = useLocalePath();
+
+/** Researchers register their material through the same form as everyone else, with their role already chosen. */
+const researcherLink = localePath("submit", {}, { role: "researcher" });
 
 const STEPS = ["collect", "digitize", "document", "access"] as const;
 /** The labels visitors meet on records, with the look each one has where it appears. */
@@ -49,9 +55,12 @@ const LABELS = [
         <div class="mt-4 border-t-2 border-ink pt-6">
           <p class="text-pretty text-lg leading-loose text-ink">{{ t("methodology.rights.body") }}</p>
           <div class="mt-8 flex flex-wrap gap-4">
-            <!-- The rights policy and researcher pages are not written yet; disabled rather than linked to nowhere. -->
-            <button v-for="k in ['policy', 'researchers']" :key="k" type="button" class="border border-ink px-8 py-4 text-lg font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-50" disabled :title="t('methodology.rights.soon')" :data-testid="`rights-${k}`">
-              {{ t(`methodology.rights.${k}`) }}
+            <RouterLink :to="researcherLink" class="border border-ink px-8 py-4 text-lg font-semibold text-ink transition-colors hover:bg-ink hover:text-paper" data-testid="rights-researchers">
+              {{ t("methodology.rights.researchers") }}
+            </RouterLink>
+            <!-- The rights policy page is not written yet; disabled rather than linked to nowhere. -->
+            <button type="button" class="border border-ink px-8 py-4 text-lg font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-50" disabled :title="t('methodology.rights.soon')" data-testid="rights-policy">
+              {{ t("methodology.rights.policy") }}
             </button>
           </div>
         </div>

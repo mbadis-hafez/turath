@@ -150,6 +150,7 @@ describe("AppLayout footer", () => {
 
     expect(hrefOf("Methodology")).toBe("/en/about/methodology");
     expect(hrefOf("For owners")).toBe("/en/submit");
+    expect(hrefOf("For researchers")).toBe("/en/submit?role=researcher");
   });
 });
 
