@@ -29,7 +29,18 @@
   "sources": {
     "direct_edit": "تعديل مباشر",
     "approved_proposal": "اقتراح مقبول",
-    "rollback": "تراجع"
+    "rollback": "تراجع",
+    "audit": "سجل التدقيق"
+  },
+  "auditEvents": {
+    "created": "إضافة",
+    "updated": "تعديل",
+    "deleted": "إزالة"
+  },
+  "contactParts": {
+    "created": "إضافة {n}",
+    "updated": "تعديل {n}",
+    "deleted": "إزالة {n}"
   },
   "submittedBy": "اقترحه {name}",
   "reviewedBy": "راجعه {name}",

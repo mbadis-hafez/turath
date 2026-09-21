@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Models\Revision;
 use App\Support\Completeness\CitableTypeResolver;
+use App\Support\Proposals\AuditTrail;
 use App\Support\Proposals\RollbackService;
 use App\Support\Proposals\UnpublishConfirmationRequired;
 use Illuminate\Http\JsonResponse;
@@ -21,7 +22,12 @@ class RevisionController
             ->where('citable_type', $entry['model'])->where('citable_id', $id)
             ->orderByDesc('revision_number')->get();
 
-        return response()->json(['data' => $revisions->map(fn (Revision $r) => self::present($r))->values()]);
+        $history = $revisions->map(fn (Revision $r) => self::present($r))
+            ->concat(AuditTrail::forRecord($entry['model'], $id))
+            ->sortByDesc('applied_at')
+            ->values();
+
+        return response()->json(['data' => $history]);
     }
 
     public function rollback(Request $request, string $type, int $id, Revision $revision): JsonResponse

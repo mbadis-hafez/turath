@@ -44,11 +44,11 @@ export interface Proposal {
   conflicts?: ProposalConflict[];
 }
 
-export type RevisionSource = "direct_edit" | "approved_proposal" | "rollback";
+export type RevisionSource = "direct_edit" | "approved_proposal" | "rollback" | "audit";
 
 export interface Revision {
   id: string;
-  revision_number: number;
+  revision_number: number | null;
   source: RevisionSource;
   edit_proposal_id: string | null;
   field_diffs: Record<string, { old: unknown; new: unknown }>;
@@ -56,6 +56,12 @@ export interface Revision {
   applied_by: { id: number; name: string } | null;
   applied_at: string;
   reverted_by_revision_id: string | null;
+  /** Audit-log entries (child rows, encrypted values): informational only, never revertible. */
+  event?: string | null;
+  description?: string | null;
+  subject_label?: string | null;
+  edit_summary?: string | null;
+  contacts_changed?: Record<string, number> | null;
 }
 
 export interface ProposalsPage {

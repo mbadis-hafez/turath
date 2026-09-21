@@ -29,7 +29,18 @@
   "sources": {
     "direct_edit": "Direct edit",
     "approved_proposal": "Approved proposal",
-    "rollback": "Rollback"
+    "rollback": "Rollback",
+    "audit": "Audit log"
+  },
+  "auditEvents": {
+    "created": "Added",
+    "updated": "Changed",
+    "deleted": "Removed"
+  },
+  "contactParts": {
+    "created": "{n} added",
+    "updated": "{n} updated",
+    "deleted": "{n} removed"
   },
   "submittedBy": "Suggested by {name}",
   "reviewedBy": "Reviewed by {name}",

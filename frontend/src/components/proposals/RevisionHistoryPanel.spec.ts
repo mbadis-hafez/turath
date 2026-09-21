@@ -87,4 +87,58 @@ describe("RevisionHistoryPanel", () => {
     expect(api.rollbackRevision).toHaveBeenLastCalledWith("artists", 7, "r2", true);
     expect(wrapper.emitted("rolledBack")).toHaveLength(1);
   });
+
+  it("renders audit entries with their subject and diff, but no rollback", async () => {
+    api.listRevisions.mockResolvedValue({
+      data: [
+        revision(1),
+        {
+          id: "audit-90", revision_number: null, source: "audit", edit_proposal_id: null,
+          event: "updated", description: "updated", subject_label: "Award: Prize 4",
+          edit_summary: null, contacts_changed: null,
+          field_diffs: { place_en: { old: "Ministry", new: "Royal Academy" } },
+          field_labels: { place_en: { ar: "الجهة", en: "Place (English)" } },
+          applied_by: { id: 5, name: "Fidha" }, applied_at: "2026-09-21T10:00:00Z", reverted_by_revision_id: null,
+        } satisfies Revision,
+      ],
+    });
+    pinia = signIn(["artists.manage"]);
+    const wrapper = mount();
+    await flushPromises();
+
+    const rows = wrapper.findAll("[data-testid=revision]");
+    expect(rows).toHaveLength(2);
+    expect(rows[1].get("[data-testid=audit-subject]").text()).toBe("Award: Prize 4");
+    expect(rows[1].find("[data-testid=revision-number]").exists()).toBe(false);
+    expect(rows[1].get("[data-testid=revision-source]").text()).toBe("Audit log");
+    expect(rows[1].get("[data-testid=audit-event]").text()).toBe("Changed");
+    expect(rows[1].find("[data-testid=rollback]").exists()).toBe(false);
+    expect(api.rollbackRevision).not.toHaveBeenCalled();
+
+    await rows[1].get("[data-testid=toggle-diff]").trigger("click");
+    expect(wrapper.get("[data-testid=field-diffs]").text()).toContain("Place (English)");
+  });
+
+  it("renders a contacts-changed audit entry as a counts summary without a diff", async () => {
+    api.listRevisions.mockResolvedValue({
+      data: [
+        {
+          id: "audit-91", revision_number: null, source: "audit", edit_proposal_id: null,
+          event: "updated", description: "contacts changed", subject_label: null,
+          edit_summary: null, contacts_changed: { created: 1, updated: 2, deleted: 0 },
+          field_diffs: {}, field_labels: {},
+          applied_by: { id: 5, name: "Fidha" }, applied_at: "2026-09-21T10:00:00Z", reverted_by_revision_id: null,
+        } satisfies Revision,
+      ],
+    });
+    pinia = signIn(["artists.manage"]);
+    const wrapper = mount();
+    await flushPromises();
+
+    const row = wrapper.get("[data-testid=revision]");
+    expect(row.get("[data-testid=audit-subject]").text()).toBe("contacts changed");
+    expect(row.get("[data-testid=contacts-summary]").text()).toBe("1 added · 2 updated");
+    expect(row.find("[data-testid=toggle-diff]").exists()).toBe(false);
+    expect(row.find("[data-testid=rollback]").exists()).toBe(false);
+  });
 });
