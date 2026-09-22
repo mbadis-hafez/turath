@@ -4,11 +4,12 @@ import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 import {
-  deleteArtistPortrait, setArtistPortraitRights, syncArtistEntries, syncArtistSocialLinks,
-  updateArtist, updateArtistCuration, uploadArtistPortrait, verifyArtist,
+  deleteArtistPortrait, searchStaffOptions, setArtistPortraitRights, syncArtistEntries, syncArtistSocialLinks,
+  updateArtist, updateArtistAssignment, updateArtistCuration, uploadArtistPortrait, verifyArtist,
 } from "@/api/artistCuration";
 import ContactsEditor from "@/components/curation/ContactsEditor.vue";
 import DraftStatusBanner from "@/components/curation/DraftStatusBanner.vue";
+import EntityPicker, { type PickerOption } from "@/components/curation/EntityPicker.vue";
 import EntryListEditor from "@/components/curation/EntryListEditor.vue";
 import PortraitPicker from "@/components/curation/PortraitPicker.vue";
 import SocialLinksEditor from "@/components/curation/SocialLinksEditor.vue";
@@ -25,7 +26,7 @@ import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
 import type { ArtistDraftPayload } from "@/types/proposal";
 import type {
-  ArtistCuration, AuthLetterStatus, BioSourceType, CurationUpdate, OwnerType, PortraitRights, PreAgreementStatus,
+  ArtistCuration, AuthLetterStatus, BioSourceType, CurationUpdate, OwnerType, PortraitRights, PreAgreementStatus, StaffOption,
 } from "@/types/artistCuration";
 import { SEVERITY_BADGE_CLASS } from "@/utils/severity";
 import { firstBlockReason } from "@/utils/verifyBlocker";
@@ -50,6 +51,28 @@ const BIO_SOURCES: BioSourceType[] = ["citation", "derived_from_linked_materials
 const profile = useArtistProfileForm();
 const portraitRights = ref<PortraitRights>("unknown");
 const portraitBusy = ref(false);
+
+// Who is responsible for progressing this record — operational metadata, not
+// editorial content, so it's applied directly (like Verify/Portrait) rather
+// than staged through the draft/review pipeline.
+const assignee = ref<PickerOption | null>(null);
+const assigneeBusy = ref(false);
+async function searchStaff(q: string): Promise<PickerOption[]> {
+  const { data } = await searchStaffOptions(q);
+  return data.map((s: StaffOption) => ({ id: s.id, label: `${s.name} (${s.email})` }));
+}
+async function onAssigneeChange(next: PickerOption | null): Promise<void> {
+  assignee.value = next;
+  assigneeBusy.value = true;
+  actionError.value = null;
+  try {
+    await updateArtistAssignment(id.value, next?.id ?? null);
+  } catch (err) {
+    actionError.value = err instanceof Error ? err.message : t("errors.generic");
+  } finally {
+    assigneeBusy.value = false;
+  }
+}
 
 // Editors (and admins, who also hold proposals.submit) work through the draft
 // pipeline: saves upsert a draft proposal instead of touching the live record.
@@ -79,6 +102,7 @@ function applyCuration(c: ArtistCuration): void {
   form.bio_source_type = c.bio.source_type;
   profile.load(c);
   portraitRights.value = c.portrait.rights_status;
+  assignee.value = c.assigned_to ? { id: c.assigned_to.id, label: `${c.assigned_to.name} (${c.assigned_to.email})` } : null;
 }
 
 /** Draft sections win over live data when initializing the form models. */
@@ -445,6 +469,10 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
                   <option v-for="s in AGREEMENT" :key="s" :value="s">{{ t(`curation.docStatus.${s}`) }}</option>
                 </select>
               </label>
+              <div class="text-xs text-ink-muted" data-testid="assigned-staff">{{ t("curation.detail.assignedStaff") }}
+                <EntityPicker :model-value="assignee" :search="searchStaff" :placeholder="t('curation.detail.assignedStaffPlaceholder')" @update:model-value="onAssigneeChange" />
+                <p class="mt-1 text-ink-faint">{{ assigneeBusy ? t("curation.detail.saving") : t("curation.detail.assignedStaffHelp") }}</p>
+              </div>
               <label class="text-xs text-ink-muted sm:col-span-2">{{ t("curation.detail.supervisor") }}<input v-model="form.ref_supervisor_note" type="text" :class="input" /></label>
             </div>
           </section>

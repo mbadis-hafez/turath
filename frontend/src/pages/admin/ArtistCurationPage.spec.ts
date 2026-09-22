@@ -9,7 +9,10 @@ import { mountWithPlugins } from "@/test/utils";
 import { ApiError } from "@/types/api";
 import type { ArtistCuration } from "@/types/artistCuration";
 
-const api = vi.hoisted(() => ({ getArtistCuration: vi.fn(), updateArtistCuration: vi.fn(), verifyArtist: vi.fn() }));
+const api = vi.hoisted(() => ({
+  getArtistCuration: vi.fn(), updateArtistCuration: vi.fn(), verifyArtist: vi.fn(),
+  searchStaffOptions: vi.fn(), updateArtistAssignment: vi.fn(),
+}));
 vi.mock("@/api/artistCuration", () => api);
 
 const editorial = vi.hoisted(() => ({ getDraft: vi.fn(), saveDraft: vi.fn(), submitDraft: vi.fn() }));
@@ -54,6 +57,8 @@ async function mountPage(permissions: string[] = ["artists.manage"]) {
 
 beforeEach(() => {
   api.getArtistCuration.mockReset().mockResolvedValue({ data: bundle() });
+  api.searchStaffOptions.mockReset().mockResolvedValue({ data: [{ id: 5, name: "Samar", email: "samar@hafezgallery.com" }] });
+  api.updateArtistAssignment.mockReset().mockResolvedValue({ data: { id: 5, name: "Samar", email: "samar@hafezgallery.com" } });
   editorial.getDraft.mockReset().mockResolvedValue({ data: null });
   editorial.saveDraft.mockReset().mockResolvedValue({ data: { status: "draft" } });
   editorial.submitDraft.mockReset().mockResolvedValue({ data: { status: "pending" } });
@@ -120,6 +125,34 @@ describe("ArtistCurationPage", () => {
     useAuthStore().$patch({ user: { id: 2, name: "R", email: "r@x", roles: ["reader"], permissions: [] } as never });
     await flushPromises();
     expect(wrapper.find("[data-testid=contact-section]").exists()).toBe(false);
+  });
+
+  describe("assigned staff", () => {
+    it("shows the record's current assignee and saves a change immediately, bypassing draft mode", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      api.getArtistCuration.mockResolvedValue({
+        data: bundle({ assigned_to: { id: 2, name: "Fidha", email: "fidha.fatma@hafezgallery.com" } }),
+      });
+      const wrapper = await mountPage(["artists.manage", "proposals.submit"]);
+      const picker = wrapper.get("[data-testid=assigned-staff]");
+      expect(picker.get("[data-testid=picked]").text()).toContain("Fidha");
+
+      await picker.get("[data-testid=picked] button").trigger("click");
+      await picker.get("[data-testid=picker-input]").setValue("Samar");
+      await vi.advanceTimersByTimeAsync(300);
+      await flushPromises();
+      await picker.get("[data-testid=picker-options] button").trigger("click");
+      await flushPromises();
+
+      expect(api.updateArtistAssignment).toHaveBeenCalledWith(36, 5);
+      expect(editorial.saveDraft).not.toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it("shows no assignee when the record has none", async () => {
+      const wrapper = await mountPage();
+      expect(wrapper.get("[data-testid=assigned-staff]").find("[data-testid=picked]").exists()).toBe(false);
+    });
   });
 
   describe("draft mode (proposals.submit)", () => {
