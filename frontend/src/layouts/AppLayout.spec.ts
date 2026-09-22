@@ -183,6 +183,14 @@ describe("AppLayout main menu (signed in)", () => {
     expect(link(wrapper, "archive").attributes("href")).toBe("/en/archive");
   });
 
+  it("gives a reviewer the proposals tool labeled as the review queue, without record-manage permissions", async () => {
+    signIn(["review_queue.second_source_needed"]);
+    const wrapper = await mountAt("/en");
+
+    expect(link(wrapper, "proposals").text()).toBe("Review queue");
+    expect(nav(wrapper).find("[data-testid=tools-toggle]").exists()).toBe(false);
+  });
+
   it("gives a signed-in user with no tools just the sections and their dashboard", async () => {
     signIn([]);
     const wrapper = await mountAt("/en");

@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 import AlsoKnownAs from "@/components/artists/AlsoKnownAs.vue";
 import LifeDates from "@/components/artists/LifeDates.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
-import { useLocalePath } from "@/composables/useLocalePath";
-import { useAuthStore } from "@/stores/auth";
+import CorrectionBox from "@/components/proposals/CorrectionBox.vue";
 import type { AppLocale } from "@/i18n";
 import type { Artist, Bilingual } from "@/types/artist";
 import { formatDateTime } from "@/utils/format";
@@ -15,9 +13,6 @@ import { formatLifeDates } from "@/utils/lifeDates";
 
 const props = defineProps<{ artist: Artist }>();
 const { t, locale } = useI18n();
-const route = useRoute();
-const auth = useAuthStore();
-const { localePath } = useLocalePath();
 
 const hasText = (v: Bilingual | null | undefined) => Boolean(v?.ar?.trim() || v?.en?.trim());
 const life = (d: Artist["birth"] | null) => (d && formatLifeDates(d, locale.value as "ar" | "en") !== null ? d : null);
@@ -27,13 +22,6 @@ const hasLifeDates = computed(() => birth.value !== null || death.value !== null
 
 const verified = computed(() => props.artist.verified_status === "verified");
 const recordDate = computed(() => (props.artist.record_date ? new Intl.DateTimeFormat(locale.value, { dateStyle: "medium" }).format(new Date(props.artist.record_date)) : null));
-
-/** Signed-in contributors go straight to the suggestion form; visitors sign in first and come back to it. */
-const suggestTarget = computed(() => localePath("suggest", { type: "artists", id: props.artist.id }));
-const correctionLink = computed(() =>
-  auth.isAuthenticated ? suggestTarget.value : { ...localePath("login"), query: { redirect: `/${route.params.locale}/suggest/artists/${props.artist.id}` } },
-);
-const canCorrect = computed(() => !auth.isAuthenticated || auth.can("proposals.submit"));
 </script>
 
 <template>
@@ -58,10 +46,6 @@ const canCorrect = computed(() => !auth.isAuthenticated || auth.can("proposals.s
 
     <AlsoKnownAs v-if="artist.also_known_as.length > 0" class="mt-6" :variants="artist.also_known_as" />
 
-    <section class="mt-8 border border-ink p-6" data-testid="correction-box">
-      <h2 class="text-xl font-semibold text-ink">{{ t("artists.correction.title") }}</h2>
-      <p class="mt-3 text-pretty text-sm leading-relaxed text-ink-muted">{{ t("artists.correction.body") }}</p>
-      <RouterLink v-if="canCorrect" :to="correctionLink" class="mt-5 block border border-ink py-3 text-center font-semibold text-ink hover:bg-ink hover:text-paper" data-testid="send-correction">{{ t("artists.correction.send") }}</RouterLink>
-    </section>
+    <CorrectionBox :id="artist.slug" class="mt-8" type="artists" />
   </aside>
 </template>

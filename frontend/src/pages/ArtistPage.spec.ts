@@ -266,14 +266,14 @@ describe("ArtistPage", () => {
     const visitor = await mountPage("/en/artists/inji-efflatoun", "en");
     const href = visitor.get("[data-testid=send-correction]").attributes("href")!;
     expect(href).toContain("/en/login");
-    expect(decodeURIComponent(href)).toContain("redirect=/en/suggest/artists/7");
+    expect(decodeURIComponent(href)).toContain("redirect=/en/suggest/artists/inji-efflatoun");
   });
 
   it("sends a signed-in contributor straight to the suggestion form, and hides the button from a user who cannot suggest", async () => {
     vi.mocked(getArtist).mockResolvedValue({ data: makeArtist() });
 
     const contributor = await mountPage("/en/artists/inji-efflatoun", "en", ["proposals.submit"]);
-    expect(contributor.get("[data-testid=send-correction]").attributes("href")).toBe("/en/suggest/artists/7");
+    expect(contributor.get("[data-testid=send-correction]").attributes("href")).toBe("/en/suggest/artists/inji-efflatoun");
 
     const reader = await mountPage("/en/artists/inji-efflatoun", "en", []);
     expect(reader.find("[data-testid=send-correction]").exists()).toBe(false);

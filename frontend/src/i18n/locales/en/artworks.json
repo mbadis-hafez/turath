@@ -36,5 +36,10 @@
   "attributionHelp": "This artwork's attribution has not been fully confirmed",
   "noResults": "No matching artworks",
   "noneForArtist": "No artworks recorded yet",
-  "events": "Events"
+  "events": "Events",
+  "correction": {
+    "title": "Know more about this artwork?",
+    "body": "The details on this page are drawn from archival material. If you have a source that corrects them, or that adds to them, send it to us.",
+    "send": "Send a correction"
+  }
 }

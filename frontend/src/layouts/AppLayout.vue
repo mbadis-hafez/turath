@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 
 import { useAuthStore } from "@/stores/auth";
 import { useLocalePath } from "@/composables/useLocalePath";
+import { canReviewProposals } from "@/utils/permissions";
 import type { AppLocale } from "@/i18n";
 
 const { t } = useI18n();
@@ -28,10 +29,8 @@ const submitLink = computed(() => localePath("submit"));
 const methodologyLink = computed(() => localePath("methodology"));
 const researcherLink = computed(() => localePath("submit", {}, { role: "researcher" }));
 const materialsLink = computed(() => localePath("admin.materials"));
-const canReviewProposals = computed(() =>
-  ["artists.manage", "artworks.manage", "archive.manage", "events.manage"].some((p) => auth.can(p)),
-);
-const showProposals = computed(() => canReviewProposals.value || auth.can("proposals.submit"));
+const canReviewProposalsFlag = computed(() => canReviewProposals((p) => auth.can(p)));
+const showProposals = computed(() => canReviewProposalsFlag.value || auth.can("proposals.submit"));
 const registryLink = computed(() => localePath("admin.artists"));
 const artworkRegistryLink = computed(() => localePath("admin.artworks"));
 const eventsRegistryLink = computed(() => localePath("admin.events"));
@@ -68,7 +67,7 @@ const toolGroups = computed<ToolGroup[]>(() => {
   if (!auth.isAuthenticated) return [];
   const groups: [string, [boolean, string, string, RouteLocationRaw][]][] = [
     ["review", [
-      [showProposals.value, "proposals", canReviewProposals.value ? t("proposals.queueTitle") : t("proposals.mineTitle"), proposalsLink.value],
+      [showProposals.value, "proposals", canReviewProposalsFlag.value ? t("proposals.queueTitle") : t("proposals.mineTitle"), proposalsLink.value],
       [auth.can("materials.review"), "materials", t("submissions.title"), materialsLink.value],
     ]],
     ["catalog", [

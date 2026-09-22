@@ -9,6 +9,7 @@ import ErrorState from "@/components/common/ErrorState.vue";
 import PublicEventsList from "@/components/events/PublicEventsList.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import PartialDateDisplay from "@/components/common/PartialDateDisplay.vue";
+import CorrectionBox from "@/components/proposals/CorrectionBox.vue";
 import NotFoundPage from "@/pages/NotFoundPage.vue";
 import { useArtwork } from "@/composables/useArtwork";
 import { useDocumentTitle } from "@/composables/useDocumentTitle";
@@ -166,5 +167,7 @@ watch(
       <h2 class="text-lg font-semibold text-ink">{{ t("artworks.events") }}</h2>
       <PublicEventsList class="mt-2" :events="artwork.events" />
     </section>
+
+    <CorrectionBox :id="artwork.id" class="mt-10" type="artworks" />
   </article>
 </template>
