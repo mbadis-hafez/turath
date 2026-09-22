@@ -100,6 +100,18 @@ class Artist extends Model
     }
 
     /**
+     * The staff member currently responsible for progressing this record (D63's
+     * "artist_staff_assignments", built as a single assignee rather than a
+     * separate history table — nothing here needed more than one at a time).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function assignedTo(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to_user_id');
+    }
+
+    /**
      * Search columns are machine-maintained noise, never audited.
      *
      * @return array<int, string>
@@ -145,6 +157,7 @@ class Artist extends Model
             'living_status' => ['ar' => 'حالة الحياة', 'en' => 'Living status'],
             'verified_status' => ['ar' => 'حالة التوثيق', 'en' => 'Verified status'],
             'verified_by_user_id' => ['ar' => 'تم التوثيق بواسطة', 'en' => 'Verified by'],
+            'assigned_to_user_id' => ['ar' => 'الموظف المسؤول', 'en' => 'Responsible staff'],
             'verified_at' => ['ar' => 'تاريخ التوثيق', 'en' => 'Verified at'],
             'publication_status' => ['ar' => 'حالة النشر', 'en' => 'Publication status'],
         ];

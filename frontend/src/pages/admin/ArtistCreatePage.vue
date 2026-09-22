@@ -4,9 +4,11 @@ import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 import {
-  createArtist, syncArtistEntries, syncArtistSocialLinks, updateArtistCuration, uploadArtistPortrait,
+  createArtist, searchStaffOptions, syncArtistEntries, syncArtistSocialLinks, updateArtistAssignment,
+  updateArtistCuration, uploadArtistPortrait,
 } from "@/api/artistCuration";
 import ContactsEditor from "@/components/curation/ContactsEditor.vue";
+import EntityPicker, { type PickerOption } from "@/components/curation/EntityPicker.vue";
 import EntryListEditor from "@/components/curation/EntryListEditor.vue";
 import PortraitPicker from "@/components/curation/PortraitPicker.vue";
 import SocialLinksEditor from "@/components/curation/SocialLinksEditor.vue";
@@ -15,7 +17,7 @@ import ErrorState from "@/components/common/ErrorState.vue";
 import { useLocalePath } from "@/composables/useLocalePath";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
-import type { AuthLetterStatus, OwnerType, PortraitRights, PreAgreementStatus } from "@/types/artistCuration";
+import type { AuthLetterStatus, OwnerType, PortraitRights, PreAgreementStatus, StaffOption } from "@/types/artistCuration";
 
 const router = useRouter();
 const { t } = useI18n();
@@ -39,6 +41,11 @@ const form = reactive({
 const profile = useArtistProfileForm();
 const portraitFile = ref<File | null>(null);
 const portraitRights = ref<PortraitRights>("unknown");
+const assignee = ref<PickerOption | null>(null);
+async function searchStaff(q: string): Promise<PickerOption[]> {
+  const { data } = await searchStaffOptions(q);
+  return data.map((s: StaffOption) => ({ id: s.id, label: `${s.name} (${s.email})` }));
+}
 
 const submitting = ref(false);
 const error = ref<unknown>(null);
@@ -106,6 +113,9 @@ async function submit(): Promise<void> {
   if (portraitFile.value) {
     const file = portraitFile.value;
     steps.push(() => uploadArtistPortrait(id, file, portraitRights.value));
+  }
+  if (assignee.value) {
+    steps.push(() => updateArtistAssignment(id, assignee.value!.id));
   }
 
   for (const step of steps) {
@@ -234,6 +244,10 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
                 <label class="text-xs text-ink-muted">{{ t("curation.detail.ownerPreAgreement") }}
                   <select v-model="form.owner_pre_agreement_status" :class="input"><option v-for="s in AGREEMENT" :key="s" :value="s">{{ t(`curation.docStatus.${s}`) }}</option></select>
                 </label>
+                <div class="text-xs text-ink-muted">{{ t("curation.detail.assignedStaff") }}
+                  <EntityPicker v-model="assignee" :search="searchStaff" :placeholder="t('curation.detail.assignedStaffPlaceholder')" data-testid="assigned-staff" />
+                  <p class="mt-1 text-ink-faint">{{ t("curation.detail.assignedStaffHelp") }}</p>
+                </div>
                 <label class="text-xs text-ink-muted sm:col-span-2">{{ t("curation.detail.supervisor") }}<input v-model="form.ref_supervisor_note" type="text" :class="input" /></label>
               </div>
             </section>

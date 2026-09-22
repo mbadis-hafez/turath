@@ -38,6 +38,12 @@ export type ActivityType = "award" | "exhibition" | "talk" | "symposium";
 export type EntryGroup = "educations" | "activities";
 export type EntryGroups = Record<EntryGroup, ProfileEntry[]>;
 
+export interface StaffOption {
+  id: number;
+  name: string;
+  email: string;
+}
+
 export interface ArtistContact {
   id?: number;
   name: string | null;
@@ -125,6 +131,7 @@ export interface ArtistCuration {
   social_links: SocialLink[];
   portrait: PortraitInfo;
   contact: { owner_type: OwnerType | null; ref_supervisor_note: string | null };
+  assigned_to: StaffOption | null;
   contacts: ArtistContact[];
   pipeline: {
     authorization_letter: { status: AuthLetterStatus; file_id: number | null; file_name: string | null };

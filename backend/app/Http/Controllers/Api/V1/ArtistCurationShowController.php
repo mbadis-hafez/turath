@@ -39,6 +39,7 @@ class ArtistCurationShowController
             'social_links' => ArtistSocialLinksSyncController::present($artist),
             'portrait' => ArtistPortraitController::present($artist),
             'contact' => ['owner_type' => $artist->owner_type, 'ref_supervisor_note' => $artist->ref_supervisor_note],
+            'assigned_to' => ArtistAssignmentController::present($artist),
             'contacts' => $artist->contacts->map(fn ($c) => [
                 'id' => $c->id, 'name' => $c->name, 'role_note' => $c->role_note, 'email' => $c->email, 'phone' => $c->phone, 'address' => $c->address,
             ])->values(),

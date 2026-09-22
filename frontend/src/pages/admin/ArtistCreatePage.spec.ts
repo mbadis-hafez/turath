@@ -7,7 +7,10 @@ import ArtistCreatePage from "@/pages/admin/ArtistCreatePage.vue";
 import { useAuthStore } from "@/stores/auth";
 import { mountWithPlugins } from "@/test/utils";
 
-const api = vi.hoisted(() => ({ createArtist: vi.fn(), updateArtistCuration: vi.fn(), syncArtistEntries: vi.fn(), syncArtistSocialLinks: vi.fn(), uploadArtistPortrait: vi.fn() }));
+const api = vi.hoisted(() => ({
+  createArtist: vi.fn(), updateArtistCuration: vi.fn(), syncArtistEntries: vi.fn(), syncArtistSocialLinks: vi.fn(),
+  uploadArtistPortrait: vi.fn(), searchStaffOptions: vi.fn(), updateArtistAssignment: vi.fn(),
+}));
 vi.mock("@/api/artistCuration", () => api);
 
 let router: Router;
@@ -28,6 +31,8 @@ beforeEach(() => {
   api.syncArtistEntries.mockReset().mockResolvedValue({});
   api.syncArtistSocialLinks.mockReset().mockResolvedValue({});
   api.uploadArtistPortrait.mockReset().mockResolvedValue({ data: {} });
+  api.searchStaffOptions.mockReset().mockResolvedValue({ data: [{ id: 5, name: "Samar", email: "samar@hafezgallery.com" }] });
+  api.updateArtistAssignment.mockReset().mockResolvedValue({ data: { id: 5, name: "Samar", email: "samar@hafezgallery.com" } });
   router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -63,6 +68,35 @@ describe("ArtistCreatePage", () => {
     expect(api.createArtist).toHaveBeenCalledWith(expect.objectContaining({ name: { ar: null, en: "New Artist" }, living_status: "unknown" }));
     expect(api.updateArtistCuration).toHaveBeenCalledWith(77, expect.objectContaining({ contacts: [expect.objectContaining({ email: "a@b.co" })] }));
     expect(router.currentRoute.value.path).toBe("/en/admin/artists/77");
+  });
+
+  it("searches and assigns a real staff member, then saves the assignment after the artist is created", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const wrapper = await mountPage();
+    await wrapper.get("input[lang=en]").setValue("New Artist");
+
+    const picker = wrapper.get("[data-testid=assigned-staff]");
+    await picker.get("[data-testid=picker-input]").setValue("Samar");
+    await vi.advanceTimersByTimeAsync(300);
+    await flushPromises();
+    expect(api.searchStaffOptions).toHaveBeenCalledWith("Samar");
+    await picker.get("[data-testid=picker-options] button").trigger("click");
+    expect(picker.get("[data-testid=picked]").text()).toContain("Samar");
+
+    await wrapper.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(api.updateArtistAssignment).toHaveBeenCalledWith(77, 5);
+    vi.useRealTimers();
+  });
+
+  it("does not call the assignment endpoint when no staff member was picked", async () => {
+    const wrapper = await mountPage();
+    await wrapper.get("input[lang=en]").setValue("New Artist");
+    await wrapper.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(api.updateArtistAssignment).not.toHaveBeenCalled();
   });
 
   it("shows API field errors and stays on the page", async () => {

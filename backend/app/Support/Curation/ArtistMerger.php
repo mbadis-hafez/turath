@@ -20,7 +20,7 @@ class ArtistMerger
         'name_ar', 'name_en', 'bio_ar', 'bio_en', 'birth_place_ar', 'birth_place_en', 'death_place_ar', 'death_place_en',
         'birth_date_display', 'birth_year_from', 'birth_year_to', 'birth_calendar', 'birth_certainty',
         'death_date_display', 'death_year_from', 'death_year_to', 'death_calendar', 'death_certainty',
-        'living_status', 'nationality_ar', 'nationality_en', 'classification_ar', 'classification_en', 'owner_type', 'identified_through_note', 'ref_supervisor_note',
+        'living_status', 'nationality_ar', 'nationality_en', 'classification_ar', 'classification_en', 'owner_type', 'identified_through_note', 'ref_supervisor_note', 'assigned_to_user_id',
     ];
 
     /**

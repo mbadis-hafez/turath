@@ -11,6 +11,7 @@ import type {
   PortraitInfo,
   PortraitRights,
   SocialLink,
+  StaffOption,
   Theme,
 } from "@/types/artistCuration";
 
@@ -45,6 +46,14 @@ export function updateArtistCuration(
 
 export function verifyArtist(id: number): Promise<unknown> {
   return request({ method: "POST", url: `/api/v1/artists/${id}/verify`, data: { status: "verified" } });
+}
+
+export function searchStaffOptions(q: string, signal?: AbortSignal): Promise<{ data: StaffOption[] }> {
+  return request({ method: "GET", url: "/api/v1/staff-options", params: q ? { q } : {}, signal });
+}
+
+export function updateArtistAssignment(id: number, assignedToUserId: number | null): Promise<{ data: StaffOption | null }> {
+  return request({ method: "PATCH", url: `/api/v1/artists/${id}/assignment`, data: { assigned_to_user_id: assignedToUserId } });
 }
 
 export function mergeArtists(payload: {
