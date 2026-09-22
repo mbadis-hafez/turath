@@ -6,6 +6,7 @@ use App\Models\FieldCitation;
 use App\Models\ReviewQueueItem;
 use App\Models\Revision;
 use App\Models\Source;
+use App\Models\User;
 use Spatie\Activitylog\Models\Activity;
 
 function proposableArtist(array $overrides = []): Artist
@@ -263,4 +264,41 @@ it('lets a contributor see only their own proposals and reviewers see all', func
     $this->actingAs($other)->getJson("/api/v1/proposals/{$id}")->assertForbidden();
     Auth::forgetGuards();
     $this->actingAs($mine)->getJson("/api/v1/proposals/{$id}")->assertOk()->assertJsonPath('data.rationale', 'Found it in the catalogue.');
+});
+
+it('lets a reviewer see and settle contributor proposals through the review_queue permissions', function () {
+    $contributor = makeUser('contributor');
+    $artist = proposableArtist();
+    $id = propose($artist, $contributor, ['bio_en' => 'A fuller biography.'])->json('data.id');
+    Auth::forgetGuards();
+
+    $reviewer = makeUser('reviewer');
+    $this->actingAs($reviewer)->getJson('/api/v1/proposals?status=pending')
+        ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $id);
+    $this->actingAs($reviewer)->getJson("/api/v1/proposals/{$id}")->assertOk();
+
+    $this->actingAs($reviewer)->postJson("/api/v1/proposals/{$id}/approve", [])->assertOk();
+    expect($artist->refresh()->bio_en)->toBe('A fuller biography.');
+});
+
+it('scopes a review_queue permission holder to the queues they actually hold', function () {
+    seedRoles();
+    $auditor = User::factory()->create();
+    $auditor->givePermissionTo('review_queue.data_audit');
+
+    $contributor = makeUser('contributor');
+    $artist = proposableArtist();
+    $audit = propose($artist, $contributor, ['birth_year_from' => 1953])->json('data.id'); // data_audit
+    Auth::forgetGuards();
+    $claim = propose($artist, $contributor, ['bio_en' => 'Unsourced claim.'])->json('data.id'); // second_source_needed
+    Auth::forgetGuards();
+
+    // The index shows exactly the queues they can work, like /review-queue.
+    $this->actingAs($auditor)->getJson('/api/v1/proposals')
+        ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $audit);
+    $this->actingAs($auditor)->getJson("/api/v1/proposals/{$claim}")->assertForbidden();
+
+    // They can settle the data_audit proposal, but not one routed to a queue they do not hold.
+    $this->actingAs($auditor)->postJson("/api/v1/proposals/{$audit}/approve", [])->assertOk();
+    $this->actingAs($auditor)->postJson("/api/v1/proposals/{$claim}/reject", ['review_note' => 'Out of my lane.'])->assertForbidden();
 });

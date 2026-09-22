@@ -28,6 +28,7 @@ class EditProposal extends Model
     {
         return [
             'field_diffs' => 'array',
+            'payload' => 'array',
             'proposed_citations' => 'array',
             'reviewed_at' => 'datetime',
         ];

@@ -2,29 +2,17 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Requests\Artist\SyncArtistSocialLinksRequest;
 use App\Models\Artist;
 use App\Models\ArtistSocialLink;
-use App\Support\Curation\ChildSync;
+use App\Support\Curation\ArtistSections;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class ArtistSocialLinksSyncController
 {
-    public function __invoke(Request $request, Artist $artist): JsonResponse
+    public function __invoke(SyncArtistSocialLinksRequest $request, Artist $artist): JsonResponse
     {
-        $data = $request->validate([
-            'links' => ['present', 'array', 'max:30'],
-            'links.*.id' => ['nullable', 'integer'],
-            'links.*.platform' => ['required', Rule::in(ArtistSocialLink::PLATFORMS)],
-            'links.*.url' => ['required', 'url', 'max:500'],
-            'links.*.is_public' => ['sometimes', 'boolean'],
-            'edit_summary' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        ChildSync::sync($artist->socialLinks(), array_map(fn (array $l) => [
-            'id' => $l['id'] ?? null, 'platform' => $l['platform'], 'url' => $l['url'], 'is_public' => $l['is_public'] ?? false,
-        ], $data['links']));
+        (new ArtistSections)->syncSocialLinks($artist, $request->input('links', []));
 
         return response()->json(['data' => self::present($artist->refresh())]);
     }
