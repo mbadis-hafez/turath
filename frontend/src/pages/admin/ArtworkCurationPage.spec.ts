@@ -6,12 +6,16 @@ import { createMemoryHistory, createRouter, type Router } from "vue-router";
 import ArtworkCurationPage from "@/pages/admin/ArtworkCurationPage.vue";
 import { useAuthStore } from "@/stores/auth";
 import { mountWithPlugins } from "@/test/utils";
+import { ApiError } from "@/types/api";
 import type { ArtworkCuration } from "@/types/artworkCuration";
 
 const api = vi.hoisted(() => ({
   getArtworkCuration: vi.fn(), updateArtwork: vi.fn(), uploadArtworkImage: vi.fn(), updateArtworkImage: vi.fn(), deleteArtworkImage: vi.fn(), updateArtworkStage: vi.fn(), approveArtwork: vi.fn(),
 }));
 vi.mock("@/api/artworkCuration", () => api);
+
+const editorial = vi.hoisted(() => ({ getDraft: vi.fn(), saveDraft: vi.fn(), submitDraft: vi.fn() }));
+vi.mock("@/api/editorial", () => editorial);
 
 const dims = { height_cm: null, width_cm: null, depth_cm: null, raw: null };
 
@@ -36,10 +40,10 @@ function bundle(patch: Partial<ArtworkCuration> = {}): ArtworkCuration {
 
 let router: Router;
 
-async function mountPage() {
+async function mountPage(permissions: string[] = ["artworks.manage"]) {
   const pinia = createPinia();
   setActivePinia(pinia);
-  useAuthStore().$patch({ user: { id: 1, name: "E", email: "e@x", roles: ["editor"], permissions: ["artworks.manage"] } as never, initialized: true });
+  useAuthStore().$patch({ user: { id: 1, name: "E", email: "e@x", roles: ["editor"], permissions } as never, initialized: true });
   await router.push("/en/admin/artworks/7");
   const wrapper = mountWithPlugins(ArtworkCurationPage, { locale: "en", router, pinia });
   await flushPromises();
@@ -51,6 +55,9 @@ beforeEach(() => {
   api.updateArtwork.mockReset().mockResolvedValue({});
   api.updateArtworkStage.mockReset().mockResolvedValue({});
   api.approveArtwork.mockReset().mockResolvedValue({});
+  editorial.getDraft.mockReset().mockResolvedValue({ data: null });
+  editorial.saveDraft.mockReset().mockResolvedValue({ data: { status: "draft" } });
+  editorial.submitDraft.mockReset().mockResolvedValue({ data: { status: "pending" } });
   router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -128,5 +135,83 @@ describe("ArtworkCurationPage", () => {
     await flushPromises();
 
     expect(api.updateArtwork.mock.calls[0][1]).toMatchObject({ material_classification: "immovable", conservation_risk_note: "Stored in a humid room." });
+  });
+
+  describe("draft mode (proposals.submit)", () => {
+    it("saves the fields section through saveDraft instead of the direct endpoint", async () => {
+      const wrapper = await mountPage(["artworks.manage", "proposals.submit"]);
+
+      await wrapper.get("[data-testid=risk-note]").setValue("Humid storage.");
+      await wrapper.get("[data-testid=save-button]").trigger("click");
+      await flushPromises();
+
+      expect(editorial.saveDraft).toHaveBeenCalledTimes(1);
+      expect(editorial.saveDraft.mock.calls[0][0]).toBe("artworks");
+      expect(editorial.saveDraft.mock.calls[0][1]).toBe(7);
+      expect(editorial.saveDraft.mock.calls[0][2].fields).toMatchObject({ conservation_risk_note: "Humid storage.", category: "painting" });
+      expect(api.updateArtwork).not.toHaveBeenCalled();
+      expect(wrapper.get("[data-testid=saved-feedback]").text()).toBe("Saved to draft");
+    });
+
+    it("appends each pipeline toggle to the pipeline section instead of PATCHing the stage", async () => {
+      const wrapper = await mountPage(["artworks.manage", "proposals.submit"]);
+
+      await wrapper.get("[data-testid=pipeline] select").setValue("done");
+      await flushPromises();
+
+      expect(editorial.saveDraft).toHaveBeenCalledTimes(1);
+      expect(editorial.saveDraft.mock.calls[0][2]).toEqual({ pipeline: { stages: [{ stage_key: "work_category", status: "done" }] } });
+      expect(api.updateArtworkStage).not.toHaveBeenCalled();
+      expect(wrapper.get("[data-testid=draft-banner]").attributes("data-state")).toBe("draft");
+    });
+
+    it("initializes the form and the pipeline selects from draft sections", async () => {
+      editorial.getDraft.mockResolvedValue({
+        data: {
+          status: "draft",
+          payload: {
+            fields: { title: { ar: null, en: "Draft Title" }, material_classification: "immovable", risk_note: null },
+            pipeline: { stages: [{ stage_key: "work_category", status: "done" }] },
+          },
+        },
+      });
+      const wrapper = await mountPage(["artworks.manage", "proposals.submit"]);
+
+      expect(wrapper.get("[data-testid=draft-banner]").attributes("data-state")).toBe("draft");
+      expect(wrapper.get("[data-testid=pipeline] select").element).toHaveProperty("value", "done");
+      expect(wrapper.get("[data-testid=material-classification]").element).toHaveProperty("value", "immovable");
+      const titleInput = wrapper.findAll("input[type=text]").find((i) => (i.element as HTMLInputElement).value === "Draft Title");
+      expect(titleInput).toBeDefined();
+    });
+
+    it("shows the pending state and disables saving while a review is open", async () => {
+      editorial.getDraft.mockResolvedValue({ data: { status: "pending", payload: {} } });
+      const wrapper = await mountPage(["artworks.manage", "proposals.submit"]);
+
+      expect(wrapper.get("[data-testid=draft-banner]").attributes("data-state")).toBe("pending");
+      expect(wrapper.get("[data-testid=save-button]").attributes("disabled")).toBeDefined();
+    });
+
+    it("blocks editing with a non-actionable banner when another user's review is open", async () => {
+      editorial.getDraft.mockRejectedValue(new ApiError("server", "conflict", { status: 409, body: { message: "conflict", proposal_id: "p9" } }));
+      const wrapper = await mountPage(["artworks.manage", "proposals.submit"]);
+
+      expect(wrapper.get("[data-testid=draft-banner]").attributes("data-state")).toBe("blocked");
+      expect(wrapper.get("[data-testid=save-button]").attributes("disabled")).toBeDefined();
+    });
+
+    it("sends the draft for review and flips the banner to awaiting review", async () => {
+      const wrapper = await mountPage(["artworks.manage", "proposals.submit"]);
+      expect(wrapper.find("[data-testid=send-for-review]").exists()).toBe(false);
+
+      await wrapper.get("[data-testid=save-button]").trigger("click");
+      await flushPromises();
+      await wrapper.get("[data-testid=send-for-review]").trigger("click");
+      await flushPromises();
+
+      expect(editorial.submitDraft).toHaveBeenCalledWith("artworks", 7);
+      expect(wrapper.get("[data-testid=draft-banner]").attributes("data-state")).toBe("pending");
+      expect(wrapper.get("[data-testid=draft-notice]").text()).toBe("Your draft was sent for review.");
+    });
   });
 });

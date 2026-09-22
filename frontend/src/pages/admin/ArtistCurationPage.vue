@@ -8,10 +8,11 @@ import {
   updateArtist, updateArtistCuration, uploadArtistPortrait, verifyArtist,
 } from "@/api/artistCuration";
 import ContactsEditor from "@/components/curation/ContactsEditor.vue";
+import DraftStatusBanner from "@/components/curation/DraftStatusBanner.vue";
 import EntryListEditor from "@/components/curation/EntryListEditor.vue";
 import PortraitPicker from "@/components/curation/PortraitPicker.vue";
 import SocialLinksEditor from "@/components/curation/SocialLinksEditor.vue";
-import { useArtistProfileForm } from "@/composables/useArtistProfileForm";
+import { useArtistProfileForm, dateValueToInput } from "@/composables/useArtistProfileForm";
 import RevisionHistoryPanel from "@/components/proposals/RevisionHistoryPanel.vue";
 import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
@@ -19,10 +20,12 @@ import Spinner from "@/components/common/Spinner.vue";
 import { useArtistCuration } from "@/composables/useArtistCuration";
 import { useLocalePath } from "@/composables/useLocalePath";
 import { useLocalized } from "@/composables/useLocalized";
+import { useRecordDraft } from "@/composables/useRecordDraft";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
+import type { ArtistDraftPayload } from "@/types/proposal";
 import type {
-  AuthLetterStatus, BioSourceType, CurationUpdate, OwnerType, PortraitRights, PreAgreementStatus,
+  ArtistCuration, AuthLetterStatus, BioSourceType, CurationUpdate, OwnerType, PortraitRights, PreAgreementStatus,
 } from "@/types/artistCuration";
 import { SEVERITY_BADGE_CLASS } from "@/utils/severity";
 import { firstBlockReason } from "@/utils/verifyBlocker";
@@ -48,6 +51,16 @@ const profile = useArtistProfileForm();
 const portraitRights = ref<PortraitRights>("unknown");
 const portraitBusy = ref(false);
 
+// Editors (and admins, who also hold proposals.submit) work through the draft
+// pipeline: saves upsert a draft proposal instead of touching the live record.
+const draftMode = computed(() => auth.can("proposals.submit"));
+const {
+  status: draftStatus, reviewNote: draftReviewNote, blocker: draftBlocker, pendingSubmit,
+  draftPayload, dirtySections, init: initDraft, saveSection, submit: submitDraftForReview,
+  resetLocally: resetDraftLocally,
+} = useRecordDraft();
+const draftLocked = computed(() => draftMode.value && (draftStatus.value === "pending" || draftBlocker.value !== null));
+
 const form = reactive({
   identified_through_note: "",
   owner_type: "" as OwnerType | "",
@@ -57,8 +70,7 @@ const form = reactive({
   bio_source_type: "unspecified" as BioSourceType,
 });
 
-watch(curation, (c) => {
-  if (!c) return;
+function applyCuration(c: ArtistCuration): void {
   form.identified_through_note = c.identified_through.note ?? "";
   form.owner_type = c.contact.owner_type ?? "";
   form.ref_supervisor_note = c.contact.ref_supervisor_note ?? "";
@@ -67,6 +79,46 @@ watch(curation, (c) => {
   form.bio_source_type = c.bio.source_type;
   profile.load(c);
   portraitRights.value = c.portrait.rights_status;
+}
+
+/** Draft sections win over live data when initializing the form models. */
+function applyDraftToForm(): void {
+  const p = draftPayload.value as ArtistDraftPayload;
+  if (p.fields) {
+    if (p.fields.nationality) profile.form.nationality = { ...p.fields.nationality };
+    if (p.fields.classification) profile.form.classification = { ...p.fields.classification };
+    if ("birth" in p.fields) profile.form.birthDate = dateValueToInput(p.fields.birth ?? null);
+    if ("death" in p.fields) profile.form.deathDate = dateValueToInput(p.fields.death ?? null);
+  }
+  if (p.educations) profile.form.entries.educations = JSON.parse(JSON.stringify(p.educations));
+  if (p.activities) profile.form.entries.activities = JSON.parse(JSON.stringify(p.activities));
+  if (p.social_links) profile.form.socialLinks = JSON.parse(JSON.stringify(p.social_links.links ?? []));
+  if (p.curation) {
+    const cu = p.curation;
+    if (cu.identified_through_note !== undefined) form.identified_through_note = cu.identified_through_note ?? "";
+    if (cu.owner_type !== undefined) form.owner_type = cu.owner_type ?? "";
+    if (cu.ref_supervisor_note !== undefined) form.ref_supervisor_note = cu.ref_supervisor_note ?? "";
+    if (cu.authorization_letter_status) form.authorization_letter_status = cu.authorization_letter_status;
+    if (cu.owner_pre_agreement_status) form.owner_pre_agreement_status = cu.owner_pre_agreement_status;
+    if (cu.bio_source_type) form.bio_source_type = cu.bio_source_type;
+    if (cu.contacts) profile.form.contacts = JSON.parse(JSON.stringify(cu.contacts));
+  }
+}
+
+watch(curation, (c) => {
+  if (!c) return;
+  applyCuration(c);
+}, { immediate: true });
+
+watch(curation, async (c) => {
+  if (!c || !draftMode.value) return;
+  try {
+    await initDraft("artists", id.value);
+  } catch {
+    // A failed draft lookup must not block the page; the live record still loads.
+    return;
+  }
+  applyDraftToForm();
 }, { immediate: true });
 
 const saving = ref(false);
@@ -109,16 +161,47 @@ async function save(): Promise<void> {
   actionError.value = null;
   try {
     const current = curation.value;
-    await updateArtist(id.value, profile.profilePayload(current?.city, true));
-    await syncArtistEntries(id.value, profile.entriesPayload());
-    await syncArtistSocialLinks(id.value, profile.socialPayload());
-    set((await updateArtistCuration(id.value, payload())).data);
+    if (draftMode.value) {
+      // Nothing changes live: each section is merged into the draft payload.
+      const entries = profile.entriesPayload();
+      await saveSection("fields", profile.profilePayload(current?.city, true));
+      await saveSection("educations", entries.educations);
+      await saveSection("activities", entries.activities);
+      await saveSection("social_links", { links: profile.socialPayload() });
+      await saveSection("curation", payload());
+    } else {
+      await updateArtist(id.value, profile.profilePayload(current?.city, true));
+      await syncArtistEntries(id.value, profile.entriesPayload());
+      await syncArtistSocialLinks(id.value, profile.socialPayload());
+      set((await updateArtistCuration(id.value, payload())).data);
+    }
     saved.value = true;
   } catch (err) {
     actionError.value = err instanceof Error ? err.message : t("errors.generic");
   } finally {
     saving.value = false;
   }
+}
+
+const draftNotice = ref<string | null>(null);
+
+async function sendForReview(): Promise<void> {
+  draftNotice.value = null;
+  actionError.value = null;
+  try {
+    await submitDraftForReview();
+    draftNotice.value = t("draft.submitSuccess");
+  } catch {
+    actionError.value = t("draft.submitError");
+  }
+}
+
+function discardDraft(): void {
+  draftNotice.value = null;
+  actionError.value = null;
+  resetDraftLocally();
+  saved.value = false;
+  if (curation.value) applyCuration(curation.value);
 }
 
 async function verify(): Promise<void> {
@@ -199,7 +282,7 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
           </p>
         </div>
         <div class="flex items-center gap-2">
-          <button type="button" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft disabled:opacity-50" :disabled="saving" @click="save">
+          <button type="button" data-testid="save-button" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft disabled:opacity-50" :disabled="saving || draftLocked" @click="save">
             {{ saving ? t("curation.detail.saving") : t("curation.detail.save") }}
           </button>
           <button
@@ -214,7 +297,18 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
           </button>
         </div>
       </div>
-      <p v-if="saved" class="mt-2 text-sm text-success">{{ t("curation.detail.saved") }}</p>
+      <DraftStatusBanner
+        v-if="draftMode"
+        :status="draftStatus"
+        :blocker="draftBlocker"
+        :can-submit="dirtySections.size > 0"
+        :submitting="pendingSubmit"
+        :review-note="draftReviewNote"
+        @submit="sendForReview"
+        @discard="discardDraft"
+      />
+      <p v-if="saved" class="mt-2 text-sm text-success" data-testid="saved-feedback">{{ draftMode ? t("draft.sectionSaved") : t("curation.detail.saved") }}</p>
+      <p v-if="draftNotice" class="mt-2 text-sm text-success" data-testid="draft-notice">{{ draftNotice }}</p>
       <p v-if="actionError" class="mt-2 text-sm text-danger">{{ actionError }}</p>
 
       <div class="mt-8 grid gap-10 lg:grid-cols-[20rem_1fr]">

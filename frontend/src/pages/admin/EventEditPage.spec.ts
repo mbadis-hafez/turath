@@ -6,6 +6,7 @@ import { createMemoryHistory, createRouter, type Router } from "vue-router";
 import EventEditPage from "@/pages/admin/EventEditPage.vue";
 import { useAuthStore } from "@/stores/auth";
 import { mountWithPlugins } from "@/test/utils";
+import { ApiError } from "@/types/api";
 import type { EventDetail } from "@/types/event";
 
 const api = vi.hoisted(() => ({
@@ -15,6 +16,9 @@ const api = vi.hoisted(() => ({
 vi.mock("@/api/events", () => api);
 vi.mock("@/api/artistCuration", () => ({ listThemes: api.listThemes, listAdminArtists: api.listAdminArtists }));
 vi.mock("@/api/artworkCuration", () => ({ listAdminArtworks: api.listAdminArtworks, searchHolders: api.searchHolders }));
+
+const editorial = vi.hoisted(() => ({ getDraft: vi.fn(), saveDraft: vi.fn(), submitDraft: vi.fn() }));
+vi.mock("@/api/editorial", () => editorial);
 
 function detail(patch: Partial<EventDetail> = {}): EventDetail {
   return {
@@ -29,10 +33,10 @@ function detail(patch: Partial<EventDetail> = {}): EventDetail {
 
 let router: Router;
 
-async function mountAt(path: string) {
+async function mountAt(path: string, permissions: string[] = ["events.manage"]) {
   const pinia = createPinia();
   setActivePinia(pinia);
-  useAuthStore().$patch({ user: { id: 1, name: "E", email: "e@x", roles: ["editor"], permissions: ["events.manage"] } as never, initialized: true });
+  useAuthStore().$patch({ user: { id: 1, name: "E", email: "e@x", roles: ["editor"], permissions } as never, initialized: true });
   await router.push(path);
   const wrapper = mountWithPlugins(EventEditPage, { locale: "en", router, pinia });
   await flushPromises();
@@ -47,6 +51,9 @@ beforeEach(() => {
   api.syncEventParticipants.mockReset().mockResolvedValue({});
   api.syncEventThemes.mockReset().mockResolvedValue({});
   api.listThemes.mockReset().mockResolvedValue({ data: [{ id: 2, label: { ar: "التأسيس", en: "Founding" } }, { id: 3, label: { ar: "الحداثة", en: "Modernity" } }] });
+  editorial.getDraft.mockReset().mockResolvedValue({ data: null });
+  editorial.saveDraft.mockReset().mockResolvedValue({ data: { status: "draft" } });
+  editorial.submitDraft.mockReset().mockResolvedValue({ data: { status: "pending" } });
   router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -95,6 +102,77 @@ describe("EventEditPage (edit)", () => {
 
     expect(api.updateEvent).toHaveBeenCalledBefore(api.publishEvent);
     expect(api.publishEvent).toHaveBeenCalledWith(7);
+  });
+
+  describe("draft mode (proposals.submit)", () => {
+    it("saves fields and participants through saveDraft, keeping the theme sync direct", async () => {
+      const wrapper = await mountAt("/en/admin/events/7", ["events.manage", "proposals.submit"]);
+
+      await wrapper.get("[data-testid=venue]").setValue("New Wing");
+      await wrapper.get("[data-testid=save]").trigger("click");
+      await flushPromises();
+
+      expect(editorial.saveDraft).toHaveBeenCalledTimes(2);
+      expect(editorial.saveDraft.mock.calls[0][0]).toBe("events");
+      expect(editorial.saveDraft.mock.calls[0][1]).toBe(7);
+      const payloads = editorial.saveDraft.mock.calls.map((call) => call[2] as Record<string, unknown>);
+      expect(payloads[0].fields).toMatchObject({ venue_name: "New Wing", event_type: "exhibition" });
+      expect(payloads[1].participants).toEqual({ participants: [{ id: 1, type: "artist", participant_id: 4, role: "awardee", note: "الجائزة الأولى" }] });
+      expect(api.updateEvent).not.toHaveBeenCalled();
+      expect(api.syncEventParticipants).not.toHaveBeenCalled();
+      expect(api.syncEventThemes).toHaveBeenCalledWith(7, [2]);
+      expect(wrapper.get("[data-testid=saved-feedback]").text()).toBe("Saved to draft");
+    });
+
+    it("initializes the form from draft sections instead of live data", async () => {
+      editorial.getDraft.mockResolvedValue({
+        data: {
+          status: "draft",
+          payload: {
+            fields: { venue_name: "Draft Hall", city: "Alahsa", title: { ar: "مسودة", en: "Draft Title" } },
+            participants: { participants: [{ id: 1, type: "artist", participant_id: 4, role: "organizer", note: null }] },
+          },
+        },
+      });
+      const wrapper = await mountAt("/en/admin/events/7", ["events.manage", "proposals.submit"]);
+
+      expect(wrapper.get("[data-testid=draft-banner]").attributes("data-state")).toBe("draft");
+      expect(wrapper.get("[data-testid=venue]").element).toHaveProperty("value", "Draft Hall");
+      expect(wrapper.get("[data-testid=participant-role]").element).toHaveProperty("value", "organizer");
+    });
+
+    it("shows the pending state and disables saving while a review is open", async () => {
+      editorial.getDraft.mockResolvedValue({ data: { status: "pending", payload: {} } });
+      const wrapper = await mountAt("/en/admin/events/7", ["events.manage", "proposals.submit"]);
+
+      expect(wrapper.get("[data-testid=draft-banner]").attributes("data-state")).toBe("pending");
+      expect(wrapper.get("[data-testid=save]").attributes("disabled")).toBeDefined();
+    });
+
+    it("blocks editing with a non-actionable banner when another user's review is open", async () => {
+      editorial.getDraft.mockRejectedValue(new ApiError("server", "conflict", { status: 409, body: { message: "conflict", proposal_id: "p9" } }));
+      const wrapper = await mountAt("/en/admin/events/7", ["events.manage", "proposals.submit"]);
+
+      expect(wrapper.get("[data-testid=draft-banner]").attributes("data-state")).toBe("blocked");
+      expect(wrapper.get("[data-testid=save]").attributes("disabled")).toBeDefined();
+      expect(editorial.saveDraft).not.toHaveBeenCalled();
+    });
+
+    it("discarding the draft resets the form to live values", async () => {
+      editorial.getDraft.mockResolvedValue({
+        data: { status: "draft", payload: { fields: { venue_name: "Draft Hall" } } },
+      });
+      const wrapper = await mountAt("/en/admin/events/7", ["events.manage", "proposals.submit"]);
+      expect(wrapper.get("[data-testid=venue]").element).toHaveProperty("value", "Draft Hall");
+
+      await wrapper.get("[data-testid=discard-draft]").trigger("click");
+      document.querySelector("[data-testid=confirm-dialog-confirm]")!.dispatchEvent(new Event("click", { bubbles: true }));
+      await flushPromises();
+
+      expect(editorial.saveDraft).not.toHaveBeenCalled();
+      expect(wrapper.find("[data-testid=draft-banner]").exists()).toBe(false);
+      expect(wrapper.get("[data-testid=venue]").element).toHaveProperty("value", "دار الفنون");
+    });
   });
 });
 

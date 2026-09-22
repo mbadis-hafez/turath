@@ -6,6 +6,7 @@ import { useI18n } from "vue-i18n";
 import { listAdminArtworks } from "@/api/artworkCuration";
 import { listThemes } from "@/api/artistCuration";
 import { createEvent, getEvent, publishEvent, syncEventParticipants, syncEventThemes, updateEvent } from "@/api/events";
+import DraftStatusBanner from "@/components/curation/DraftStatusBanner.vue";
 import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import Spinner from "@/components/common/Spinner.vue";
@@ -16,10 +17,12 @@ import ListEditor from "@/components/curation/ListEditor.vue";
 import { useEventForm, newParticipant } from "@/composables/useEventForm";
 import { useLocalePath } from "@/composables/useLocalePath";
 import { useLocalized } from "@/composables/useLocalized";
+import { useRecordDraft } from "@/composables/useRecordDraft";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
 import type { Theme } from "@/types/artistCuration";
-import { EVENT_TYPES, PARTICIPANT_ROLES, type EventDetail, type EventStatus } from "@/types/event";
+import type { EventDraftPayload } from "@/types/proposal";
+import { EVENT_TYPES, PARTICIPANT_ROLES, type EventDetail, type EventStatus, type EventType, type ParticipantRole } from "@/types/event";
 
 const route = useRoute();
 const router = useRouter();
@@ -35,11 +38,81 @@ const isNew = computed(() => id.value === null);
 
 const { form, holder, participants, themeIds, start, load: loadForm, payload, participantsPayload, checklist: liveChecklist } = useEventForm();
 
+// Editors (and admins, who also hold proposals.submit) work through the draft
+// pipeline on existing events: saves upsert a draft proposal instead of
+// touching the live record. New events are created directly.
+const draftMode = computed(() => !isNew.value && auth.can("proposals.submit"));
+const {
+  status: draftStatus, reviewNote: draftReviewNote, blocker: draftBlocker, pendingSubmit,
+  draftPayload, dirtySections, init: initDraft, saveSection, submit: submitDraftForReview,
+  resetLocally: resetDraftLocally,
+} = useRecordDraft();
+const draftLocked = computed(() => draftMode.value && (draftStatus.value === "pending" || draftBlocker.value !== null));
+
 const event = ref<EventDetail | null>(null);
 const themes = ref<Theme[]>([]);
 const loading = ref(false);
 const loadError = ref<unknown>(null);
 let originalEnd = "";
+
+/** Mirrors useFuzzyDate.load against the exposed state (the composable keeps the helpers private). */
+function applyFuzzyToStart(content: { display?: string | null; year_from?: number | null; year_to?: number | null; certainty?: string | null } | null, note: string | null): void {
+  const display = content?.display ?? "";
+  Object.assign(start, { date: "", year: "", text: "", from: "", to: "", note: note ?? "" });
+  start.certainty = content?.certainty === "range" ? "range" : "circa";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(display)) {
+    start.mode = "exact";
+    start.date = display;
+  } else if (content?.certainty === "exact" && content.year_from !== null && content.year_from !== undefined && content.year_from === content.year_to && /^\d{4}$/.test(display)) {
+    start.mode = "year";
+    start.year = display;
+  } else if (content?.year_from) {
+    start.mode = "approx";
+    start.text = display;
+    start.from = String(content.year_from);
+    start.to = content.year_to ? String(content.year_to) : "";
+  } else {
+    start.mode = "exact";
+  }
+}
+
+/** Draft sections win over live data when initializing the form models. */
+function applyDraftToForm(): void {
+  const p = draftPayload.value as EventDraftPayload;
+  if (p.fields) {
+    const f = p.fields;
+    if (f.event_type) form.type = f.event_type as EventType;
+    if (f.title) {
+      form.titleAr = f.title.ar ?? "";
+      form.titleEn = f.title.en ?? "";
+    }
+    if (f.description) {
+      form.descriptionAr = f.description.ar ?? "";
+      form.descriptionEn = f.description.en ?? "";
+    }
+    if (f.venue_name !== undefined) form.venue = f.venue_name ?? "";
+    if (f.city !== undefined) form.city = f.city ?? "";
+    if (f.holder_id !== undefined) {
+      holder.value = f.holder_id !== null && f.holder_id === (event.value?.holder?.id ?? null)
+        ? { id: f.holder_id, label: labelOf(event.value!.holder!.name) }
+        : f.holder_id === null ? null : { id: f.holder_id, label: `#${f.holder_id}` };
+    }
+    if ("start" in f) applyFuzzyToStart(f.start ?? null, f.date_note ?? null);
+    if ("end" in f) form.endDate = /^\d{4}-\d{2}-\d{2}$/.test(f.end?.display ?? "") ? f.end!.display! : "";
+  }
+  if (p.participants) {
+    participants.value = p.participants.participants.map((pp) => {
+      const live = event.value?.participants.find((lp) => lp.id === pp.id || (lp.kind === pp.type && lp.entity.id === pp.participant_id));
+      return {
+        ...(pp.id ? { id: pp.id } : {}),
+        kind: pp.type,
+        role: pp.role as ParticipantRole,
+        note: pp.note ?? "",
+        entity: { id: pp.participant_id, label: live ? labelOf((live.kind === "artist" ? live.entity.name : live.entity.title) ?? { ar: null, en: null }) : `#${pp.participant_id}` },
+      };
+    });
+  }
+}
 
 async function loadEvent(): Promise<void> {
   if (id.value === null) return;
@@ -49,6 +122,15 @@ async function loadEvent(): Promise<void> {
     event.value = (await getEvent(id.value)).data;
     loadForm(event.value);
     originalEnd = form.endDate;
+    if (draftMode.value) {
+      try {
+        await initDraft("events", id.value);
+      } catch {
+        // A failed draft lookup must not block the page; the live record still loads.
+        return;
+      }
+      applyDraftToForm();
+    }
   } catch (err) {
     loadError.value = err;
   } finally {
@@ -104,14 +186,46 @@ async function save(): Promise<void> {
     return;
   }
   try {
-    await updateEvent(id.value!, payload("update", originalEnd));
-    await saveRelations(id.value!);
-    await loadEvent();
+    if (draftMode.value) {
+      // Nothing changes live: fields and participants merge into the draft payload.
+      // Theme tagging stays direct, like the other relations endpoints.
+      await saveSection("fields", payload("update", originalEnd));
+      await saveSection("participants", { participants: participantsPayload() });
+      await syncEventThemes(id.value!, themeIds.value);
+    } else {
+      await updateEvent(id.value!, payload("update", originalEnd));
+      await saveRelations(id.value!);
+      await loadEvent();
+    }
     saved.value = true;
   } catch (err) {
     fail(err);
   } finally {
     busy.value = false;
+  }
+}
+
+const draftNotice = ref<string | null>(null);
+
+async function sendForReview(): Promise<void> {
+  draftNotice.value = null;
+  error.value = null;
+  try {
+    await submitDraftForReview();
+    draftNotice.value = t("draft.submitSuccess");
+  } catch {
+    error.value = t("draft.submitError");
+  }
+}
+
+function discardDraft(): void {
+  draftNotice.value = null;
+  error.value = null;
+  resetDraftLocally();
+  saved.value = false;
+  if (event.value) {
+    loadForm(event.value);
+    originalEnd = form.endDate;
   }
 }
 
@@ -161,11 +275,22 @@ const missing = (key: string) => (missingKeys.value.has(key) ? "!border-danger" 
           <p v-if="event" class="mt-1 text-sm text-ink-muted"><LocalizedText :text="event.title" /></p>
         </div>
         <div class="flex items-center gap-2">
-          <button type="button" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft disabled:opacity-50" :disabled="busy || createdId !== null" data-testid="save" @click="save">{{ busy ? t("curation.detail.saving") : t("events.edit.saveDraft") }}</button>
+          <button type="button" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft disabled:opacity-50" :disabled="busy || createdId !== null || draftLocked" data-testid="save" @click="save">{{ busy ? t("curation.detail.saving") : t("events.edit.saveDraft") }}</button>
           <button v-if="!isNew" type="button" class="rounded-md bg-ink px-4 py-2 text-sm font-semibold text-paper disabled:cursor-not-allowed disabled:bg-neutral-soft disabled:text-ink-muted" :disabled="!coreMet || busy || status === 'published'" :title="coreMet ? undefined : t('events.edit.publishBlocked')" data-testid="publish" @click="publish">{{ status === "published" ? t("events.edit.published") : t("events.edit.publish") }}</button>
         </div>
       </div>
-      <p v-if="saved" class="mt-2 text-sm text-success">{{ t("curation.detail.saved") }}</p>
+      <DraftStatusBanner
+        v-if="draftMode"
+        :status="draftStatus"
+        :blocker="draftBlocker"
+        :can-submit="dirtySections.size > 0"
+        :submitting="pendingSubmit"
+        :review-note="draftReviewNote"
+        @submit="sendForReview"
+        @discard="discardDraft"
+      />
+      <p v-if="saved" class="mt-2 text-sm text-success" data-testid="saved-feedback">{{ draftMode ? t("draft.sectionSaved") : t("curation.detail.saved") }}</p>
+      <p v-if="draftNotice" class="mt-2 text-sm text-success" data-testid="draft-notice">{{ draftNotice }}</p>
       <p v-if="error" class="mt-2 text-sm text-danger" role="alert">{{ error }}</p>
       <p v-if="createdId" class="mt-2 text-sm text-warn" data-testid="partial-failure">
         {{ t("events.edit.partialFailure") }}

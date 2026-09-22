@@ -10,6 +10,7 @@ import {
 import { listThemes } from "@/api/artistCuration";
 import { listAdminArtworks } from "@/api/artworkCuration";
 import { listAdminEvents } from "@/api/events";
+import DraftStatusBanner from "@/components/curation/DraftStatusBanner.vue";
 import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import Spinner from "@/components/common/Spinner.vue";
@@ -21,10 +22,12 @@ import TagsInput from "@/components/curation/TagsInput.vue";
 import { useArchiveForm } from "@/composables/useArchiveForm";
 import { useLocalePath } from "@/composables/useLocalePath";
 import { useLocalized } from "@/composables/useLocalized";
+import { useRecordDraft } from "@/composables/useRecordDraft";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
 import type { Theme } from "@/types/artistCuration";
-import { ARCHIVE_ITEM_TYPES, LINK_ROLES, type ArchiveEdit, type ArchiveEditLink, type RightsStatus } from "@/types/archive";
+import type { ArchiveItemDraftPayload } from "@/types/proposal";
+import { ARCHIVE_ITEM_TYPES, LINK_ROLES, type AccessLevel, type ArchiveEdit, type ArchiveEditLink, type ArchiveItemType, type RightsStatus } from "@/types/archive";
 import { formatRelativeTime } from "@/utils/format";
 import type { AppLocale } from "@/i18n";
 
@@ -42,6 +45,17 @@ const isNew = computed(() => id.value === null);
 
 const { form, date, load: loadForm, payload, checklist: liveChecklist } = useArchiveForm();
 
+// Editors (and admins, who also hold proposals.submit) work through the draft
+// pipeline on existing items: saves upsert a draft proposal instead of
+// touching the live record. New items are created directly.
+const draftMode = computed(() => !isNew.value && auth.can("proposals.submit"));
+const {
+  status: draftStatus, reviewNote: draftReviewNote, blocker: draftBlocker, pendingSubmit,
+  draftPayload, dirtySections, init: initDraft, saveSection, submit: submitDraftForReview,
+  resetLocally: resetDraftLocally,
+} = useRecordDraft();
+const draftLocked = computed(() => draftMode.value && (draftStatus.value === "pending" || draftBlocker.value !== null));
+
 const themes = ref<Theme[]>([]);
 const themeIds = ref<number[]>([]);
 void listThemes().then((r) => (themes.value = r.data)).catch(() => (themes.value = []));
@@ -51,6 +65,60 @@ const item = ref<ArchiveEdit | null>(null);
 const loading = ref(false);
 const loadError = ref<unknown>(null);
 let controller: AbortController | null = null;
+
+/** Mirrors useFuzzyDate.load against the exposed state (the composable keeps the helpers private). */
+function applyFuzzyToDate(content: { display?: string | null; year_from?: number | null; year_to?: number | null; certainty?: string | null } | null, note: string | null): void {
+  const display = content?.display ?? "";
+  Object.assign(date, { date: "", year: "", text: "", from: "", to: "", note: note ?? "" });
+  date.certainty = content?.certainty === "range" ? "range" : "circa";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(display)) {
+    date.mode = "exact";
+    date.date = display;
+  } else if (content?.certainty === "exact" && content.year_from !== null && content.year_from !== undefined && content.year_from === content.year_to && /^\d{4}$/.test(display)) {
+    date.mode = "year";
+    date.year = display;
+  } else if (content?.year_from) {
+    date.mode = "approx";
+    date.text = display;
+    date.from = String(content.year_from);
+    date.to = content.year_to ? String(content.year_to) : "";
+  } else {
+    date.mode = "exact";
+  }
+}
+
+/** Draft sections win over live data when initializing the form models. */
+function applyDraftToForm(): void {
+  const p = draftPayload.value as ArchiveItemDraftPayload;
+  if (!p.fields) return;
+  const f = p.fields;
+  if (f.item_type) form.type = f.item_type as ArchiveItemType;
+  if (f.title) {
+    form.titleAr = f.title.ar ?? "";
+    form.titleEn = f.title.en ?? "";
+  }
+  if ("content" in f) applyFuzzyToDate(f.content ?? null, f.date_note ?? null);
+  if (f.place) {
+    form.placeAr = f.place.ar ?? "";
+    form.placeEn = f.place.en ?? "";
+  }
+  if (f.description) {
+    form.descriptionAr = f.description.ar ?? "";
+    form.descriptionEn = f.description.en ?? "";
+  }
+  if (f.people_names) form.people = [...f.people_names];
+  if (f.keywords) form.keywords = [...f.keywords];
+  if (f.source_name !== undefined) form.sourceName = f.source_name ?? "";
+  if (f.rights_holder) {
+    form.holderAr = f.rights_holder.ar ?? "";
+    form.holderEn = f.rights_holder.en ?? "";
+  }
+  if (f.license !== undefined) form.license = f.license ?? "";
+  if (f.rights_status) form.rightsStatus = f.rights_status as RightsStatus;
+  if (f.verification_reference !== undefined) form.verification = f.verification_reference ?? "";
+  if (f.access_level) form.access = f.access_level as AccessLevel;
+  if (f.legacy_ref !== undefined) form.code = f.legacy_ref ?? "";
+}
 
 async function loadItem(): Promise<void> {
   if (id.value === null) return;
@@ -65,6 +133,15 @@ async function loadItem(): Promise<void> {
     item.value = response.data;
     loadForm(response.data);
     themeIds.value = [...response.data.theme_ids];
+    if (draftMode.value) {
+      try {
+        await initDraft("archive-items", id.value);
+      } catch {
+        // A failed draft lookup must not block the page; the live record still loads.
+        return;
+      }
+      applyDraftToForm();
+    }
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") return;
     loadError.value = err;
@@ -172,9 +249,16 @@ async function saveDraft(): Promise<void> {
     return;
   }
   try {
-    await updateArchiveItem(id.value!, payload("update"));
-    await syncArchiveItemThemes(id.value!, themeIds.value);
-    await loadItem();
+    if (draftMode.value) {
+      // Nothing changes live: the fields section is merged into the draft payload.
+      // Theme tagging stays direct, like the other relations endpoints.
+      await saveSection("fields", payload("update"));
+      await syncArchiveItemThemes(id.value!, themeIds.value);
+    } else {
+      await updateArchiveItem(id.value!, payload("update"));
+      await syncArchiveItemThemes(id.value!, themeIds.value);
+      await loadItem();
+    }
     saved.value = true;
   } catch (err) {
     fail(err);
@@ -183,6 +267,30 @@ async function saveDraft(): Promise<void> {
   }
 }
 const createdId = ref<number | null>(null);
+
+const draftNotice = ref<string | null>(null);
+
+async function sendDraftForReview(): Promise<void> {
+  draftNotice.value = null;
+  error.value = null;
+  try {
+    await submitDraftForReview();
+    draftNotice.value = t("draft.submitSuccess");
+  } catch {
+    error.value = t("draft.submitError");
+  }
+}
+
+function discardDraft(): void {
+  draftNotice.value = null;
+  error.value = null;
+  resetDraftLocally();
+  saved.value = false;
+  if (item.value) {
+    loadForm(item.value);
+    themeIds.value = [...item.value.theme_ids];
+  }
+}
 
 async function sendForReview(): Promise<void> {
   busy.value = true;
@@ -278,7 +386,7 @@ const err = (key: string) => fieldErrors.value[key]?.[0];
           </p>
         </div>
         <div class="flex items-center gap-2">
-          <button type="button" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft disabled:opacity-50" :disabled="busy || createdId !== null" data-testid="save-draft" @click="saveDraft">
+          <button type="button" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft disabled:opacity-50" :disabled="busy || createdId !== null || draftLocked" data-testid="save-draft" @click="saveDraft">
             {{ busy ? t("curation.detail.saving") : t("archive.edit.saveDraft") }}
           </button>
           <button v-if="!isNew" type="button" class="rounded-md bg-ink px-4 py-2 text-sm font-semibold text-paper disabled:cursor-not-allowed disabled:bg-neutral-soft disabled:text-ink-muted" :disabled="!complete || busy || item?.under_review" :title="complete ? undefined : t('archive.edit.reviewBlocked')" data-testid="send-review" @click="sendForReview">
@@ -286,7 +394,18 @@ const err = (key: string) => fieldErrors.value[key]?.[0];
           </button>
         </div>
       </div>
-      <p v-if="saved" class="mt-2 text-sm text-success">{{ t("curation.detail.saved") }}</p>
+      <DraftStatusBanner
+        v-if="draftMode"
+        :status="draftStatus"
+        :blocker="draftBlocker"
+        :can-submit="dirtySections.size > 0"
+        :submitting="pendingSubmit"
+        :review-note="draftReviewNote"
+        @submit="sendDraftForReview"
+        @discard="discardDraft"
+      />
+      <p v-if="saved" class="mt-2 text-sm text-success" data-testid="saved-feedback">{{ draftMode ? t("draft.sectionSaved") : t("curation.detail.saved") }}</p>
+      <p v-if="draftNotice" class="mt-2 text-sm text-success" data-testid="draft-notice">{{ draftNotice }}</p>
       <p v-if="error" class="mt-2 text-sm text-danger" role="alert">{{ error }}</p>
       <p v-if="createdId" class="mt-2 text-sm text-warn" data-testid="partial-failure">
         {{ t("archive.edit.partialFailure") }}

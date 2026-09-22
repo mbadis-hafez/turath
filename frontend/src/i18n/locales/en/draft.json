@@ -1,0 +1,20 @@
+{
+  "intro": "Changes you save here are stored as a draft and go live only after review.",
+  "draftBadge": "Draft — not sent yet",
+  "sendForReview": "Send for review",
+  "sendForReviewHint": "Save at least one section before sending for review.",
+  "awaitingReview": "Awaiting review",
+  "changesRequested": "Changes requested",
+  "changesRequestedHint": "Revise the flagged sections, save your changes, then send again.",
+  "reviewerNote": "Reviewer note: \"{note}\"",
+  "discardDraft": "Discard draft",
+  "discardConfirmTitle": "Discard this draft?",
+  "discardConfirmBody": "The draft stays on the server, but your unsaved form changes will be reset to the live record values.",
+  "discardConfirmAction": "Discard",
+  "discardCancel": "Cancel",
+  "sectionSaved": "Saved to draft",
+  "blockedTitle": "This record has an open review by someone else",
+  "blockedBody": "Editing is blocked until that review is resolved.",
+  "submitError": "Could not send the draft for review. Please try again.",
+  "submitSuccess": "Your draft was sent for review."
+}

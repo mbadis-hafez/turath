@@ -6,6 +6,7 @@ import { createMemoryHistory, createRouter, type Router } from "vue-router";
 import ArchiveEditPage from "@/pages/admin/ArchiveEditPage.vue";
 import { useAuthStore } from "@/stores/auth";
 import { mountWithPlugins } from "@/test/utils";
+import { ApiError } from "@/types/api";
 import type { ArchiveEdit } from "@/types/archive";
 
 const api = vi.hoisted(() => ({
@@ -17,6 +18,9 @@ vi.mock("@/api/archive", () => api);
 vi.mock("@/api/artistCuration", () => ({ listAdminArtists: vi.fn(), listThemes: api.listThemes }));
 vi.mock("@/api/artworkCuration", () => ({ searchHolders: vi.fn(), listAdminArtworks: vi.fn() }));
 vi.mock("@/api/events", () => ({ listAdminEvents: vi.fn() }));
+
+const editorial = vi.hoisted(() => ({ getDraft: vi.fn(), saveDraft: vi.fn(), submitDraft: vi.fn() }));
+vi.mock("@/api/editorial", () => editorial);
 
 function bundle(patch: Partial<ArchiveEdit> = {}): ArchiveEdit {
   return {
@@ -36,10 +40,10 @@ function bundle(patch: Partial<ArchiveEdit> = {}): ArchiveEdit {
 
 let router: Router;
 
-async function mountAt(path: string) {
+async function mountAt(path: string, permissions: string[] = ["archive.manage"]) {
   const pinia = createPinia();
   setActivePinia(pinia);
-  useAuthStore().$patch({ user: { id: 1, name: "E", email: "e@x", roles: ["editor"], permissions: ["archive.manage"] } as never, initialized: true });
+  useAuthStore().$patch({ user: { id: 1, name: "E", email: "e@x", roles: ["editor"], permissions } as never, initialized: true });
   await router.push(path);
   const wrapper = mountWithPlugins(ArchiveEditPage, { locale: "en", router, pinia });
   await flushPromises();
@@ -57,6 +61,9 @@ beforeEach(() => {
   api.syncArchiveItemThemes.mockReset().mockResolvedValue({});
   api.listThemes.mockReset().mockResolvedValue({ data: [{ id: 2, label: { ar: "التأسيس", en: "Founding" } }, { id: 3, label: { ar: "الطبيعة", en: "Nature" } }] });
   api.submitArchiveReview.mockReset().mockResolvedValue({ data: bundle({ under_review: true }) });
+  editorial.getDraft.mockReset().mockResolvedValue({ data: null });
+  editorial.saveDraft.mockReset().mockResolvedValue({ data: { status: "draft" } });
+  editorial.submitDraft.mockReset().mockResolvedValue({ data: { status: "pending" } });
   router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -103,6 +110,69 @@ describe("ArchiveEditPage (edit)", () => {
     expect(api.updateArchiveItem).toHaveBeenCalledBefore(api.submitArchiveReview);
     expect(api.submitArchiveReview).toHaveBeenCalledWith(5);
     expect(wrapper.get("[data-testid=send-review]").text()).toBe("Under review");
+  });
+
+  describe("draft mode (proposals.submit)", () => {
+    it("saves the fields section through saveDraft instead of the direct endpoint", async () => {
+      const wrapper = await mountAt("/en/admin/archive/5", ["archive.manage", "proposals.submit"]);
+
+      await wrapper.get("[data-testid=license]").setValue("CC0");
+      await wrapper.get("[data-testid=save-draft]").trigger("click");
+      await flushPromises();
+
+      expect(editorial.saveDraft).toHaveBeenCalledTimes(1);
+      expect(editorial.saveDraft.mock.calls[0][0]).toBe("archive-items");
+      expect(editorial.saveDraft.mock.calls[0][1]).toBe(5);
+      expect(editorial.saveDraft.mock.calls[0][2].fields).toMatchObject({ license: "CC0", item_type: "image" });
+      expect(api.updateArchiveItem).not.toHaveBeenCalled();
+      expect(api.syncArchiveItemThemes).toHaveBeenCalledWith(5, [2]);
+      expect(wrapper.get("[data-testid=saved-feedback]").text()).toBe("Saved to draft");
+    });
+
+    it("initializes the form from the draft fields section instead of live data", async () => {
+      editorial.getDraft.mockResolvedValue({
+        data: {
+          status: "draft",
+          payload: { fields: { title: { ar: "مسودة العنوان", en: null }, license: "CC BY", description: { ar: "وصف", en: "Desc" } } },
+        },
+      });
+      const wrapper = await mountAt("/en/admin/archive/5", ["archive.manage", "proposals.submit"]);
+
+      expect(wrapper.get("[data-testid=draft-banner]").attributes("data-state")).toBe("draft");
+      expect(wrapper.get("[data-testid=title-ar]").element).toHaveProperty("value", "مسودة العنوان");
+      expect(wrapper.get("[data-testid=license]").element).toHaveProperty("value", "CC BY");
+    });
+
+    it("shows the pending state and disables saving while a review is open", async () => {
+      editorial.getDraft.mockResolvedValue({ data: { status: "pending", payload: {} } });
+      const wrapper = await mountAt("/en/admin/archive/5", ["archive.manage", "proposals.submit"]);
+
+      expect(wrapper.get("[data-testid=draft-banner]").attributes("data-state")).toBe("pending");
+      expect(wrapper.get("[data-testid=save-draft]").attributes("disabled")).toBeDefined();
+    });
+
+    it("blocks editing with a non-actionable banner when another user's review is open", async () => {
+      editorial.getDraft.mockRejectedValue(new ApiError("server", "conflict", { status: 409, body: { message: "conflict", proposal_id: "p9" } }));
+      const wrapper = await mountAt("/en/admin/archive/5", ["archive.manage", "proposals.submit"]);
+
+      expect(wrapper.get("[data-testid=draft-banner]").attributes("data-state")).toBe("blocked");
+      expect(wrapper.get("[data-testid=save-draft]").attributes("disabled")).toBeDefined();
+      expect(editorial.saveDraft).not.toHaveBeenCalled();
+    });
+
+    it("sends the draft for review and flips the banner to awaiting review", async () => {
+      const wrapper = await mountAt("/en/admin/archive/5", ["archive.manage", "proposals.submit"]);
+      expect(wrapper.find("[data-testid=send-for-review]").exists()).toBe(false);
+
+      await wrapper.get("[data-testid=save-draft]").trigger("click");
+      await flushPromises();
+      await wrapper.get("[data-testid=send-for-review]").trigger("click");
+      await flushPromises();
+
+      expect(editorial.submitDraft).toHaveBeenCalledWith("archive-items", 5);
+      expect(wrapper.get("[data-testid=draft-banner]").attributes("data-state")).toBe("pending");
+      expect(wrapper.get("[data-testid=draft-notice]").text()).toBe("Your draft was sent for review.");
+    });
   });
 });
 

@@ -1,7 +1,8 @@
 import type { Bilingual } from "@/types/artist";
 import type { PaginationMeta } from "@/types/api";
+import type { CurationUpdate, DateValue, Localized, ProfileEntry, SocialLink } from "@/types/artistCuration";
 
-export const PROPOSAL_STATUSES = ["pending", "approved", "rejected", "superseded"] as const;
+export const PROPOSAL_STATUSES = ["draft", "pending", "changes_requested", "approved", "rejected", "superseded"] as const;
 export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number];
 export const REVIEW_TYPES = ["editorial_review", "archivist_review", "data_audit", "second_source_needed"] as const;
 export type ReviewType = (typeof REVIEW_TYPES)[number];
@@ -42,6 +43,30 @@ export interface Proposal {
   resulting_revision_id: string | null;
   created_at: string;
   conflicts?: ProposalConflict[];
+  /** Per-type draft sections (editorial drafts only): each section matches the body of the corresponding direct endpoint. */
+  payload?: Record<string, unknown>;
+}
+
+/** PATCH /api/v1/artists/{id} body as stored in a draft's `fields` section. */
+export interface ArtistDraftFields {
+  name?: Localized;
+  bio?: Localized;
+  birth?: DateValue | null;
+  death?: DateValue | null;
+  nationality?: Localized;
+  classification?: Localized;
+  living_status?: "unknown" | "living" | "deceased";
+  legacy_code?: string;
+  publication_status?: string;
+}
+
+/** Artist draft payload: sections are optional; each matches the corresponding direct endpoint's body. */
+export interface ArtistDraftPayload {
+  fields?: ArtistDraftFields;
+  educations?: ProfileEntry[];
+  activities?: ProfileEntry[];
+  social_links?: { links: SocialLink[] };
+  curation?: CurationUpdate;
 }
 
 export type RevisionSource = "direct_edit" | "approved_proposal" | "rollback" | "audit";
@@ -67,4 +92,96 @@ export interface Revision {
 export interface ProposalsPage {
   data: Proposal[];
   meta: PaginationMeta;
+}
+
+/** PATCH /api/v1/artworks/{id} body as stored in a draft's `fields` section. */
+export interface ArtworkDraftFields {
+  title?: Localized;
+  is_untitled?: boolean;
+  category?: string;
+  artist_id?: number | null;
+  holder_id?: number | null;
+  medium?: Localized;
+  signed?: string;
+  dimensions?: { height_cm?: number | null; width_cm?: number | null; depth_cm?: number | null };
+  frame_dimensions?: { height_cm?: number | null; width_cm?: number | null; depth_cm?: number | null };
+  weight_kg?: number | null;
+  edition_number?: string | null;
+  edition_size?: number | null;
+  holder_inventory_no?: string | null;
+  inventory_by_owner?: string | null;
+  condition_report_link?: string | null;
+  condition_report_status?: string | null;
+  image_quality?: string | null;
+  editing_status?: string | null;
+  notes?: Localized;
+  material_classification?: string;
+  conservation_risk_note?: string | null;
+  creation?: DateValue | null;
+}
+
+/** One pipeline toggle; the backend applies each via PipelineService. */
+export interface ArtworkPipelineStageDraft {
+  stage_key: string;
+  status?: "not_started" | "in_progress" | "tbc" | "done" | "not_applicable";
+  note?: string | null;
+  linked_file_id?: number | null;
+}
+
+/** Artwork draft payload: sections are optional; each matches the corresponding direct endpoint's body. */
+export interface ArtworkDraftPayload {
+  fields?: ArtworkDraftFields;
+  pipeline?: { stages: ArtworkPipelineStageDraft[] };
+}
+
+/** PATCH /api/v1/events/{id} body as stored in a draft's `fields` section. */
+export interface EventDraftFields {
+  event_type?: string;
+  title?: Localized;
+  description?: Localized;
+  venue_name?: string | null;
+  city?: string | null;
+  holder_id?: number | null;
+  date_note?: string | null;
+  start?: DateValue | null;
+  end?: DateValue | null;
+}
+
+/** One participant row as sent by the participants sync endpoint. */
+export interface EventParticipantDraft {
+  id?: number;
+  type: "artist" | "artwork";
+  participant_id: number;
+  role: string;
+  note: string | null;
+}
+
+/** Event draft payload: `fields` mirrors PATCH /events/{id}; `participants` mirrors the participants sync body. */
+export interface EventDraftPayload {
+  fields?: EventDraftFields;
+  participants?: { participants: EventParticipantDraft[] };
+}
+
+/** PATCH /api/v1/archive-items/{id} body as stored in a draft's `fields` section. */
+export interface ArchiveItemDraftFields {
+  item_type?: string;
+  title?: Localized;
+  description?: Localized;
+  place?: Localized;
+  people_names?: string[];
+  keywords?: string[];
+  source_name?: string | null;
+  rights_holder?: Localized;
+  rights_status?: string;
+  license?: string | null;
+  verification_reference?: string | null;
+  access_level?: string;
+  legacy_ref?: string | null;
+  content?: DateValue | null;
+  date_note?: string | null;
+}
+
+/** Archive item draft payload: only the `fields` section, mirroring PATCH /archive-items/{id}. */
+export interface ArchiveItemDraftPayload {
+  fields?: ArchiveItemDraftFields;
 }

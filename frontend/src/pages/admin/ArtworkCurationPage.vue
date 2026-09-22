@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 
@@ -8,6 +8,7 @@ import {
 } from "@/api/artworkCuration";
 import ArtworkImagesPanel from "@/components/curation/ArtworkImagesPanel.vue";
 import ArtworkFormSections from "@/components/curation/ArtworkFormSections.vue";
+import DraftStatusBanner from "@/components/curation/DraftStatusBanner.vue";
 import RevisionHistoryPanel from "@/components/proposals/RevisionHistoryPanel.vue";
 import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
@@ -16,8 +17,10 @@ import { useArtworkForm } from "@/composables/useArtworkForm";
 import { useArtworkCuration } from "@/composables/useArtworkCuration";
 import { useLocalePath } from "@/composables/useLocalePath";
 import { useLocalized } from "@/composables/useLocalized";
+import { useRecordDraft } from "@/composables/useRecordDraft";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
+import type { ArtworkDraftPayload } from "@/types/proposal";
 import {
   PIPELINE_STATUSES, type ArtworkStatus, type ImageRights, type PipelineStatus,
 } from "@/types/artworkCuration";
@@ -37,6 +40,71 @@ const { form, artist, holder, load: loadForm, payload } = useArtworkForm();
 
 watch(curation, (c) => c && loadForm(c), { immediate: true });
 
+// Editors (and admins, who also hold proposals.submit) work through the draft
+// pipeline: saves upsert a draft proposal instead of touching the live record.
+const draftMode = computed(() => auth.can("proposals.submit"));
+const {
+  status: draftStatus, reviewNote: draftReviewNote, blocker: draftBlocker, pendingSubmit,
+  draftPayload, dirtySections, init: initDraft, saveSection, submit: submitDraftForReview,
+  resetLocally: resetDraftLocally,
+} = useRecordDraft();
+const draftLocked = computed(() => draftMode.value && (draftStatus.value === "pending" || draftBlocker.value !== null));
+
+/** Stage statuses overridden by the open draft; keys are stage_key, last toggle wins. */
+const draftStageOverrides = reactive<Record<string, PipelineStatus>>({});
+
+/** Draft sections win over live data when initializing the form models. */
+function applyDraftToForm(): void {
+  const p = draftPayload.value as ArtworkDraftPayload;
+  if (p.fields) {
+    const f = p.fields;
+    if (f.title) form.title = { ar: f.title.ar ?? "", en: f.title.en ?? "" };
+    if (f.is_untitled !== undefined) form.isUntitled = f.is_untitled;
+    if (f.category) form.category = f.category;
+    if (f.medium) form.medium = { ar: f.medium.ar ?? "", en: f.medium.en ?? "" };
+    if (f.signed) form.signed = f.signed as typeof form.signed;
+    if (f.creation) form.year = f.creation.year_from ? String(f.creation.year_from) : "";
+    if (f.dimensions) {
+      form.height = f.dimensions.height_cm?.toString() ?? "";
+      form.width = f.dimensions.width_cm?.toString() ?? "";
+      form.depth = f.dimensions.depth_cm?.toString() ?? "";
+    }
+    if (f.frame_dimensions) {
+      form.frameHeight = f.frame_dimensions.height_cm?.toString() ?? "";
+      form.frameWidth = f.frame_dimensions.width_cm?.toString() ?? "";
+      form.frameDepth = f.frame_dimensions.depth_cm?.toString() ?? "";
+    }
+    if (f.weight_kg !== undefined) form.weight = f.weight_kg?.toString() ?? "";
+    if (f.edition_number !== undefined) form.editionNumber = f.edition_number ?? "";
+    if (f.edition_size !== undefined) form.editionSize = f.edition_size?.toString() ?? "";
+    if (f.holder_inventory_no !== undefined) form.holderInventory = f.holder_inventory_no ?? "";
+    if (f.inventory_by_owner !== undefined) form.inventoryByOwner = f.inventory_by_owner ?? "";
+    if (f.condition_report_link !== undefined) form.conditionLink = f.condition_report_link ?? "";
+    if (f.condition_report_status !== undefined) form.conditionStatus = (f.condition_report_status ?? "") as typeof form.conditionStatus;
+    if (f.image_quality !== undefined) form.imageQuality = (f.image_quality ?? "") as typeof form.imageQuality;
+    if (f.editing_status !== undefined) form.editingStatus = f.editing_status ?? "";
+    if (f.notes) form.notes = { ar: f.notes.ar ?? "", en: f.notes.en ?? "" };
+    if (f.material_classification) form.materialClassification = f.material_classification as typeof form.materialClassification;
+    if (f.conservation_risk_note !== undefined) form.riskNote = f.conservation_risk_note ?? "";
+  }
+  if (p.pipeline) {
+    for (const s of p.pipeline.stages) {
+      if (s.status) draftStageOverrides[s.stage_key] = s.status;
+    }
+  }
+}
+
+watch(curation, async (c) => {
+  if (!c || !draftMode.value) return;
+  try {
+    await initDraft("artworks", id.value);
+  } catch {
+    // A failed draft lookup must not block the page; the live record still loads.
+    return;
+  }
+  applyDraftToForm();
+}, { immediate: true });
+
 const saving = ref(false);
 const saved = ref(false);
 const approving = ref(false);
@@ -51,14 +119,41 @@ async function save(): Promise<void> {
   saved.value = false;
   actionError.value = null;
   try {
-    await updateArtwork(id.value, payload("update"));
-    await retry();
+    if (draftMode.value) {
+      // Nothing changes live: the fields section is merged into the draft payload.
+      await saveSection("fields", payload("update"));
+    } else {
+      await updateArtwork(id.value, payload("update"));
+      await retry();
+    }
     saved.value = true;
   } catch (err) {
     actionError.value = messageOf(err);
   } finally {
     saving.value = false;
   }
+}
+
+const draftNotice = ref<string | null>(null);
+
+async function sendForReview(): Promise<void> {
+  draftNotice.value = null;
+  actionError.value = null;
+  try {
+    await submitDraftForReview();
+    draftNotice.value = t("draft.submitSuccess");
+  } catch {
+    actionError.value = t("draft.submitError");
+  }
+}
+
+function discardDraft(): void {
+  draftNotice.value = null;
+  actionError.value = null;
+  resetDraftLocally();
+  saved.value = false;
+  for (const key of Object.keys(draftStageOverrides)) delete draftStageOverrides[key];
+  if (curation.value) loadForm(curation.value);
 }
 
 const imageBusy = ref(false);
@@ -83,6 +178,18 @@ const onRemove = (imageId: number) => imageAction(() => deleteArtworkImage(id.va
 
 async function setStage(key: string, status: PipelineStatus): Promise<void> {
   actionError.value = null;
+  if (draftMode.value) {
+    // Each toggle appends one entry; the backend applies them via PipelineService.
+    const stages = [...((draftPayload.value as ArtworkDraftPayload).pipeline?.stages ?? [])];
+    stages.push({ stage_key: key, status });
+    try {
+      await saveSection("pipeline", { stages });
+      draftStageOverrides[key] = status;
+    } catch (err) {
+      actionError.value = messageOf(err);
+    }
+    return;
+  }
   try {
     await updateArtworkStage(id.value, key, status);
     await retry();
@@ -142,7 +249,7 @@ const stageClass = (s: PipelineStatus) =>
           </p>
         </div>
         <div class="flex items-center gap-2">
-          <button type="button" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft disabled:opacity-50" :disabled="saving" @click="save">
+          <button type="button" data-testid="save-button" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft disabled:opacity-50" :disabled="saving || draftLocked" @click="save">
             {{ saving ? t("curation.detail.saving") : t("curation.detail.save") }}
           </button>
           <button
@@ -157,7 +264,18 @@ const stageClass = (s: PipelineStatus) =>
           </button>
         </div>
       </div>
-      <p v-if="saved" class="mt-2 text-sm text-success">{{ t("curation.detail.saved") }}</p>
+      <DraftStatusBanner
+        v-if="draftMode"
+        :status="draftStatus"
+        :blocker="draftBlocker"
+        :can-submit="dirtySections.size > 0"
+        :submitting="pendingSubmit"
+        :review-note="draftReviewNote"
+        @submit="sendForReview"
+        @discard="discardDraft"
+      />
+      <p v-if="saved" class="mt-2 text-sm text-success" data-testid="saved-feedback">{{ draftMode ? t("draft.sectionSaved") : t("curation.detail.saved") }}</p>
+      <p v-if="draftNotice" class="mt-2 text-sm text-success" data-testid="draft-notice">{{ draftNotice }}</p>
       <p v-if="actionError" class="mt-2 text-sm text-danger">{{ actionError }}</p>
 
       <div class="mt-8 grid gap-10 lg:grid-cols-[20rem_1fr]">
@@ -183,7 +301,7 @@ const stageClass = (s: PipelineStatus) =>
             <ul class="divide-y divide-line text-sm" data-testid="pipeline">
               <li v-for="s in curation.pipeline" :key="s.stage_key" class="flex items-center justify-between gap-2 py-3">
                 <span class="text-ink">{{ t(`curation.artworkDetail.stages.${s.stage_key}`) }}</span>
-                <select :value="s.status" class="rounded-sm border-0 px-1.5 py-0.5 text-xs font-medium" :class="stageClass(s.status)" :aria-label="t(`curation.artworkDetail.stages.${s.stage_key}`)" @change="setStage(s.stage_key, ($event.target as HTMLSelectElement).value as PipelineStatus)">
+                <select :value="draftStageOverrides[s.stage_key] ?? s.status" class="rounded-sm border-0 px-1.5 py-0.5 text-xs font-medium" :class="stageClass(draftStageOverrides[s.stage_key] ?? s.status)" :aria-label="t(`curation.artworkDetail.stages.${s.stage_key}`)" :disabled="draftLocked" @change="setStage(s.stage_key, ($event.target as HTMLSelectElement).value as PipelineStatus)">
                   <option v-for="st in PIPELINE_STATUSES" :key="st" :value="st">{{ t(`curation.artworkDetail.stageStatus.${st}`) }}</option>
                 </select>
               </li>

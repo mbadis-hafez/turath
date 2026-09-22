@@ -14,6 +14,7 @@ import arCommon from "./locales/ar/common.json";
 import arCuration from "./locales/ar/curation.json";
 import arDashboard from "./locales/ar/dashboard.json";
 import arDates from "./locales/ar/dates.json";
+import arDraft from "./locales/ar/draft.json";
 import arErrors from "./locales/ar/errors.json";
 import arHome from "./locales/ar/home.json";
 import arImports from "./locales/ar/imports.json";
@@ -34,6 +35,7 @@ import enCommon from "./locales/en/common.json";
 import enCuration from "./locales/en/curation.json";
 import enDashboard from "./locales/en/dashboard.json";
 import enDates from "./locales/en/dates.json";
+import enDraft from "./locales/en/draft.json";
 import enErrors from "./locales/en/errors.json";
 import enHome from "./locales/en/home.json";
 import enImports from "./locales/en/imports.json";
@@ -100,6 +102,7 @@ export const i18n = createI18n({
       proposals: arProposals,
       events: arEvents,
       dates: arDates,
+      draft: arDraft,
       search: arSearch,
       users: arUsers,
       imports: arImports,
@@ -122,6 +125,7 @@ export const i18n = createI18n({
       proposals: enProposals,
       events: enEvents,
       dates: enDates,
+      draft: enDraft,
       search: enSearch,
       users: enUsers,
       imports: enImports,
