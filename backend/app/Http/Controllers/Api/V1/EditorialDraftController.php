@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\ProposalStatus;
+use App\Enums\ReviewType;
 use App\Models\EditProposal;
 use App\Support\Completeness\CitableTypeResolver;
 use App\Support\Proposals\EditorialDraftService;
@@ -69,8 +70,7 @@ class EditorialDraftController
     /** GET proposals/{proposal}/diff — per-section diff of an editorial draft against the live record. */
     public function diff(Request $request, EditProposal $proposal): JsonResponse
     {
-        abort_if($proposal->proposed_by_user_id !== $request->user()->id
-            && ! ($request->user()?->can($this->managePermission($proposal)) ?? false), 403);
+        abort_if($proposal->proposed_by_user_id !== $request->user()->id && ! $this->mayReview($request, $proposal), 403);
 
         return response()->json(['data' => ProposalDiffBuilder::build($proposal)]);
     }
@@ -82,7 +82,7 @@ class EditorialDraftController
         abort_if($record === null, 404);
 
         abort_if($proposal->proposed_by_user_id === $request->user()->id, 403);
-        abort_unless($request->user()?->can($this->managePermission($proposal)) ?? false, 403);
+        abort_unless($this->mayReview($request, $proposal), 403);
 
         $data = $request->validate(['review_note' => ['required', 'string', 'min:3', 'max:5000']]);
         abort_unless($proposal->status === ProposalStatus::Pending->value, 422);
@@ -103,6 +103,19 @@ class EditorialDraftController
         $record = $entry['model']::query()->findOrFail($id);
 
         return [$entry, $record];
+    }
+
+    /** Reviewing means holding the record-type manage permission or the proposal's own review_queue.* permission. */
+    private function mayReview(Request $request, EditProposal $proposal): bool
+    {
+        $user = $request->user();
+        if ($user !== null && $user->can($this->managePermission($proposal))) {
+            return true;
+        }
+
+        $type = ReviewType::tryFrom($proposal->review_type);
+
+        return $type !== null && ($user?->can($type->permission()) ?? false);
     }
 
     private function managePermission(EditProposal $proposal): string

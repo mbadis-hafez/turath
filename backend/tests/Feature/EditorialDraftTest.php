@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ReviewType;
 use App\Models\ArchiveItem;
 use App\Models\Artist;
 use App\Models\Artwork;
@@ -311,6 +312,26 @@ it('serves a per-section diff to the proposer and managers only', function () {
     $this->actingAs($editor)->getJson("/api/v1/proposals/{$blank}/diff")
         ->assertOk()
         ->assertJsonPath('data.sections', [['key' => 'fields', 'fields' => [], 'collections' => []]]);
+});
+
+it('lets a review-queue permission holder read the diff and request changes without the manage permission', function () {
+    $editor = editorUser();
+    $artist = draftableArtist();
+
+    $id = upsertDraft('artists', $artist->id, $editor, ['fields' => ['bio' => ['en' => 'Queue-visible draft.']]])->json('data.id');
+    submitDraft('artists', $artist->id, $editor)->assertOk();
+
+    $queueReviewer = makeUser('reviewer');
+    $queueReviewer->givePermissionTo(ReviewType::from(EditProposal::find($id)->review_type)->permission());
+
+    Auth::forgetGuards();
+    $this->actingAs($queueReviewer)->getJson("/api/v1/proposals/{$id}/diff")
+        ->assertOk()
+        ->assertJsonPath('data.sections.0.key', 'fields');
+
+    Auth::forgetGuards();
+    $this->actingAs($queueReviewer)->postJson("/api/v1/proposals/{$id}/request-changes", ['review_note' => 'Tighten the wording.'])
+        ->assertOk()->assertJsonPath('data.status', 'changes_requested');
 });
 
 it('applies an event draft with fields and participants on approval', function () {
