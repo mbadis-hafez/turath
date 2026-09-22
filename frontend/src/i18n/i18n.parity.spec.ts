@@ -20,9 +20,11 @@ const namespaces = {
   auth: loadLocales("auth"),
   common: loadLocales("common"),
   dates: loadLocales("dates"),
+  draft: loadLocales("draft"),
   errors: loadLocales("errors"),
   home: loadLocales("home"),
   nav: loadLocales("nav"),
+  proposals: loadLocales("proposals"),
   users: loadLocales("users"),
 } as const;
 

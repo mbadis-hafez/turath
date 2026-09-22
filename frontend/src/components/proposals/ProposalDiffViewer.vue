@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
+import { getProposalDiff, requestChanges as requestProposalChanges } from "@/api/editorial";
 import { approveProposal, rejectProposal } from "@/api/proposals";
 import FieldDiffTable from "@/components/proposals/FieldDiffTable.vue";
+import ProposalSectionDiffs from "@/components/proposals/ProposalSectionDiffs.vue";
 import { ApiError } from "@/types/api";
 import type { Proposal, ProposalConflict } from "@/types/proposal";
+import type { SectionDiff } from "@/types/proposalDiff";
 import { formatDateTime } from "@/utils/format";
 import type { AppLocale } from "@/i18n";
 
-const props = defineProps<{ proposal: Proposal; canReview: boolean }>();
+const props = defineProps<{ proposal: Proposal; canReview: boolean; currentUserId: number | null }>();
 const emit = defineEmits<{ reviewed: [] }>();
 
 const { t, locale } = useI18n();
@@ -34,6 +37,32 @@ const rows = computed(() =>
   }),
 );
 const isPending = computed(() => props.proposal.status === "pending");
+const isOwn = computed(() => props.proposal.proposed_by?.id != null && props.proposal.proposed_by.id === props.currentUserId);
+const isSectioned = computed(() => props.proposal.payload != null && Object.keys(props.proposal.payload).length > 0);
+
+const sections = ref<SectionDiff[] | null>(null);
+const diffFailed = ref(false);
+let controller: AbortController | null = null;
+
+async function loadDiff(): Promise<void> {
+  controller?.abort();
+  if (!isSectioned.value) return;
+  const self = new AbortController();
+  controller = self;
+  sections.value = null;
+  diffFailed.value = false;
+  try {
+    const response = await getProposalDiff(props.proposal.id, self.signal);
+    if (controller !== self) return;
+    sections.value = response.data.sections;
+  } catch {
+    if (controller !== self) return;
+    // Fall back to the flat field_diffs rendering the legacy flow uses.
+    diffFailed.value = true;
+  }
+}
+watch(() => props.proposal.id, () => void loadDiff(), { immediate: true });
+onBeforeUnmount(() => controller?.abort());
 
 async function approve(confirmConflict = false): Promise<void> {
   busy.value = true;
@@ -70,8 +99,26 @@ async function reject(): Promise<void> {
   }
 }
 
+async function requestChanges(): Promise<void> {
+  if (note.value.trim().length < 3) {
+    error.value = t("proposals.noteRequiredChanges");
+    return;
+  }
+  busy.value = true;
+  error.value = null;
+  try {
+    await requestProposalChanges(props.proposal.id, note.value);
+    emit("reviewed");
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : t("errors.generic");
+  } finally {
+    busy.value = false;
+  }
+}
+
 const STATUS_CLASS: Record<string, string> = {
-  pending: "bg-warn-soft text-warn", approved: "bg-success-soft text-success",
+  draft: "bg-neutral-soft text-ink-muted", pending: "bg-warn-soft text-warn",
+  changes_requested: "bg-danger-soft text-danger", approved: "bg-success-soft text-success",
   rejected: "bg-danger-soft text-danger", superseded: "bg-neutral-soft text-ink-muted",
 };
 </script>
@@ -102,7 +149,12 @@ const STATUS_CLASS: Record<string, string> = {
       </ul>
     </div>
 
-    <FieldDiffTable class="mt-4" :rows="rows" :labels="proposal.field_labels" />
+    <template v-if="isSectioned">
+      <p v-if="sections === null && !diffFailed" class="mt-4 text-xs text-ink-muted" data-testid="diff-loading">{{ t("proposals.diffLoading") }}</p>
+      <ProposalSectionDiffs v-else-if="!diffFailed && sections !== null" class="mt-4" :sections="sections" />
+      <FieldDiffTable v-else class="mt-4" :rows="rows" :labels="proposal.field_labels" />
+    </template>
+    <FieldDiffTable v-else class="mt-4" :rows="rows" :labels="proposal.field_labels" />
 
     <ul v-if="proposal.proposed_citations.length" class="mt-4 space-y-1 text-xs text-ink-muted" data-testid="proposed-citations">
       <li v-for="(c, n) in proposal.proposed_citations" :key="n">{{ t("proposals.citationFor", { field: c.field_key }) }}</li>
@@ -112,7 +164,7 @@ const STATUS_CLASS: Record<string, string> = {
       {{ t("proposals.reviewedBy", { name: proposal.reviewed_by?.name ?? "—" }) }}: {{ proposal.review_note }}
     </p>
 
-    <template v-if="canReview && isPending">
+    <template v-if="canReview && isPending && !isOwn">
       <label class="mt-4 block text-xs text-ink-muted">{{ t("proposals.reviewNote") }}
         <textarea v-model="note" rows="2" class="mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none" data-testid="review-note-input" />
       </label>
@@ -121,8 +173,10 @@ const STATUS_CLASS: Record<string, string> = {
         <button v-if="conflicts.length === 0" type="button" class="rounded-md bg-ink px-4 py-2 text-sm font-semibold text-paper disabled:opacity-50" :disabled="busy" data-testid="approve" @click="approve(false)">{{ t("proposals.approve") }}</button>
         <button v-else type="button" class="rounded-md bg-warn px-4 py-2 text-sm font-semibold text-surface disabled:opacity-50" :disabled="busy" data-testid="approve-confirm" @click="approve(true)">{{ t("proposals.approveAnyway") }}</button>
         <button type="button" class="rounded-md border border-danger px-4 py-2 text-sm font-medium text-danger hover:bg-danger-soft disabled:opacity-50" :disabled="busy" data-testid="reject" @click="reject">{{ t("proposals.reject") }}</button>
+        <button type="button" class="rounded-md border border-warn px-4 py-2 text-sm font-medium text-warn hover:bg-warn-soft disabled:opacity-50" :disabled="busy" data-testid="request-changes" @click="requestChanges">{{ t("proposals.requestChanges") }}</button>
       </div>
     </template>
+    <p v-else-if="canReview && isPending && isOwn" class="mt-4 text-sm text-ink-muted" data-testid="own-proposal">{{ t("proposals.ownProposal") }}</p>
     <p v-else-if="error" class="mt-2 text-sm text-danger" role="alert">{{ error }}</p>
   </article>
 </template>

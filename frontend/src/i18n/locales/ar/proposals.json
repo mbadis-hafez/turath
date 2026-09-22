@@ -10,12 +10,15 @@
   "empty2": "لا يوجد شيء هنا",
   "emptyHelpReviewer": "لا اقتراحات مطابقة لعوامل التصفية.",
   "emptyHelpContributor": "لم تقترح أي تعديل بعد.",
+  "emptyHowToSubmit": "لاقتراح تعديل، افتح صفحة أي فنان أو عمل فني واختر «إرسال تصحيح».",
   "fieldsChanged": "{count} حقول",
   "empty": "فارغ",
   "true": "نعم",
   "false": "لا",
   "statuses": {
+    "draft": "مسودة",
     "pending": "قيد المراجعة",
+    "changes_requested": "مطلوب تعديلات",
     "approved": "مقبول",
     "rejected": "مرفوض",
     "superseded": "متجاوَز"
@@ -46,6 +49,24 @@
   "reviewedBy": "راجعه {name}",
   "reviewNote": "ملاحظة المراجعة",
   "noteRequired": "الملاحظة مطلوبة عند الرفض.",
+  "noteRequiredChanges": "ملاحظة مطلوبة عند طلب التعديلات.",
+  "ownProposal": "هذا اقتراحك — يجب أن يراجعه محرر آخر.",
+  "requestChanges": "طلب تعديلات",
+  "diffLoading": "جاري تحميل المقارنة…",
+  "diff": {
+    "added": "إضافات",
+    "removed": "حذف",
+    "changed": "تعديلات"
+  },
+  "diffSections": {
+    "fields": "الحقول",
+    "curation": "التوثيق والملكية",
+    "educations": "التعليم",
+    "activities": "الجوائز والمعارض والمحاضرات والندوات",
+    "social_links": "روابط التواصل",
+    "pipeline": "مراحل الإنجاز",
+    "participants": "المشاركون"
+  },
   "approve": "قبول",
   "approveAnyway": "القبول مقابل القيمة الحالية",
   "reject": "رفض",

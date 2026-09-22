@@ -10,12 +10,15 @@
   "empty2": "Nothing here",
   "emptyHelpReviewer": "No proposals match these filters.",
   "emptyHelpContributor": "You haven't suggested any edits yet.",
+  "emptyHowToSubmit": "To suggest an edit, open any artist or artwork page and use \"Send a correction\".",
   "fieldsChanged": "{count} fields",
   "empty": "empty",
   "true": "Yes",
   "false": "No",
   "statuses": {
+    "draft": "Draft",
     "pending": "Pending",
+    "changes_requested": "Changes requested",
     "approved": "Approved",
     "rejected": "Rejected",
     "superseded": "Superseded"
@@ -46,6 +49,24 @@
   "reviewedBy": "Reviewed by {name}",
   "reviewNote": "Review note",
   "noteRequired": "A note is required when rejecting.",
+  "noteRequiredChanges": "A note is required when requesting changes.",
+  "ownProposal": "This is your own proposal — another reviewer must review it.",
+  "requestChanges": "Request changes",
+  "diffLoading": "Loading diff…",
+  "diff": {
+    "added": "Added",
+    "removed": "Removed",
+    "changed": "Changed"
+  },
+  "diffSections": {
+    "fields": "Fields",
+    "curation": "Curation & ownership",
+    "educations": "Education",
+    "activities": "Awards, exhibitions, talks & symposiums",
+    "social_links": "Social links",
+    "pipeline": "Pipeline",
+    "participants": "Participants"
+  },
   "approve": "Approve",
   "approveAnyway": "Approve against the current value",
   "reject": "Reject",

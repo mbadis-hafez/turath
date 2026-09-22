@@ -9,14 +9,14 @@ import Pagination from "@/components/common/Pagination.vue";
 import Spinner from "@/components/common/Spinner.vue";
 import ProposalDiffViewer from "@/components/proposals/ProposalDiffViewer.vue";
 import { useAuthStore } from "@/stores/auth";
+import { canReviewProposals } from "@/utils/permissions";
 import type { PaginationMeta } from "@/types/api";
 import { PROPOSAL_STATUSES, REVIEW_TYPES, type Proposal, type ProposalStatus, type ReviewType } from "@/types/proposal";
 
 const { t } = useI18n();
 const auth = useAuthStore();
 
-const MANAGE = ["artists.manage", "artworks.manage", "archive.manage", "events.manage"];
-const canReview = computed(() => MANAGE.some((p) => auth.can(p)));
+const canReview = computed(() => canReviewProposals((p) => auth.can(p)));
 
 const status = ref<ProposalStatus | "">("pending");
 const reviewType = ref<ReviewType | "">("");
@@ -85,7 +85,9 @@ const field = "rounded-md border border-line bg-surface px-3 py-2 text-sm text-i
     <div class="mt-6">
       <ErrorState v-if="error" :error="error" @retry="load" />
       <Spinner v-else-if="loading && items.length === 0" class="mx-auto my-12 block" />
-      <EmptyState v-else-if="items.length === 0" :title="t('proposals.empty2')" :description="canReview ? t('proposals.emptyHelpReviewer') : t('proposals.emptyHelpContributor')" />
+      <EmptyState v-else-if="items.length === 0" :title="t('proposals.empty2')" :description="canReview ? t('proposals.emptyHelpReviewer') : t('proposals.emptyHelpContributor')">
+        <p v-if="!canReview" class="mt-3 text-sm text-ink-muted" data-testid="empty-submit-hint">{{ t("proposals.emptyHowToSubmit") }}</p>
+      </EmptyState>
       <template v-else>
         <ul class="space-y-3" data-testid="proposals-list">
           <li v-for="p in items" :key="p.id" data-testid="proposal-row">
@@ -102,7 +104,7 @@ const field = "rounded-md border border-line bg-surface px-3 py-2 text-sm text-i
               </span>
               <span class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="p.status === 'pending' ? 'bg-warn-soft text-warn' : 'bg-neutral-soft text-ink-muted'">{{ t(`proposals.statuses.${p.status}`) }}</span>
             </button>
-            <ProposalDiffViewer v-if="openId === p.id" class="mt-2" :proposal="p" :can-review="canReview" @reviewed="load" />
+            <ProposalDiffViewer v-if="openId === p.id" class="mt-2" :proposal="p" :can-review="canReview" :current-user-id="auth.user?.id ?? null" @reviewed="load" />
           </li>
         </ul>
         <Pagination class="mt-6" :meta="meta" @change="(n: number) => (page = n)" />
