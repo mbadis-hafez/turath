@@ -244,7 +244,11 @@
     "add": "+ Add artwork",
     "merge": "Merge duplicates",
     "artist": "Artist",
-    "holder": "Holder"
+    "holder": "Holder",
+    "view": {
+      "grid": "Grid",
+      "list": "List"
+    }
   },
   "artworkDetail": {
     "back": "Artworks",

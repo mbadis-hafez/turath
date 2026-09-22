@@ -1,24 +1,25 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { useLocalStorage } from "@vueuse/core";
 import { useI18n } from "vue-i18n";
 
 import EmptyState from "@/components/common/EmptyState.vue";
 import ErrorState from "@/components/common/ErrorState.vue";
-import LocalizedText from "@/components/common/LocalizedText.vue";
 import Pagination from "@/components/common/Pagination.vue";
 import Spinner from "@/components/common/Spinner.vue";
 import { useLocalePath } from "@/composables/useLocalePath";
+import ArtworkGridCard from "@/components/curation/ArtworkGridCard.vue";
+import ArtworkListRow from "@/components/curation/ArtworkListRow.vue";
 import ArtworkMergeModal from "@/components/curation/ArtworkMergeModal.vue";
 import EntityPicker, { type PickerOption } from "@/components/curation/EntityPicker.vue";
 import { searchArtistOptions, searchHolderOptions } from "@/components/curation/ArtworkPickers";
+import ViewModeToggle, { type ArtworkViewMode } from "@/components/curation/ViewModeToggle.vue";
 import { useAdminArtworks } from "@/composables/useAdminArtworks";
-import { useLocalized } from "@/composables/useLocalized";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
-import type { ArtworkFlag, ArtworkStatus } from "@/types/artworkCuration";
+import type { ArtworkStatus } from "@/types/artworkCuration";
 
 const { t } = useI18n();
-const { pick } = useLocalized();
 const { localePath } = useLocalePath();
 const auth = useAuthStore();
 
@@ -32,6 +33,14 @@ const {
 
 const merging = ref(false);
 const labels = ref<Record<string, string>>({});
+
+const storedView = useLocalStorage<ArtworkViewMode>("admin-artworks-view", "grid");
+const viewMode = computed<ArtworkViewMode>({
+  get: () => (storedView.value === "list" ? "list" : "grid"),
+  set: (value) => {
+    storedView.value = value;
+  },
+});
 
 function pickerModel(kind: "artist" | "holder") {
   return computed<PickerOption | null>({
@@ -54,17 +63,6 @@ function onMerged(): void {
 }
 
 const STATUSES: ArtworkStatus[] = ["draft", "published", "hidden"];
-const STATUS_CLASS: Record<ArtworkStatus, string> = {
-  draft: "bg-warn-soft text-warn",
-  published: "bg-success-soft text-success",
-  hidden: "bg-neutral-soft text-ink-muted",
-};
-const FLAG_CLASS: Record<ArtworkFlag, string> = {
-  untitled: "bg-danger-soft text-danger",
-  missing_dimensions: "bg-danger-soft text-danger",
-  holder_missing: "bg-danger-soft text-danger",
-  year_uncertain: "bg-danger-soft text-danger",
-};
 
 const hasFilters = computed(() => Object.values(query.value).some((v) => v && v !== 1));
 const toggle = (on: boolean) =>
@@ -85,6 +83,7 @@ const field = "rounded-md border border-line bg-surface px-3 py-2 text-sm text-i
           </p>
         </div>
         <div class="flex items-center gap-2">
+          <ViewModeToggle v-model="viewMode" />
           <button type="button" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft" data-testid="merge-open" @click="merging = true">{{ t("curation.artworkRegistry.merge") }}</button>
           <RouterLink :to="localePath('admin.artworks.new')" class="rounded-md bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-ink/85" data-testid="add-artwork">{{ t("curation.artworkRegistry.add") }}</RouterLink>
         </div>
@@ -121,27 +120,14 @@ const field = "rounded-md border border-line bg-surface px-3 py-2 text-sm text-i
           </button>
         </EmptyState>
         <template v-else>
-          <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <ul v-if="viewMode === 'grid'" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <li v-for="a in items" :key="a.id" data-testid="artwork-card">
-              <div class="relative aspect-[4/3] overflow-hidden bg-neutral-soft">
-                <img v-if="a.thumbnail_url" :src="a.thumbnail_url" alt="" loading="lazy" class="size-full object-cover" />
-                <span class="absolute end-3 top-3 flex flex-wrap gap-1">
-                  <span class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="STATUS_CLASS[a.publication_status]">{{ t(`curation.artworkRegistry.statuses.${a.publication_status}`) }}</span>
-                  <span v-for="f in a.flags" :key="f" class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="FLAG_CLASS[f]">{{ t(`curation.artworkRegistry.flags.${f}`) }}</span>
-                </span>
-              </div>
-              <h2 class="mt-4 text-xl font-semibold text-ink"><RouterLink :to="localePath('admin.artworks.show', { id: a.id })" class="hover:underline"><LocalizedText :text="a.title" /></RouterLink></h2>
-              <p class="text-sm text-ink-muted">{{ pick({ ar: a.title.en, en: a.title.ar })?.text }}</p>
-              <p v-if="a.artist" class="mt-2 text-sm font-medium text-ink"><LocalizedText :text="a.artist.name" /></p>
-              <p class="mt-1 text-xs text-ink-muted">
-                <template v-if="a.year">{{ a.year }}</template>
-                <template v-if="a.year && a.holder"> · </template>
-                <LocalizedText v-if="a.holder" :text="a.holder.name" />
-              </p>
-              <p class="mt-3 flex items-center justify-between border-t border-line pt-2 text-xs tabular-nums text-ink-muted">
-                <span>{{ t("curation.artworkRegistry.pipeline", { cleared: a.pipeline.cleared, total: a.pipeline.total }) }}</span>
-                <span>{{ a.completeness_pct }}%</span>
-              </p>
+              <ArtworkGridCard :artwork="a" />
+            </li>
+          </ul>
+          <ul v-else class="space-y-2">
+            <li v-for="a in items" :key="a.id" data-testid="artwork-card">
+              <ArtworkListRow :artwork="a" />
             </li>
           </ul>
           <Pagination class="mt-6" :meta="meta" @change="setPage" />
