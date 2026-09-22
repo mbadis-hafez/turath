@@ -56,7 +56,7 @@ const portraitBusy = ref(false);
 const draftMode = computed(() => auth.can("proposals.submit"));
 const {
   status: draftStatus, reviewNote: draftReviewNote, blocker: draftBlocker, pendingSubmit,
-  draftPayload, dirtySections, init: initDraft, saveSection, submit: submitDraftForReview,
+  draftPayload, dirtySections, hasContent, init: initDraft, saveSection, submit: submitDraftForReview,
   resetLocally: resetDraftLocally,
 } = useRecordDraft();
 const draftLocked = computed(() => draftMode.value && (draftStatus.value === "pending" || draftBlocker.value !== null));
@@ -92,7 +92,7 @@ function applyDraftToForm(): void {
   }
   if (p.educations) profile.form.entries.educations = JSON.parse(JSON.stringify(p.educations));
   if (p.activities) profile.form.entries.activities = JSON.parse(JSON.stringify(p.activities));
-  if (p.social_links) profile.form.socialLinks = JSON.parse(JSON.stringify(p.social_links.links ?? []));
+  if (p.social_links) profile.form.socialLinks = JSON.parse(JSON.stringify(p.social_links));
   if (p.curation) {
     const cu = p.curation;
     if (cu.identified_through_note !== undefined) form.identified_through_note = cu.identified_through_note ?? "";
@@ -167,7 +167,7 @@ async function save(): Promise<void> {
       await saveSection("fields", profile.profilePayload(current?.city, true));
       await saveSection("educations", entries.educations);
       await saveSection("activities", entries.activities);
-      await saveSection("social_links", { links: profile.socialPayload() });
+      await saveSection("social_links", profile.socialPayload());
       await saveSection("curation", payload());
     } else {
       await updateArtist(id.value, profile.profilePayload(current?.city, true));
@@ -301,7 +301,7 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
         v-if="draftMode"
         :status="draftStatus"
         :blocker="draftBlocker"
-        :can-submit="dirtySections.size > 0"
+        :can-submit="dirtySections.size > 0 || hasContent"
         :submitting="pendingSubmit"
         :review-note="draftReviewNote"
         @submit="sendForReview"

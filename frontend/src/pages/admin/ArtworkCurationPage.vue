@@ -45,7 +45,7 @@ watch(curation, (c) => c && loadForm(c), { immediate: true });
 const draftMode = computed(() => auth.can("proposals.submit"));
 const {
   status: draftStatus, reviewNote: draftReviewNote, blocker: draftBlocker, pendingSubmit,
-  draftPayload, dirtySections, init: initDraft, saveSection, submit: submitDraftForReview,
+  draftPayload, dirtySections, hasContent, init: initDraft, saveSection, submit: submitDraftForReview,
   resetLocally: resetDraftLocally,
 } = useRecordDraft();
 const draftLocked = computed(() => draftMode.value && (draftStatus.value === "pending" || draftBlocker.value !== null));
@@ -88,7 +88,7 @@ function applyDraftToForm(): void {
     if (f.conservation_risk_note !== undefined) form.riskNote = f.conservation_risk_note ?? "";
   }
   if (p.pipeline) {
-    for (const s of p.pipeline.stages) {
+    for (const s of p.pipeline) {
       if (s.status) draftStageOverrides[s.stage_key] = s.status;
     }
   }
@@ -180,10 +180,10 @@ async function setStage(key: string, status: PipelineStatus): Promise<void> {
   actionError.value = null;
   if (draftMode.value) {
     // Each toggle appends one entry; the backend applies them via PipelineService.
-    const stages = [...((draftPayload.value as ArtworkDraftPayload).pipeline?.stages ?? [])];
+    const stages = [...((draftPayload.value as ArtworkDraftPayload).pipeline ?? [])];
     stages.push({ stage_key: key, status });
     try {
-      await saveSection("pipeline", { stages });
+      await saveSection("pipeline", stages);
       draftStageOverrides[key] = status;
     } catch (err) {
       actionError.value = messageOf(err);
@@ -268,7 +268,7 @@ const stageClass = (s: PipelineStatus) =>
         v-if="draftMode"
         :status="draftStatus"
         :blocker="draftBlocker"
-        :can-submit="dirtySections.size > 0"
+        :can-submit="dirtySections.size > 0 || hasContent"
         :submitting="pendingSubmit"
         :review-note="draftReviewNote"
         @submit="sendForReview"

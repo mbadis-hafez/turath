@@ -44,7 +44,7 @@ const { form, holder, participants, themeIds, start, load: loadForm, payload, pa
 const draftMode = computed(() => !isNew.value && auth.can("proposals.submit"));
 const {
   status: draftStatus, reviewNote: draftReviewNote, blocker: draftBlocker, pendingSubmit,
-  draftPayload, dirtySections, init: initDraft, saveSection, submit: submitDraftForReview,
+  draftPayload, dirtySections, hasContent, init: initDraft, saveSection, submit: submitDraftForReview,
   resetLocally: resetDraftLocally,
 } = useRecordDraft();
 const draftLocked = computed(() => draftMode.value && (draftStatus.value === "pending" || draftBlocker.value !== null));
@@ -101,7 +101,7 @@ function applyDraftToForm(): void {
     if ("end" in f) form.endDate = /^\d{4}-\d{2}-\d{2}$/.test(f.end?.display ?? "") ? f.end!.display! : "";
   }
   if (p.participants) {
-    participants.value = p.participants.participants.map((pp) => {
+    participants.value = p.participants.map((pp) => {
       const live = event.value?.participants.find((lp) => lp.id === pp.id || (lp.kind === pp.type && lp.entity.id === pp.participant_id));
       return {
         ...(pp.id ? { id: pp.id } : {}),
@@ -190,7 +190,7 @@ async function save(): Promise<void> {
       // Nothing changes live: fields and participants merge into the draft payload.
       // Theme tagging stays direct, like the other relations endpoints.
       await saveSection("fields", payload("update", originalEnd));
-      await saveSection("participants", { participants: participantsPayload() });
+      await saveSection("participants", participantsPayload());
       await syncEventThemes(id.value!, themeIds.value);
     } else {
       await updateEvent(id.value!, payload("update", originalEnd));
@@ -283,7 +283,7 @@ const missing = (key: string) => (missingKeys.value.has(key) ? "!border-danger" 
         v-if="draftMode"
         :status="draftStatus"
         :blocker="draftBlocker"
-        :can-submit="dirtySections.size > 0"
+        :can-submit="dirtySections.size > 0 || hasContent"
         :submitting="pendingSubmit"
         :review-note="draftReviewNote"
         @submit="sendForReview"

@@ -35,6 +35,26 @@ describe("useRecordDraft", () => {
     expect(draft.reviewNote.value).toBe("Fix the birth year");
     expect(draft.draftPayload.value).toEqual({ fields: { legacy_code: "AR036" } });
     expect(draft.hasDraft.value).toBe(true);
+    expect(draft.hasContent.value).toBe(true);
+  });
+
+  it("reports no content for an empty or absent payload so a reloaded draft can still be judged", async () => {
+    api.getDraft.mockResolvedValue({ data: null });
+    const draft = useRecordDraft();
+    await draft.init("artists", 36);
+    expect(draft.hasContent.value).toBe(false);
+
+    api.getDraft.mockResolvedValue({ data: { status: "draft", payload: {} } });
+    await draft.init("artists", 36);
+    expect(draft.hasContent.value).toBe(false);
+
+    api.getDraft.mockResolvedValue({ data: { status: "draft", payload: { fields: {}, educations: [] } } });
+    await draft.init("artists", 36);
+    expect(draft.hasContent.value).toBe(false);
+
+    api.getDraft.mockResolvedValue({ data: { status: "draft", payload: { fields: { bio: { en: "x" } } } } });
+    await draft.init("artists", 36);
+    expect(draft.hasContent.value).toBe(true);
   });
 
   it("turns a 409 on init into a blocker", async () => {

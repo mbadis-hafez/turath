@@ -65,7 +65,7 @@ export interface ArtistDraftPayload {
   fields?: ArtistDraftFields;
   educations?: ProfileEntry[];
   activities?: ProfileEntry[];
-  social_links?: { links: SocialLink[] };
+  social_links?: SocialLink[];
   curation?: CurationUpdate;
 }
 
@@ -131,7 +131,7 @@ export interface ArtworkPipelineStageDraft {
 /** Artwork draft payload: sections are optional; each matches the corresponding direct endpoint's body. */
 export interface ArtworkDraftPayload {
   fields?: ArtworkDraftFields;
-  pipeline?: { stages: ArtworkPipelineStageDraft[] };
+  pipeline?: ArtworkPipelineStageDraft[];
 }
 
 /** PATCH /api/v1/events/{id} body as stored in a draft's `fields` section. */
@@ -159,7 +159,7 @@ export interface EventParticipantDraft {
 /** Event draft payload: `fields` mirrors PATCH /events/{id}; `participants` mirrors the participants sync body. */
 export interface EventDraftPayload {
   fields?: EventDraftFields;
-  participants?: { participants: EventParticipantDraft[] };
+  participants?: EventParticipantDraft[];
 }
 
 /** PATCH /api/v1/archive-items/{id} body as stored in a draft's `fields` section. */

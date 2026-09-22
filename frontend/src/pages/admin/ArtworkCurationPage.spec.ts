@@ -160,7 +160,7 @@ describe("ArtworkCurationPage", () => {
       await flushPromises();
 
       expect(editorial.saveDraft).toHaveBeenCalledTimes(1);
-      expect(editorial.saveDraft.mock.calls[0][2]).toEqual({ pipeline: { stages: [{ stage_key: "work_category", status: "done" }] } });
+      expect(editorial.saveDraft.mock.calls[0][2]).toEqual({ pipeline: [{ stage_key: "work_category", status: "done" }] });
       expect(api.updateArtworkStage).not.toHaveBeenCalled();
       expect(wrapper.get("[data-testid=draft-banner]").attributes("data-state")).toBe("draft");
     });
@@ -171,7 +171,7 @@ describe("ArtworkCurationPage", () => {
           status: "draft",
           payload: {
             fields: { title: { ar: null, en: "Draft Title" }, material_classification: "immovable", risk_note: null },
-            pipeline: { stages: [{ stage_key: "work_category", status: "done" }] },
+            pipeline: [{ stage_key: "work_category", status: "done" }],
           },
         },
       });

@@ -138,7 +138,7 @@ describe("ArtistCurationPage", () => {
       expect(last.fields).toEqual({ nationality: { ar: null, en: null }, classification: { ar: null, en: null } });
       expect(last.educations).toEqual([]);
       expect(last.activities).toEqual([]);
-      expect(last.social_links).toEqual({ links: [] });
+      expect(last.social_links).toEqual([]);
       expect(last.curation).toMatchObject({
         owner_type: "artist",
         authorization_letter_status: "not_started",

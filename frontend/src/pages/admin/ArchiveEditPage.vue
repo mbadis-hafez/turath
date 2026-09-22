@@ -51,7 +51,7 @@ const { form, date, load: loadForm, payload, checklist: liveChecklist } = useArc
 const draftMode = computed(() => !isNew.value && auth.can("proposals.submit"));
 const {
   status: draftStatus, reviewNote: draftReviewNote, blocker: draftBlocker, pendingSubmit,
-  draftPayload, dirtySections, init: initDraft, saveSection, submit: submitDraftForReview,
+  draftPayload, dirtySections, hasContent, init: initDraft, saveSection, submit: submitDraftForReview,
   resetLocally: resetDraftLocally,
 } = useRecordDraft();
 const draftLocked = computed(() => draftMode.value && (draftStatus.value === "pending" || draftBlocker.value !== null));
@@ -398,7 +398,7 @@ const err = (key: string) => fieldErrors.value[key]?.[0];
         v-if="draftMode"
         :status="draftStatus"
         :blocker="draftBlocker"
-        :can-submit="dirtySections.size > 0"
+        :can-submit="dirtySections.size > 0 || hasContent"
         :submitting="pendingSubmit"
         :review-note="draftReviewNote"
         @submit="sendDraftForReview"

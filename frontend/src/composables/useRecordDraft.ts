@@ -35,6 +35,15 @@ export function useRecordDraft() {
 
   const hasDraft = computed(() => status.value !== null && blocker.value === null);
 
+  /** True when the draft carries at least one non-empty section (so a reloaded draft can still be submitted). */
+  const hasContent = computed(() =>
+    Object.values(draftPayload.value).some((v) => {
+      if (v === null || v === undefined) return false;
+      if (typeof v === "object") return Object.keys(v as object).length > 0;
+      return true;
+    }),
+  );
+
   async function init(recordType: RecordType, id: number): Promise<void> {
     type = recordType;
     recordId = id;
@@ -99,7 +108,7 @@ export function useRecordDraft() {
   const sectionInDraft = (section: string): boolean => dirtySections.value.has(section);
 
   return {
-    status, reviewNote, blocker, pendingSubmit, draftPayload, dirtySections, hasDraft,
+    status, reviewNote, blocker, pendingSubmit, draftPayload, dirtySections, hasDraft, hasContent,
     init, saveSection, submit, resetLocally, sectionInDraft,
   };
 }

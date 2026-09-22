@@ -117,7 +117,7 @@ describe("EventEditPage (edit)", () => {
       expect(editorial.saveDraft.mock.calls[0][1]).toBe(7);
       const payloads = editorial.saveDraft.mock.calls.map((call) => call[2] as Record<string, unknown>);
       expect(payloads[0].fields).toMatchObject({ venue_name: "New Wing", event_type: "exhibition" });
-      expect(payloads[1].participants).toEqual({ participants: [{ id: 1, type: "artist", participant_id: 4, role: "awardee", note: "الجائزة الأولى" }] });
+      expect(payloads[1].participants).toEqual([{ id: 1, type: "artist", participant_id: 4, role: "awardee", note: "الجائزة الأولى" }]);
       expect(api.updateEvent).not.toHaveBeenCalled();
       expect(api.syncEventParticipants).not.toHaveBeenCalled();
       expect(api.syncEventThemes).toHaveBeenCalledWith(7, [2]);
@@ -130,7 +130,7 @@ describe("EventEditPage (edit)", () => {
           status: "draft",
           payload: {
             fields: { venue_name: "Draft Hall", city: "Alahsa", title: { ar: "مسودة", en: "Draft Title" } },
-            participants: { participants: [{ id: 1, type: "artist", participant_id: 4, role: "organizer", note: null }] },
+            participants: [{ id: 1, type: "artist", participant_id: 4, role: "organizer", note: null }],
           },
         },
       });
