@@ -4,7 +4,7 @@ use App\Models\Artist;
 
 it('adds, updates and deletes variants', function () {
     $editor = editorUser();
-    $artist = Artist::factory()->published()->create();
+    $artist = Artist::factory()->create();
 
     $response = $this->actingAs($editor)->postJson("/api/v1/artists/{$artist->id}/variants", [
         'name' => 'Abdulhalim Radwi Jr',
@@ -33,7 +33,7 @@ it('adds, updates and deletes variants', function () {
 
 it('detects the variant language from the script', function () {
     $editor = editorUser();
-    $artist = Artist::factory()->published()->create();
+    $artist = Artist::factory()->create();
 
     $this->actingAs($editor)->postJson("/api/v1/artists/{$artist->id}/variants", [
         'name' => 'عبد الحليم رضوي',
@@ -43,7 +43,7 @@ it('detects the variant language from the script', function () {
 
 it('rejects duplicate variant names case-insensitively', function () {
     $editor = editorUser();
-    $artist = Artist::factory()->published()->create();
+    $artist = Artist::factory()->create();
 
     $this->actingAs($editor)->postJson("/api/v1/artists/{$artist->id}/variants", [
         'name' => 'Abdullah Alshaikh',
@@ -58,8 +58,8 @@ it('rejects duplicate variant names case-insensitively', function () {
 
 it('scopes variant routes to the parent artist', function () {
     $editor = editorUser();
-    $artist = Artist::factory()->published()->create();
-    $other = Artist::factory()->published()->create();
+    $artist = Artist::factory()->create();
+    $other = Artist::factory()->create();
 
     $variant = $artist->variants()->create(['name' => 'Scoped Variant', 'type' => 'alias']);
 
@@ -74,7 +74,7 @@ it('scopes variant routes to the parent artist', function () {
 
 it('validates variant payloads', function () {
     $editor = editorUser();
-    $artist = Artist::factory()->published()->create();
+    $artist = Artist::factory()->create();
 
     $this->actingAs($editor)->postJson("/api/v1/artists/{$artist->id}/variants", [
         'name' => 'x',

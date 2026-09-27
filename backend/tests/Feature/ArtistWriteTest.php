@@ -21,7 +21,9 @@ it('creates an artist mapping the nested payload to columns', function () {
         ->assertJsonPath('data.birth.certainty', 'circa')
         ->assertJsonPath('data.birth.place.ar', 'مكة')
         ->assertJsonPath('data.legacy_code', 'AR999')
-        ->assertJsonPath('data.publication_status', 'published')
+        // A brand-new record is always created draft, regardless of what the
+        // payload requests — publishing requires a reviewed creation (005).
+        ->assertJsonPath('data.publication_status', 'draft')
         ->assertJsonPath('data.slug', 'abdulhalim-radwi');
 
     $this->assertDatabaseHas('artists', [
@@ -53,7 +55,7 @@ it('blocks anonymous and reader users from writing', function (string $method, s
 
 it('updates an artist partially and never touches the slug', function () {
     $editor = editorUser();
-    $artist = Artist::factory()->published()->create(['name_en' => 'Keep My Slug']);
+    $artist = Artist::factory()->create(['name_en' => 'Keep My Slug']);
 
     $response = $this->actingAs($editor)->patchJson("/api/v1/artists/{$artist->id}", [
         'bio' => ['en' => 'Updated bio'],
@@ -67,7 +69,7 @@ it('updates an artist partially and never touches the slug', function () {
 
 it('soft deletes and restores', function () {
     $editor = editorUser();
-    $artist = Artist::factory()->published()->create();
+    $artist = Artist::factory()->create();
 
     $this->actingAs($editor)->deleteJson("/api/v1/artists/{$artist->id}")->assertNoContent();
 

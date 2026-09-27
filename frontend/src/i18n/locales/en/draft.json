@@ -1,6 +1,9 @@
 {
   "intro": "Changes you save here are stored as a draft and go live only after review.",
   "draftBadge": "Draft — not sent yet",
+  "creationBadge": "New record — awaiting creation review",
+  "creationHint": "This record isn't real yet. A reviewer must approve it before it can be verified or published.",
+  "creationVerifyBlocked": "Awaiting creation review — this can't be verified yet.",
   "sendForReview": "Send for review",
   "sendForReviewHint": "Save at least one section before sending for review.",
   "awaitingReview": "Awaiting review",

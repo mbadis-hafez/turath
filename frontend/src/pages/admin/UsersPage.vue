@@ -9,14 +9,17 @@ import Pagination from "@/components/common/Pagination.vue";
 import Spinner from "@/components/common/Spinner.vue";
 import { useAdminUsers } from "@/composables/useAdminUsers";
 import { useLocalePath } from "@/composables/useLocalePath";
+import { useLocalized } from "@/composables/useLocalized";
+import { useRoles } from "@/composables/useRoles";
 import { deleteUser } from "@/api/users";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
-import { ADMIN_ROLES } from "@/types/user";
 
 const { t } = useI18n();
+const { pick } = useLocalized();
 const { localePath } = useLocalePath();
 const auth = useAuthStore();
+const { roles } = useRoles();
 
 const forbidden = new ApiError("forbidden", "Forbidden", { status: 403 });
 const canManage = computed(() => auth.can("users.manage"));
@@ -81,6 +84,11 @@ function roleClass(role: string): string {
   return ROLE_BADGE_CLASS[role] ?? "bg-neutral-soft text-ink-muted";
 }
 
+function roleLabel(name: string): string {
+  const match = roles.value.find((r) => r.name === name);
+  return match ? (pick(match.display_name)?.text ?? name) : name;
+}
+
 const hasFilters = computed(() => query.value.search !== "" || query.value.role !== "");
 </script>
 
@@ -115,7 +123,7 @@ const hasFilters = computed(() => query.value.search !== "" || query.value.role 
           @change="setRole(($event.target as HTMLSelectElement).value)"
         >
           <option value="">{{ t("users.allRoles") }}</option>
-          <option v-for="role in ADMIN_ROLES" :key="role" :value="role">{{ t(`users.roles.${role}`) }}</option>
+          <option v-for="role in roles" :key="role.id" :value="role.name">{{ pick(role.display_name)?.text }}</option>
         </select>
       </div>
 
@@ -148,7 +156,7 @@ const hasFilters = computed(() => query.value.search !== "" || query.value.role 
                   <td class="px-3 py-3">
                     <ul class="flex flex-wrap gap-1">
                       <li v-for="role in u.roles" :key="role" class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="roleClass(role)">
-                        {{ t(`users.roles.${role}`) }}
+                        {{ roleLabel(role) }}
                       </li>
                     </ul>
                   </td>

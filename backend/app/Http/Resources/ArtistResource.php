@@ -54,12 +54,13 @@ class ArtistResource extends ArtistListResource
             'updated_at' => $artist->updated_at?->toIso8601String(),
         ]);
 
-        // Verifier details are manager-only; safe for guests.
+        // Verifier details and creation-review state are manager-only; safe for guests.
         if ($request->user()?->can('artists.manage') ?? false) {
             $data['verified_by'] = $artist->verifiedBy ? [
                 'id' => $artist->verifiedBy->id,
                 'name' => $artist->verifiedBy->name,
             ] : null;
+            $data['creation_approved_at'] = $artist->creation_approved_at?->toIso8601String();
         }
 
         return $data;

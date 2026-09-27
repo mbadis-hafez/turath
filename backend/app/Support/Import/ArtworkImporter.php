@@ -54,6 +54,12 @@ class ArtworkImporter implements Importer
             $errors[] = ['field' => 'category', 'message' => 'A category is required.'];
         }
 
+        $recommendedUse = $this->str($mapped['recommended_use'] ?? null);
+
+        if ($recommendedUse !== null && mb_strtolower($recommendedUse) !== 'inventory') {
+            $errors[] = ['field' => 'recommended_use', 'message' => "Only rows marked \"Inventory\" in Recommended Use are imported at this stage (found \"{$recommendedUse}\")."];
+        }
+
         $dimensionsRaw = $this->str($mapped['dimensions_raw'] ?? null);
         $frameDimensionsRaw = $this->str($mapped['frame_dimensions_raw'] ?? null);
         $dimensions = $dimensionsRaw !== null ? DimensionParser::parse($dimensionsRaw) : null;

@@ -84,6 +84,9 @@ export interface ArtworkCuration {
 
 export type ImageRights = "unknown" | "licensed" | "public_domain" | "all_rights_reserved";
 
+/** Mirrors StoreArtworkImagesRequest::MAX_IMAGES_PER_ARTWORK — UI hint only, the server is authoritative. */
+export const MAX_ARTWORK_IMAGES = 20;
+
 export interface ArtworkImage {
   id: number;
   url: string;
@@ -93,6 +96,13 @@ export interface ArtworkImage {
   size_bytes: number;
   rights_status: ImageRights;
   is_final: boolean;
+}
+
+export interface ArtworkImageUploadResult {
+  filename: string | null;
+  status: "attached" | "duplicate" | "rejected";
+  image_id: number | null;
+  message: string | null;
 }
 
 export type MaterialClassification = "movable" | "immovable" | "digital_native" | "unspecified";

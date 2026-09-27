@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 import {
-  createArtist, searchStaffOptions, syncArtistEntries, syncArtistSocialLinks, updateArtistAssignment,
+  createArtist, previewArtistCompleteness, searchStaffOptions, syncArtistEntries, syncArtistSocialLinks, updateArtistAssignment,
   updateArtistCuration, uploadArtistPortrait,
 } from "@/api/artistCuration";
 import ContactsEditor from "@/components/curation/ContactsEditor.vue";
 import EntityPicker, { type PickerOption } from "@/components/curation/EntityPicker.vue";
 import EntryListEditor from "@/components/curation/EntryListEditor.vue";
 import PortraitPicker from "@/components/curation/PortraitPicker.vue";
+import ProfileCompletenessPanel from "@/components/curation/ProfileCompletenessPanel.vue";
 import SocialLinksEditor from "@/components/curation/SocialLinksEditor.vue";
 import { useArtistProfileForm } from "@/composables/useArtistProfileForm";
 import ErrorState from "@/components/common/ErrorState.vue";
@@ -18,6 +19,7 @@ import { useLocalePath } from "@/composables/useLocalePath";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
 import type { AuthLetterStatus, OwnerType, PortraitRights, PreAgreementStatus, StaffOption } from "@/types/artistCuration";
+import type { ProfileCompletenessPreviewRequest, ProfileCompletenessSummary } from "@/types/completeness";
 
 const router = useRouter();
 const { t } = useI18n();
@@ -51,21 +53,59 @@ const submitting = ref(false);
 const error = ref<unknown>(null);
 const notice = ref<string | null>(null);
 
-const filled = (v: string): boolean => v.trim() !== "";
-const blank = (v: string): string | null => (filled(v) ? v.trim() : null);
+const filled = (v: string | null | undefined): boolean => (v ?? "").trim() !== "";
+const blank = (v: string | null | undefined): string | null => (filled(v) ? (v ?? "").trim() : null);
 
-/** Live checklist: what the record would satisfy if saved now (mirrors the curation page). */
-const checklist = computed(() => [
-  { key: "name", met: filled(form.name_ar) && filled(form.name_en) },
-  { key: "artist_code", met: filled(form.legacy_code) },
-  { key: "city", met: filled(form.city_ar) || filled(form.city_en) },
-  { key: "contact", met: profile.form.contacts.some((c) => filled(c.name ?? "") && (filled(c.email ?? "") || filled(c.phone ?? ""))) },
-  { key: "authorization_letter", met: ["signed", "not_applicable"].includes(form.authorization_letter_status) },
-  { key: "name_verified", met: false },
-  { key: "life_dates", met: form.living_status === "living" || filled(profile.form.deathDate) },
-  { key: "portrait", met: portraitFile.value !== null && portraitRights.value !== "unknown" },
-]);
-const metCount = computed(() => checklist.value.filter((c) => c.met).length);
+/** Live completeness preview: what the record would satisfy if saved now (mirrors the curation page). */
+const completeness = ref<ProfileCompletenessSummary | null>(null);
+let previewTimer: ReturnType<typeof setTimeout> | undefined;
+let previewSeq = 0;
+
+const yearOf = (input: string): number | null => {
+  const year = Number.parseInt(input.slice(0, 4), 10);
+  return Number.isFinite(year) ? year : null;
+};
+
+function previewPayload(): ProfileCompletenessPreviewRequest {
+  return {
+    name: { ar: blank(form.name_ar), en: blank(form.name_en) },
+    bio: { ar: blank(form.bio_ar), en: blank(form.bio_en) },
+    living_status: form.living_status,
+    birth: { year_from: yearOf(profile.form.birthDate) },
+    death: { year_from: yearOf(profile.form.deathDate) },
+    birth_place: { ar: blank(form.city_ar), en: blank(form.city_en) },
+    nationality: { ar: blank(profile.form.nationality.ar), en: blank(profile.form.nationality.en) },
+    legacy_code: blank(form.legacy_code),
+    portrait_uploaded: portraitFile.value !== null,
+    portrait_rights_status: portraitRights.value,
+  };
+}
+
+async function refreshPreview(): Promise<void> {
+  const seq = ++previewSeq;
+  try {
+    const { data } = await previewArtistCompleteness(previewPayload());
+    if (seq === previewSeq) completeness.value = data;
+  } catch {
+    // The preview is advisory; a failed request keeps the last known state.
+  }
+}
+
+watch(
+  () => [
+    form.name_ar, form.name_en, form.bio_ar, form.bio_en, form.living_status,
+    form.city_ar, form.city_en, form.legacy_code,
+    profile.form.birthDate, profile.form.deathDate,
+    profile.form.nationality.ar, profile.form.nationality.en,
+    portraitFile.value, portraitRights.value,
+  ],
+  () => {
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(refreshPreview, 300);
+  },
+  { immediate: true },
+);
+onBeforeUnmount(() => clearTimeout(previewTimer));
 
 const fieldErrors = computed<Record<string, string[]>>(() => (error.value instanceof ApiError ? error.value.fieldErrors : {}));
 const firstError = (...keys: string[]): string | null => {
@@ -164,17 +204,7 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
             <section class="rounded-lg border border-line bg-surface p-4">
               <PortraitPicker v-model:rights="portraitRights" :url="null" @select="portraitFile = $event" @remove="portraitFile = null" />
             </section>
-            <section class="rounded-lg border border-danger bg-danger-soft p-4">
-              <h2 class="text-base font-semibold text-danger">{{ t("curation.detail.checklist") }}</h2>
-              <ul class="mt-3 space-y-2" data-testid="checklist">
-                <li v-for="item in checklist" :key="item.key" class="flex items-center gap-2 text-sm" :class="item.met ? 'text-ink-muted' : 'text-ink'">
-                  <input type="checkbox" class="size-4" :checked="item.met" disabled :aria-label="t(`curation.checklistItem.${item.key}`)" />
-                  <span>{{ t(`curation.checklistItem.${item.key}`) }}</span>
-                </li>
-              </ul>
-              <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-neutral-soft"><div class="h-full rounded-full bg-danger" :style="{ width: `${(metCount / checklist.length) * 100}%` }" /></div>
-              <p class="mt-1 text-xs tabular-nums text-ink-muted">{{ t("curation.detail.requiredMet", { met: metCount, total: checklist.length }) }}</p>
-            </section>
+            <ProfileCompletenessPanel v-if="completeness" :summary="completeness" tone="danger" />
           </aside>
 
           <div class="space-y-10">

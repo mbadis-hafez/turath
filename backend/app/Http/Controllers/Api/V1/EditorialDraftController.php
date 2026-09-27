@@ -6,6 +6,7 @@ use App\Enums\ProposalStatus;
 use App\Enums\ReviewType;
 use App\Models\EditProposal;
 use App\Support\Completeness\CitableTypeResolver;
+use App\Support\Proposals\CreationReviewService;
 use App\Support\Proposals\EditorialDraftService;
 use App\Support\Proposals\ProposalDiffBuilder;
 use Illuminate\Database\Eloquent\Model;
@@ -65,6 +66,23 @@ class EditorialDraftController
         $proposal = (new EditorialDraftService)->submit($record, $request->user());
 
         return response()->json(['data' => ProposalController::present($proposal->fresh(), $record)]);
+    }
+
+    /** POST records/{type}/{id}/creation/submit — send the record's open creation-review item to the queue (005). */
+    public function submitCreation(Request $request, string $type, int $id): JsonResponse
+    {
+        [, $record] = $this->resolve($type, $id);
+        $user = $request->user();
+        abort_unless($user?->can('proposals.submit') ?? false, 403);
+
+        $service = new CreationReviewService;
+        $proposal = $service->openFor($record);
+        abort_if($proposal === null, 422, 'This record has already been reviewed, or is already awaiting review.');
+        abort_if($proposal->proposed_by_user_id !== $user->id, 403);
+
+        $submitted = $service->submit($proposal, $record, $user);
+
+        return response()->json(['data' => ProposalController::present($submitted->fresh(), $record)]);
     }
 
     /** GET proposals/{proposal}/diff — per-section diff of an editorial draft against the live record. */

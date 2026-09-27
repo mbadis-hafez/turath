@@ -16,16 +16,18 @@ function eventPayload(array $overrides = []): array
 }
 
 it('blocks publishing until the core fields are met, with the same date rule as archive items', function () {
+    // Publishing is admin-exclusive (events.publish); the editor still creates and edits.
     $editor = editorUser();
+    $admin = makeUser('admin');
     $id = $this->actingAs($editor)->postJson('/api/v1/events', eventPayload([
         'venue_name' => null, 'start' => ['display' => 'أوائل الثمانينيات', 'year_from' => 1980, 'year_to' => 1983, 'certainty' => 'circa'],
     ]))->assertCreated()->json('data.id');
 
-    $res = $this->actingAs($editor)->postJson("/api/v1/events/{$id}/publish")->assertUnprocessable();
+    $res = $this->actingAs($admin)->postJson("/api/v1/events/{$id}/publish")->assertUnprocessable();
     expect(array_keys($res->json('errors')))->toContain('completeness.venue_name', 'completeness.date');
 
     $this->actingAs($editor)->patchJson("/api/v1/events/{$id}", ['venue_name' => 'دار الفنون', 'date_note' => 'Only "early 1980s" is stated.'])->assertOk();
-    $this->actingAs($editor)->postJson("/api/v1/events/{$id}/publish")->assertOk()->assertJsonPath('data.publication_status', 'published');
+    $this->actingAs($admin)->postJson("/api/v1/events/{$id}/publish")->assertOk()->assertJsonPath('data.publication_status', 'published');
 });
 
 it('requires an event type and a title, and only managers can create or edit', function () {
@@ -38,6 +40,7 @@ it('requires an event type and a title, and only managers can create or edit', f
 
 it('links artists and artworks as participants, keeps awardees distinct, and hides unpublished participants publicly', function () {
     $editor = editorUser();
+    $admin = makeUser('admin');
     $artist = Artist::factory()->create(['publication_status' => 'published']);
     $hidden = Artist::factory()->create(['publication_status' => 'draft']);
     $work = Artwork::factory()->create(['publication_status' => 'published']);
@@ -54,7 +57,7 @@ it('links artists and artworks as participants, keeps awardees distinct, and hid
     ]])->assertUnprocessable();
     $this->actingAs($editor)->patchJson("/api/v1/events/{$id}/participants", ['participants' => [['type' => 'artist', 'participant_id' => 999999, 'role' => 'juror']]])->assertUnprocessable();
 
-    $this->actingAs($editor)->postJson("/api/v1/events/{$id}/publish")->assertOk();
+    $this->actingAs($admin)->postJson("/api/v1/events/{$id}/publish")->assertOk();
     Auth::forgetGuards();
 
     $public = $this->getJson("/api/v1/events/{$id}")->assertOk()->json('data');
@@ -80,14 +83,18 @@ it('keeps drafts private and lists only published events publicly', function () 
 });
 
 it('links archive items to an event without disturbing artist and artwork links, and lists them on the event', function () {
+    // Linking a published archive item counts as directly modifying it, which is
+    // admin-only; the item needs publication_status=published for the event's
+    // (published-only) archive_items listing to include it in this test's assertion.
     $editor = editorUser();
+    $admin = makeUser('admin');
     $artist = Artist::factory()->create();
     $event = Event::create(eventPayload()['event_type'] ? ['event_type' => 'exhibition', 'title_ar' => 'معرض', 'publication_status' => 'published'] : []);
     $item = ArchiveItem::factory()->create(['publication_status' => 'published', 'access_level' => 'public', 'rights_status' => 'public_domain']);
 
-    $this->actingAs($editor)->postJson("/api/v1/archive-items/{$item->id}/links", ['linkable_type' => 'event', 'linkable_id' => $event->id, 'role' => 'event_documentation'])->assertCreated();
-    $this->actingAs($editor)->postJson("/api/v1/archive-items/{$item->id}/links", ['linkable_type' => 'artist', 'linkable_id' => $artist->id, 'role' => 'about'])->assertCreated();
-    $this->actingAs($editor)->postJson("/api/v1/archive-items/{$item->id}/links", ['linkable_type' => 'event', 'linkable_id' => 999999, 'role' => 'about'])->assertUnprocessable();
+    $this->actingAs($admin)->postJson("/api/v1/archive-items/{$item->id}/links", ['linkable_type' => 'event', 'linkable_id' => $event->id, 'role' => 'event_documentation'])->assertCreated();
+    $this->actingAs($admin)->postJson("/api/v1/archive-items/{$item->id}/links", ['linkable_type' => 'artist', 'linkable_id' => $artist->id, 'role' => 'about'])->assertCreated();
+    $this->actingAs($admin)->postJson("/api/v1/archive-items/{$item->id}/links", ['linkable_type' => 'event', 'linkable_id' => 999999, 'role' => 'about'])->assertUnprocessable();
 
     $data = $this->actingAs($editor)->getJson("/api/v1/events/{$event->id}")->assertOk()->json('data');
     expect($data['archive_items'])->toHaveCount(1)

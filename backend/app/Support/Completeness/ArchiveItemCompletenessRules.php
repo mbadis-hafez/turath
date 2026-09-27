@@ -15,13 +15,14 @@ class ArchiveItemCompletenessRules implements CompletenessRules
 {
     public function coreFields(): array
     {
+        // No citation surface exists for archive items (unlike Artist), so these
+        // can never require one — that would make the gap permanently unsatisfiable.
         return [
             'rights_holder' => [
-                'requires_citation' => true,
+                'requires_citation' => false,
             ],
             'rights_status_known' => [
-                'requires_citation' => true,
-                'citation_field_key' => 'rights_status',
+                'requires_citation' => false,
             ],
         ];
     }

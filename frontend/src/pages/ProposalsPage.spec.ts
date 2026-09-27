@@ -1,6 +1,7 @@
 import { flushPromises } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createMemoryHistory, createRouter } from "vue-router";
 
 import ProposalsPage from "@/pages/ProposalsPage.vue";
 import { useAuthStore } from "@/stores/auth";
@@ -16,9 +17,14 @@ function signIn(permissions: string[]) {
   return pinia;
 }
 
-async function mountPage(permissions: string[]) {
+async function mountPage(permissions: string[], query = "") {
   const pinia = signIn(permissions);
-  const wrapper = mountWithPlugins(ProposalsPage, { locale: "en", pinia });
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [{ path: "/:locale/proposals", name: "proposals", component: { template: "<div />" } }],
+  });
+  await router.push(`/en/proposals${query}`);
+  const wrapper = mountWithPlugins(ProposalsPage, { locale: "en", pinia, router });
   await flushPromises();
   return wrapper;
 }
@@ -28,6 +34,7 @@ const emptyResponse = { data: [], links: [], meta: { current_page: 1, last_page:
 const proposal = {
   id: "p1",
   record: { type: "artists", id: 7, label: "Ahmad" },
+  is_creation: false,
   status: "pending",
   review_type: "second_source_needed",
   field_diffs: { bio_en: { old_value_at_proposal_time: null, proposed_value: "A fuller biography." } },
@@ -69,5 +76,15 @@ describe("ProposalsPage", () => {
     expect(wrapper.get("h1").text()).toBe("Review queue");
     expect(wrapper.find("[data-testid=review-type-filter]").exists()).toBe(true);
     expect(wrapper.get("[data-testid=proposals-list]").text()).toContain("Ahmad");
+  });
+
+  it("applies status and review_type filters from the URL query, for deep-links from the reviewer dashboard", async () => {
+    api.listProposals.mockResolvedValue(emptyResponse);
+    await mountPage(["review_queue.second_source_needed"], "?status=changes_requested&review_type=archivist_review");
+
+    expect(api.listProposals).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "changes_requested", review_type: "archivist_review" }),
+      expect.anything(),
+    );
   });
 });

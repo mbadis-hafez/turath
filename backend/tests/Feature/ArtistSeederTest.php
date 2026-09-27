@@ -6,6 +6,7 @@ use App\Models\User;
 use Database\Seeders\ArtistSeeder;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\DemoArtistSeeder;
+use Database\Seeders\TeamUserSeeder;
 
 it('seeds the exact fixture artists with their variants', function () {
     $this->seed(ArtistSeeder::class);
@@ -46,9 +47,9 @@ it('does not seed demo artists outside the local environment', function () {
     expect(Artist::count())->toBe(0);
 });
 
-it('database seeder runs artist seeders in testing without demo artists or local users', function () {
+it('database seeder seeds roles and the team, without fixture or demo artists', function () {
     $this->seed(DatabaseSeeder::class);
 
-    expect(Artist::count())->toBe(19)
-        ->and(User::count())->toBe(0);
+    expect(Artist::count())->toBe(0)
+        ->and(User::count())->toBe(count(TeamUserSeeder::TEAM));
 });

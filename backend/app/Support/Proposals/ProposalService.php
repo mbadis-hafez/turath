@@ -121,8 +121,8 @@ class ProposalService
                 'review_note' => $note,
                 'resulting_revision_id' => $revision->id,
             ]);
-            $this->closeQueueItem($proposal, 'acknowledged');
-            $this->supersedeOverlapping($proposal, array_keys($proposal->field_diffs));
+            $this->closeQueueItem($proposal, 'acknowledged', $reviewer->id);
+            $this->supersedeOverlapping($proposal, array_keys($proposal->field_diffs), $reviewer->id);
 
             return $revision;
         }));
@@ -137,7 +137,7 @@ class ProposalService
                 'reviewed_at' => now(),
                 'review_note' => $note,
             ]);
-            $this->closeQueueItem($proposal, 'dismissed');
+            $this->closeQueueItem($proposal, 'dismissed', $reviewer->id);
         });
     }
 
@@ -177,24 +177,25 @@ class ProposalService
     /**
      * @param  array<int, string>  $fields
      */
-    private function supersedeOverlapping(EditProposal $approved, array $fields): void
+    private function supersedeOverlapping(EditProposal $approved, array $fields, int $actedByUserId): void
     {
         EditProposal::where('citable_type', $approved->citable_type)
             ->where('citable_id', $approved->citable_id)
             ->where('status', ProposalStatus::Pending->value)
             ->where('id', '!=', $approved->id)
             ->get()
-            ->each(function (EditProposal $other) use ($fields) {
+            ->each(function (EditProposal $other) use ($fields, $actedByUserId) {
                 if (array_intersect($other->fieldKeys(), $fields) === []) {
                     return;
                 }
                 $other->update(['status' => ProposalStatus::Superseded->value]);
-                $this->closeQueueItem($other, 'dismissed');
+                $this->closeQueueItem($other, 'dismissed', $actedByUserId);
             });
     }
 
-    private function closeQueueItem(EditProposal $proposal, string $status): void
+    private function closeQueueItem(EditProposal $proposal, string $status, int $actedByUserId): void
     {
-        ReviewQueueItem::where('edit_proposal_id', $proposal->id)->update(['status' => $status]);
+        ReviewQueueItem::where('edit_proposal_id', $proposal->id)
+            ->update(['status' => $status, 'acted_by_user_id' => $actedByUserId, 'acted_at' => now()]);
     }
 }

@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Models\Artist;
 use App\Models\FieldCitation;
 use App\Models\RecordCompleteness;
 use App\Models\Source;
 use App\Models\SourceConflict;
+use App\Support\Completeness\ArtistCompletenessPresenter;
 use App\Support\Completeness\CitableTypeResolver;
 use App\Support\Completeness\CompletenessCalculator;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 
 class RecordCompletenessController
@@ -66,7 +69,30 @@ class RecordCompletenessController
             'minor_gaps' => $labelFields($completeness->minor_gap_field_keys ?? []),
             'open_conflicts' => $openConflicts,
             'citations' => $citations->values(),
+            ...$this->sectionedExtras($entry['model'], $record),
         ]]);
+    }
+
+    /**
+     * Artists get the enriched profile-completeness shape (counts,
+     * per-section percentages, labelled missing fields) computed live;
+     * every other entity type keeps the plain shape.
+     *
+     * @param  class-string  $modelClass
+     * @param  Model  $record
+     * @return array<string, mixed>
+     */
+    private function sectionedExtras(string $modelClass, $record): array
+    {
+        if ($modelClass !== Artist::class || ! $record instanceof Artist) {
+            return [];
+        }
+
+        $presented = (new ArtistCompletenessPresenter)->present($record);
+
+        unset($presented['percentage']); // existing completeness_pct key already carries it
+
+        return $presented;
     }
 
     /**

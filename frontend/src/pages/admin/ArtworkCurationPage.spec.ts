@@ -10,7 +10,7 @@ import { ApiError } from "@/types/api";
 import type { ArtworkCuration } from "@/types/artworkCuration";
 
 const api = vi.hoisted(() => ({
-  getArtworkCuration: vi.fn(), updateArtwork: vi.fn(), uploadArtworkImage: vi.fn(), updateArtworkImage: vi.fn(), deleteArtworkImage: vi.fn(), updateArtworkStage: vi.fn(), approveArtwork: vi.fn(),
+  getArtworkCuration: vi.fn(), updateArtwork: vi.fn(), uploadArtworkImages: vi.fn(), updateArtworkImage: vi.fn(), deleteArtworkImage: vi.fn(), updateArtworkStage: vi.fn(), approveArtwork: vi.fn(),
 }));
 vi.mock("@/api/artworkCuration", () => api);
 
@@ -107,8 +107,11 @@ describe("ArtworkCurationPage", () => {
     expect(api.updateArtworkStage).toHaveBeenCalledWith(7, "work_category", "done");
   });
 
-  it("uploads an image with the chosen rights and can mark another one final", async () => {
-    api.uploadArtworkImage.mockResolvedValue({ data: [] });
+  it("uploads a batch of images with the chosen rights and can mark another one final", async () => {
+    api.uploadArtworkImages.mockResolvedValue({
+      data: [],
+      results: [{ filename: "b.jpg", status: "attached", image_id: 6, message: null }],
+    });
     api.updateArtworkImage.mockResolvedValue({ data: [] });
     const image = { id: 5, url: "/i/5", filename: "a.jpg", width_px: 3000, height_px: 2000, size_bytes: 10, rights_status: "licensed", is_final: false };
     api.getArtworkCuration.mockResolvedValue({ data: bundle({ images: [image as never] }) });
@@ -119,7 +122,7 @@ describe("ArtworkCurationPage", () => {
     Object.defineProperty(input.element, "files", { value: [file] });
     await input.trigger("change");
     await flushPromises();
-    expect(api.uploadArtworkImage).toHaveBeenCalledWith(7, file, "unknown");
+    expect(api.uploadArtworkImages).toHaveBeenCalledWith(7, [file], "unknown");
 
     await wrapper.get("[data-testid=make-final]").trigger("click");
     await flushPromises();

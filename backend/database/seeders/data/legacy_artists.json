@@ -1,0 +1,452 @@
+[
+  {
+    "code": "AR001",
+    "name_ar": "عبده ياسين",
+    "name_en": "Abdoh Yaseen"
+  },
+  {
+    "code": "AR003",
+    "name_ar": "عبدالله الشيخ",
+    "name_en": "Abdullah Alsheikh"
+  },
+  {
+    "code": "AR004",
+    "name_ar": "عبدالله نواوي",
+    "name_en": "Abdullah Nawawi"
+  },
+  {
+    "code": "AR008",
+    "name_ar": "عبدالعزيز الحماد",
+    "name_en": "Abdulaziz Alhammad"
+  },
+  {
+    "code": "AR012",
+    "name_ar": "عبدالحميد البقشي",
+    "name_en": "Abdulhameed Albaqshi"
+  },
+  {
+    "code": "AR013",
+    "name_ar": "عبدالحليم رضوي",
+    "name_en": "Abdulhalim Radwi"
+  },
+  {
+    "code": "AR014",
+    "name_ar": "عبدالجبار اليحيا",
+    "name_en": "Abduljabbar Alyahya"
+  },
+  {
+    "code": "AR016",
+    "name_ar": "عبدالله المرزوق",
+    "name_en": "Abdullah Almarzoug"
+  },
+  {
+    "code": "AR018",
+    "name_ar": "عبدالله الشلتي",
+    "name_en": "Abdullah Alshalty"
+  },
+  {
+    "code": "AR019",
+    "name_ar": "عبدالله إدريس",
+    "name_en": "Abdullah Idrees"
+  },
+  {
+    "code": "AR021",
+    "name_ar": "عبدالله حماس",
+    "name_en": "Abdullah Hammas"
+  },
+  {
+    "code": "AR025",
+    "name_ar": "عبد الرحمن تمييز الدين",
+    "name_en": "AbdulrahmanTamayiz Aldin"
+  },
+  {
+    "code": "AR026",
+    "name_ar": "عبدالرحمن السليمان",
+    "name_en": "Abdulrahman Alsoliman"
+  },
+  {
+    "code": "AR031",
+    "name_ar": "عدنان فلالي",
+    "name_en": "Adnan Felali"
+  },
+  {
+    "code": "AR033",
+    "name_ar": "أحمد عبدالعزيز الاعرج",
+    "name_en": "Ahmad Abdulaziz Alaaraj"
+  },
+  {
+    "code": "AR034",
+    "name_ar": "أحمد الغامدي",
+    "name_en": "Ahmad Alghamdi"
+  },
+  {
+    "code": "AR035",
+    "name_ar": "أحمد الزهراني",
+    "name_en": "Ahmad Alzahrani"
+  },
+  {
+    "code": "AR036",
+    "name_ar": "أحمد المغلوث",
+    "name_en": "Ahmad Almaghlouth"
+  },
+  {
+    "code": "AR037",
+    "name_ar": "أحمد السبت",
+    "name_en": "Ahmad Alsebt"
+  },
+  {
+    "code": "AR038",
+    "name_ar": "أحمد فلمبان",
+    "name_en": "Ahmed Felemban"
+  },
+  {
+    "code": "AR039",
+    "name_ar": "محمد طاهر كردي",
+    "name_en": "Muhammad Taher Kurdi"
+  },
+  {
+    "code": "AR041",
+    "name_ar": "علي الغامدي",
+    "name_en": "Ali Alghamdi"
+  },
+  {
+    "code": "AR043",
+    "name_ar": "علي الصفار",
+    "name_en": "Ali Alsaffar"
+  },
+  {
+    "code": "AR044",
+    "name_ar": "علي الطخيس",
+    "name_en": "Ali Altokhais"
+  },
+  {
+    "code": "AR045",
+    "name_ar": "علي الرزيزاء",
+    "name_en": "Ali Alruzaiza"
+  },
+  {
+    "code": "AR047",
+    "name_ar": "بدرية الناصر",
+    "name_en": "Badria Alnasir"
+  },
+  {
+    "code": "AR048",
+    "name_ar": "بكر شيخون",
+    "name_en": "Bakr Sheikhoun"
+  },
+  {
+    "code": "AR049",
+    "name_ar": "ضياء عزيز ضياء",
+    "name_en": "Dia Aziz Dia"
+  },
+  {
+    "code": "AR052",
+    "name_ar": "فهد الربيق",
+    "name_en": "Fahad Alrubaiq"
+  },
+  {
+    "code": "AR053",
+    "name_ar": "فهد الحجيلان",
+    "name_en": "Fahad Alhajailan"
+  },
+  {
+    "code": "AR054",
+    "name_ar": "فيصل المشاري",
+    "name_en": "Faisal Almashari"
+  },
+  {
+    "code": "AR055",
+    "name_ar": "فيصل سمرة",
+    "name_en": "Faisal Samra"
+  },
+  {
+    "code": "AR058",
+    "name_ar": "فوزية عبداللطيف",
+    "name_en": "Fawziah Abdullatif"
+  },
+  {
+    "code": "AR060",
+    "name_ar": "فؤاد مغربل",
+    "name_en": "Fouad Mougharbel"
+  },
+  {
+    "code": "AR063",
+    "name_ar": "حماد الجعيد",
+    "name_en": "Hamad Aljuaid"
+  },
+  {
+    "code": "AR065",
+    "name_ar": "حمزة باجودة",
+    "name_en": "Hamza Bajouda"
+  },
+  {
+    "code": "AR070",
+    "name_ar": "هشام بنجابي",
+    "name_en": "Hisham Binjabi"
+  },
+  {
+    "code": "AR071",
+    "name_ar": "​​إبراهيم الفصام",
+    "name_en": "Ibrahim Alfassam"
+  },
+  {
+    "code": "AR072",
+    "name_ar": "إبراهيم النغيثر",
+    "name_en": "Ibrahim Alnughaither"
+  },
+  {
+    "code": "AR073",
+    "name_ar": "إبراهيم بوقس",
+    "name_en": "Ibrahim Bugis"
+  },
+  {
+    "code": "AR074",
+    "name_ar": "جميل الجفري",
+    "name_en": "Jameel Aljifree"
+  },
+  {
+    "code": "AR075",
+    "name_ar": "كمال المعلّم",
+    "name_en": "Kamal Almualem"
+  },
+  {
+    "code": "AR076",
+    "name_ar": "خليل حسن خليل",
+    "name_en": "Khalil Hassan Khalil"
+  },
+  {
+    "code": "AR077",
+    "name_ar": "خالد العبدان",
+    "name_en": "Khalid Alabdan"
+  },
+  {
+    "code": "AR078",
+    "name_ar": "الأمير خالد الفيصل آل سعود",
+    "name_en": "Prince Khaled Alfaisal Alsaud"
+  },
+  {
+    "code": "AR081",
+    "name_ar": "مهدي راجح",
+    "name_en": "Mahdi Rajah"
+  },
+  {
+    "code": "AR082",
+    "name_ar": "منصور كردي",
+    "name_en": "Mansour Kurdi"
+  },
+  {
+    "code": "AR085",
+    "name_ar": "ميرزا الصالح",
+    "name_en": "Mirza Alsaleh"
+  },
+  {
+    "code": "AR088",
+    "name_ar": "محمد السليم",
+    "name_en": "Mohammed Alsaleem"
+  },
+  {
+    "code": "AR089",
+    "name_ar": "محمد الصندل",
+    "name_en": "Mohammed Alsandal"
+  },
+  {
+    "code": "AR090",
+    "name_ar": "محمد الصقعبي",
+    "name_en": "Mohammad Alsaqabi"
+  },
+  {
+    "code": "AR092",
+    "name_ar": "محمد الرصيص",
+    "name_en": "Mohammed Alresayes"
+  },
+  {
+    "code": "AR094",
+    "name_ar": "محمد الحمد",
+    "name_en": "Mohammad Alhamad"
+  },
+  {
+    "code": "AR097",
+    "name_ar": "محمد العمير",
+    "name_en": "Mohammed Alomair"
+  },
+  {
+    "code": "AR099",
+    "name_ar": "محمد الأعجم",
+    "name_en": "Mohammed Alajam"
+  },
+  {
+    "code": "AR100",
+    "name_ar": "محمد المنيف",
+    "name_en": "Mohammed Almuneef"
+  },
+  {
+    "code": "AR103",
+    "name_ar": "محمدرضا وارس",
+    "name_en": "Mohammad Ridha Waris"
+  },
+  {
+    "code": "AR104",
+    "name_ar": "محمد سيام",
+    "name_en": "Mohammad Siyam"
+  },
+  {
+    "code": "AR106",
+    "name_ar": "منى القصبي",
+    "name_en": "Mona Alqasabi"
+  },
+  {
+    "code": "AR107",
+    "name_ar": "منيرة موصلي",
+    "name_en": "Mounirah Mosly"
+  },
+  {
+    "code": "AR108",
+    "name_ar": "مفرح عسيري",
+    "name_en": "Mofarah Asiri"
+  },
+  {
+    "code": "AR110",
+    "name_ar": "نبيل النجدي",
+    "name_en": "Nabil Najdi"
+  },
+  {
+    "code": "AR111",
+    "name_ar": "نبيلة البسام",
+    "name_en": "Nabila Albassam"
+  },
+  {
+    "code": "AR112",
+    "name_ar": "ناصر الموسى",
+    "name_en": "Nasser Almousa"
+  },
+  {
+    "code": "AR114",
+    "name_ar": "نوال مصلي",
+    "name_en": "Nawal Musalli"
+  },
+  {
+    "code": "AR115",
+    "name_ar": "نايل ملا",
+    "name_en": "Naiel Mollah"
+  },
+  {
+    "code": "AR117",
+    "name_ar": "عثمان الخزيم",
+    "name_en": "Othman Khuzaim"
+  },
+  {
+    "code": "AR122",
+    "name_ar": "سعد المسعري",
+    "name_en": "Saad Almasari"
+  },
+  {
+    "code": "AR123",
+    "name_ar": "سعد العبيّد",
+    "name_en": "Saad Alobaid"
+  },
+  {
+    "code": "AR124",
+    "name_ar": "سعدون السعدون",
+    "name_en": "Saadoun Alsaadoun"
+  },
+  {
+    "code": "AR125",
+    "name_ar": "صفية بن زقر",
+    "name_en": "Safeya Binzagr"
+  },
+  {
+    "code": "AR126",
+    "name_ar": "صالح النقيدان",
+    "name_en": "Saleh Alnugedan"
+  },
+  {
+    "code": "AR129",
+    "name_ar": "صالح خطاب",
+    "name_en": "Saleh Khattab"
+  },
+  {
+    "code": "AR132",
+    "name_ar": "سمير الدهام",
+    "name_en": "Sameer Aldaham"
+  },
+  {
+    "code": "AR133",
+    "name_ar": "سعود العيدي",
+    "name_en": "Saud Alaidy"
+  },
+  {
+    "code": "AR134",
+    "name_ar": "سعود القحطاني",
+    "name_en": "Saud Alqahtani"
+  },
+  {
+    "code": "AR138",
+    "name_ar": "سليمان باجبع",
+    "name_en": "Suleiman Bajabaa"
+  },
+  {
+    "code": "AR139",
+    "name_ar": "طه  الصبان",
+    "name_en": "Taha Sabban"
+  },
+  {
+    "code": "AR141",
+    "name_ar": "تركي الدوسري",
+    "name_en": "Turki Aldosary"
+  },
+  {
+    "code": "AR144",
+    "name_ar": "يوسف جاها",
+    "name_en": "Yousef Jaha"
+  },
+  {
+    "code": "AR147",
+    "name_ar": "زايد الزهراني",
+    "name_en": "Zaid Alzahrani"
+  },
+  {
+    "code": "AR156",
+    "name_ar": "بدر بن عبد المحسن (الأمير -)",
+    "name_en": "Badr bin Abdulmohsin (Prince)"
+  },
+  {
+    "code": "AR162",
+    "name_ar": "حسن عبد المجيد",
+    "name_en": "Hasan Abdulmajeed"
+  },
+  {
+    "code": "AR173",
+    "name_ar": "عبد الستار الموسى",
+    "name_en": "Abdulsattar Almousa"
+  },
+  {
+    "code": "AR213",
+    "name_ar": "سامي المرزوقي",
+    "name_en": "Sami Almarzoogi"
+  },
+  {
+    "code": "AR221",
+    "name_ar": "أحمد طيب منشي",
+    "name_en": "Ahmed Tayeb Munshi"
+  },
+  {
+    "code": "AR223",
+    "name_ar": "عبد العزيز الخوفي",
+    "name_en": "Abdulaziz Alkhufi"
+  },
+  {
+    "code": "AR234",
+    "name_ar": "عبد العظيم الضامن",
+    "name_en": "Abduladeem Aldhamen"
+  },
+  {
+    "code": "AR60",
+    "name_ar": "فؤاد مغربل",
+    "name_en": "Fouad Mougharbel"
+  },
+  {
+    "code": "ARW091",
+    "name_ar": "محمد راسم",
+    "name_en": "Mohammed Rasim"
+  }
+]

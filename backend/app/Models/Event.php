@@ -26,6 +26,8 @@ class Event extends Model
         return [
             'start' => PartialDateCast::class.':start',
             'end' => PartialDateCast::class.':end',
+            'creation_approved_at' => 'datetime',
+            'published_at' => 'datetime',
         ];
     }
 
@@ -35,6 +37,14 @@ class Event extends Model
     public function holder(): BelongsTo
     {
         return $this->belongsTo(Holder::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function publishedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'published_by_user_id');
     }
 
     /**

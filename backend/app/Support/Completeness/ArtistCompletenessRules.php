@@ -6,59 +6,90 @@ use App\Models\Artist;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Representative rule set from the F10 spec (§3) — not a claimed-final
- * taxonomy. `portrait_with_clear_rights` is satisfied by an uploaded
- * portrait whose rights status is not `unknown`.
+ * The artist profile rule set: 11 uniformly weighted core (blocking)
+ * requirements covering identity, biography and media. Nothing here
+ * requires a citation — citations moved to the verification stage
+ * (ArtistCurationService::verifyErrors).
  */
-class ArtistCompletenessRules implements CompletenessRules
+class ArtistCompletenessRules implements SectionedCompletenessRules
 {
+    public const SECTIONS = ['identity', 'biography', 'media'];
+
     public function coreFields(): array
     {
         return [
-            'death_year_or_living_confirmed' => [
-                'requires_citation' => true,
-                'citation_field_key' => 'death_year',
-            ],
-            'primary_source' => [
-                'requires_citation' => true,
-                'any_citation' => true,
-            ],
+            'artist_code' => ['requires_citation' => false],
+            'name_ar' => ['requires_citation' => false],
+            'name_en' => ['requires_citation' => false],
+            'birth_city' => ['requires_citation' => false],
+            'living_status_known' => ['requires_citation' => false],
+            'birth_year' => ['requires_citation' => false],
+            'death_year_or_living' => ['requires_citation' => false],
+            'nationality' => ['requires_citation' => false],
+            'bio_ar' => ['requires_citation' => false],
+            'bio_en' => ['requires_citation' => false],
+            'portrait_with_clear_rights' => ['requires_citation' => false],
         ];
     }
 
     public function importantFields(): array
     {
-        return ['birth_city', 'bio_en', 'portrait_with_clear_rights'];
+        return [];
     }
 
     public function isFieldPresent(Model $record, string $fieldKey): bool
     {
         /** @var Artist $record */
         return match ($fieldKey) {
-            'death_year_or_living_confirmed' => $record->living_status === 'living' || $record->getAttribute('death_year_from') !== null,
-            'primary_source' => true, // gated entirely by the any_citation check
-            'birth_city' => $record->birth_place_ar !== null || $record->birth_place_en !== null,
-            'bio_en' => $record->bio_en !== null && trim($record->bio_en) !== '',
-            'portrait_with_clear_rights' => $record->portrait_path !== null && $record->portrait_rights_status !== 'unknown',
+            'artist_code' => $this->filled($record->getAttribute('legacy_code')),
+            'name_ar' => $this->filled($record->getAttribute('name_ar')),
+            'name_en' => $this->filled($record->getAttribute('name_en')),
+            'birth_city' => $this->filled($record->getAttribute('birth_place_ar')) || $this->filled($record->getAttribute('birth_place_en')),
+            'living_status_known' => in_array($record->getAttribute('living_status'), ['living', 'deceased'], true),
+            'birth_year' => $record->getAttribute('birth_year_from') !== null,
+            'death_year_or_living' => $record->getAttribute('living_status') === 'living' || $record->getAttribute('death_year_from') !== null,
+            'nationality' => $this->filled($record->getAttribute('nationality_ar')) || $this->filled($record->getAttribute('nationality_en')),
+            'bio_ar' => $this->filled($record->getAttribute('bio_ar')),
+            'bio_en' => $this->filled($record->getAttribute('bio_en')),
+            'portrait_with_clear_rights' => $record->getAttribute('portrait_path') !== null && $record->getAttribute('portrait_rights_status') !== 'unknown',
             default => false,
         };
     }
 
     public function citationExempt(Model $record, string $fieldKey): bool
     {
-        /** @var Artist $record */
-        return $fieldKey === 'death_year_or_living_confirmed' && $record->living_status === 'living';
+        return true;
+    }
+
+    public function fieldSection(string $fieldKey): string
+    {
+        return match ($fieldKey) {
+            'bio_ar', 'bio_en' => 'biography',
+            'portrait_with_clear_rights' => 'media',
+            default => 'identity',
+        };
     }
 
     public function fieldLabel(string $fieldKey): array
     {
         return match ($fieldKey) {
-            'death_year_or_living_confirmed' => ['ar' => 'تاريخ الوفاة أو تأكيد الحياة', 'en' => 'Death year or living status confirmed'],
-            'primary_source' => ['ar' => 'مصدر أساسي', 'en' => 'Primary source'],
+            'artist_code' => ['ar' => 'رمز الفنان', 'en' => 'Artist code'],
+            'name_ar' => ['ar' => 'الاسم (عربي)', 'en' => 'Name (Arabic)'],
+            'name_en' => ['ar' => 'الاسم (إنجليزي)', 'en' => 'Name (English)'],
             'birth_city' => ['ar' => 'مدينة الميلاد', 'en' => 'Birth city'],
-            'bio_en' => ['ar' => 'السيرة (إنجليزي)', 'en' => 'Biography (English)'],
+            'living_status_known' => ['ar' => 'حالة الحياة معروفة', 'en' => 'Living status known'],
+            'birth_year' => ['ar' => 'سنة الميلاد', 'en' => 'Birth year'],
+            'death_year_or_living' => ['ar' => 'سنة الوفاة أو كونه على قيد الحياة', 'en' => 'Death year or living'],
+            'nationality' => ['ar' => 'الجنسية', 'en' => 'Nationality'],
+            'bio_ar' => ['ar' => 'السيرة الذاتية (عربي)', 'en' => 'Biography (Arabic)'],
+            'bio_en' => ['ar' => 'السيرة الذاتية (إنجليزي)', 'en' => 'Biography (English)'],
             'portrait_with_clear_rights' => ['ar' => 'صورة شخصية بحقوق واضحة', 'en' => 'Portrait with clear rights'],
             default => ['ar' => $fieldKey, 'en' => $fieldKey],
         };
+    }
+
+    private function filled(mixed $value): bool
+    {
+        return $value !== null && trim((string) $value) !== '';
     }
 }

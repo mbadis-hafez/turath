@@ -43,12 +43,42 @@ it('bulk-links to an artist, reports items the publish gate rejects, and deletes
     $res = $this->actingAs($editor)->postJson('/api/v1/admin/archive-items/bulk', ['ids' => [$a->id], 'action' => 'set_status', 'status' => 'hidden'])->assertOk();
     expect($res->json('data.succeeded'))->toBe([$a->id])->and($a->refresh()->publication_status)->toBe('hidden');
 
+    // The bulk endpoint itself requires archive.manage (link/delete/hide are content
+    // changes a Reviewer shouldn't do), so its publish-gate-rejection path is exercised
+    // as an admin, who holds both archive.manage and archive.publish. A Reviewer
+    // publishes one item at a time through the dedicated endpoint instead (below).
     $blocked = ArchiveItem::factory()->create(['publication_status' => 'draft', 'rights_status' => 'unknown', 'access_level' => 'public']);
-    $res = $this->actingAs($editor)->postJson('/api/v1/admin/archive-items/bulk', ['ids' => [$blocked->id], 'action' => 'set_status', 'status' => 'published'])->assertOk();
+    $res = $this->actingAs(makeUser('admin'))->postJson('/api/v1/admin/archive-items/bulk', ['ids' => [$blocked->id], 'action' => 'set_status', 'status' => 'published'])->assertOk();
     expect($res->json('data.failed.0.id'))->toBe($blocked->id)->and($blocked->refresh()->publication_status)->toBe('draft');
+
+    $this->actingAs($editor)->postJson('/api/v1/admin/archive-items/bulk', ['ids' => [$blocked->id], 'action' => 'set_status', 'status' => 'published'])->assertForbidden();
+
+    $this->actingAs(makeUser('reviewer'))->postJson("/api/v1/archive-items/{$blocked->id}/publish")->assertUnprocessable();
 
     $this->actingAs($editor)->postJson('/api/v1/admin/archive-items/bulk', ['ids' => [$b->id], 'action' => 'delete'])->assertJsonCount(1, 'data.succeeded');
     expect(ArchiveItem::find($b->id))->toBeNull();
+});
+
+it('keeps its own unchanged legacy_ref on update instead of colliding with itself', function () {
+    $editor = editorUser();
+
+    $id = $this->actingAs($editor)->postJson('/api/v1/archive-items', [
+        'item_type' => 'image', 'title' => ['ar' => 'بطاقة'], 'access_level' => 'registered', 'legacy_ref' => 'ARC-1979-0412',
+    ])->assertCreated()->json('data.id');
+
+    // Re-sending the same legacy_ref on a PATCH (exactly what the edit page's
+    // "save" does on every submit) must not trip the uniqueness check against
+    // the record's own existing row.
+    $this->actingAs($editor)->patchJson("/api/v1/archive-items/{$id}", [
+        'legacy_ref' => 'ARC-1979-0412',
+    ])->assertOk();
+
+    $other = $this->actingAs($editor)->postJson('/api/v1/archive-items', [
+        'item_type' => 'image', 'title' => ['ar' => 'بطاقة أخرى'], 'access_level' => 'registered',
+    ])->assertCreated()->json('data.id');
+    $this->actingAs($editor)->patchJson("/api/v1/archive-items/{$other}", [
+        'legacy_ref' => 'ARC-1979-0412',
+    ])->assertUnprocessable()->assertJsonValidationErrors(['legacy_ref']);
 });
 
 it('edits an archive item end to end: new fields, one original file, checklist, review submission and access-checked download', function () {
@@ -115,6 +145,36 @@ it('accepts documentation cards, primary-documentation links, and a source that 
     $this->actingAs($editor)->postJson("/api/v1/records/artists/{$artist->id}/citations", [
         'field_key' => 'bio_ar', 'claimed_value' => 'x', 'new_source' => ['title_en' => 'A book'],
     ])->assertUnprocessable();
+});
+
+it('links an archive item as an artist name-verification source, and as their signed authorization letter', function () {
+    Storage::fake('local');
+    $editor = editorUser();
+    $artist = Artist::factory()->create();
+
+    $id = $this->actingAs($editor)->postJson('/api/v1/archive-items', [
+        'item_type' => 'document', 'title' => ['ar' => 'خطاب'], 'access_level' => 'institution_only',
+    ])->assertCreated()->json('data.id');
+
+    // The "Name verified by a published source" link role: the archive item
+    // becomes the artist's name citation — the FieldCitation row itself is
+    // what the citation endpoints expose; completeness no longer consumes it.
+    $this->actingAs($editor)->postJson("/api/v1/archive-items/{$id}/links", ['linkable_type' => 'artist', 'linkable_id' => $artist->id, 'role' => 'name_verification'])->assertCreated();
+    $this->actingAs($editor)->postJson("/api/v1/records/artists/{$artist->id}/citations", [
+        'field_key' => 'name', 'claimed_value' => $artist->name_ar, 'new_source' => ['linked_archive_item_id' => $id],
+    ])->assertCreated();
+    $citations = $this->actingAs($editor)->getJson("/api/v1/records/artists/{$artist->id}/completeness")->assertOk()->json('data.citations');
+    expect(collect($citations)->firstWhere('field_key', 'name'))->not->toBeNull();
+
+    // The "Authorization letter" link role: the archive item's own uploaded
+    // file becomes the artist's signed authorization letter.
+    $file = $this->actingAs($editor)->post("/api/v1/archive-items/{$id}/file", ['file' => UploadedFile::fake()->create('letter.pdf', 200, 'application/pdf')], ['Accept' => 'application/json'])->assertCreated()->json('data');
+    $this->actingAs($editor)->postJson("/api/v1/archive-items/{$id}/links", ['linkable_type' => 'artist', 'linkable_id' => $artist->id, 'role' => 'authorization_letter'])->assertCreated();
+    $this->actingAs($editor)->patchJson("/api/v1/artists/{$artist->id}/curation", [
+        'authorization_letter_status' => 'signed', 'authorization_letter_file_id' => $file['id'],
+    ])->assertOk()->assertJsonPath('data.pipeline.authorization_letter.status', 'signed');
+
+    expect($artist->refresh()->authorization_letter_file_id)->toBe($file['id']);
 });
 
 it('accepts an approximate date only together with its reason, and round-trips every editable field', function () {

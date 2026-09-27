@@ -25,6 +25,8 @@ const auth = useAuthStore();
 
 const forbidden = new ApiError("forbidden", "Forbidden", { status: 403 });
 const canManage = computed(() => auth.can("archive.manage"));
+const canPublish = computed(() => auth.can("archive.publish"));
+const bulkStatuses = computed(() => (canPublish.value ? ["draft", "published", "hidden"] : ["draft", "hidden"]));
 
 const {
   items, meta, loading, error, query, searchInput, retry,
@@ -142,7 +144,7 @@ watch(query, (q) => {
           <span class="text-sm text-ink">{{ t("archive.admin.selected", { count: selected.size }) }}</span>
           <select class="rounded-md border border-ink px-3 py-1.5 text-sm text-ink" :aria-label="t('archive.admin.changeStatus')" :disabled="bulkBusy" data-testid="bulk-status" @change="(e) => { const v = (e.target as HTMLSelectElement).value; (e.target as HTMLSelectElement).value = ''; if (v) runBulk({ action: 'set_status', status: v as 'draft' | 'published' | 'hidden' }); }">
             <option value="">{{ t("archive.admin.changeStatus") }}</option>
-            <option v-for="s in ['draft', 'published', 'hidden']" :key="s" :value="s">{{ t(`archive.statuses.${s}`) }}</option>
+            <option v-for="s in bulkStatuses" :key="s" :value="s">{{ t(`archive.statuses.${s}`) }}</option>
           </select>
           <button type="button" class="rounded-md border border-ink px-3 py-1.5 text-sm text-ink hover:bg-neutral-soft" :disabled="bulkBusy" data-testid="bulk-assign" @click="assigning = !assigning">{{ t("archive.admin.assignArtist") }}</button>
           <button v-if="!confirmingDelete" type="button" class="rounded-md border border-danger px-3 py-1.5 text-sm text-danger hover:bg-danger-soft" :disabled="bulkBusy" data-testid="bulk-delete" @click="confirmingDelete = true">{{ t("archive.admin.delete") }}</button>

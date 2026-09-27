@@ -131,6 +131,12 @@ const routes: RouteRecordRaw[] = [
     meta: { titleKey: "dashboard.title", requiresAuth: true },
   },
   {
+    path: "/:locale/dashboard/reviewer",
+    name: "dashboard.reviewer",
+    component: () => import("@/pages/ReviewerDashboardPage.vue"),
+    meta: { titleKey: "reviewerDashboard.title", requiresAuth: true },
+  },
+  {
     path: "/:locale/admin/activity",
     name: "admin.activity",
     component: () => import("@/pages/admin/ActivityPage.vue"),
@@ -157,6 +163,24 @@ const routes: RouteRecordRaw[] = [
     name: "admin.users.edit",
     component: () => import("@/pages/admin/UserEditPage.vue"),
     meta: { titleKey: "users.edit.editTitle", requiresAuth: true, requiresPermission: "users.manage" },
+  },
+  {
+    path: "/:locale/admin/roles",
+    name: "admin.roles",
+    component: () => import("@/pages/admin/RolesPage.vue"),
+    meta: { titleKey: "roles.title", requiresAuth: true, requiresPermission: "roles.manage" },
+  },
+  {
+    path: "/:locale/admin/roles/new",
+    name: "admin.roles.new",
+    component: () => import("@/pages/admin/RoleEditPage.vue"),
+    meta: { titleKey: "roles.addTitle", requiresAuth: true, requiresPermission: "roles.manage" },
+  },
+  {
+    path: "/:locale/admin/roles/:id(\\d+)",
+    name: "admin.roles.edit",
+    component: () => import("@/pages/admin/RoleEditPage.vue"),
+    meta: { titleKey: "roles.editTitle", requiresAuth: true, requiresPermission: "roles.manage" },
   },
   {
     path: "/:locale/admin/artists",
@@ -283,6 +307,14 @@ export function createAppRouter(history: RouterHistory): Router {
 
     const auth = useAuthStore();
     if (!auth.initialized) {
+      await auth.fetchUser();
+    } else if (to.meta.requiresPermission) {
+      // Permissions are read from a snapshot taken once at app load, so an
+      // administrator's change (this feature's whole point) would otherwise
+      // stay invisible in the interface for the rest of the session, even
+      // though the server enforces it on the very next request. Refetching
+      // only on permission-gated navigation keeps the cost bounded to admin
+      // areas rather than every public page view (FR-008, research R4).
       await auth.fetchUser();
     }
 

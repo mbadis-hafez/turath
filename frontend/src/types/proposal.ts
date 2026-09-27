@@ -30,6 +30,8 @@ export interface ProposedCitation {
 export interface Proposal {
   id: string;
   record: { type: RecordType | null; id: number; label: string | null };
+  /** True for a record's creation-review item — no field_diffs/payload; the record's current values are the proposed content (005). */
+  is_creation: boolean;
   status: ProposalStatus;
   review_type: ReviewType;
   field_diffs: Record<string, FieldDiff>;
@@ -173,6 +175,7 @@ export interface ArchiveItemDraftFields {
   source_name?: string | null;
   rights_holder?: Localized;
   rights_status?: string;
+  digitized_at?: string | null;
   license?: string | null;
   verification_reference?: string | null;
   access_level?: string;

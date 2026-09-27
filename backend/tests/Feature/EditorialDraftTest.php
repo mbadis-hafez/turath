@@ -154,7 +154,7 @@ it('submits a draft to the review queue and refuses an empty one', function () {
 
 it('applies an approved draft through the sections services: fields, entries, links, contacts and one revision', function () {
     $proposer = editorUser();
-    $reviewer = editorUser();
+    $reviewer = reviewerUser();
     $artist = draftableArtist();
 
     $id = upsertDraft('artists', $artist->id, $proposer, artistDraftPayload(), 'Fuller profile from the archive.')->json('data.id');
@@ -196,7 +196,7 @@ it('applies an approved draft through the sections services: fields, entries, li
 
 it('requests changes, lets the editor revise and resubmit with a fresh queue item', function () {
     $editor = editorUser();
-    $reviewer = editorUser();
+    $reviewer = reviewerUser();
     $artist = draftableArtist();
 
     $id = upsertDraft('artists', $artist->id, $editor, ['fields' => ['bio' => ['en' => 'First draft.']]])->json('data.id');
@@ -252,28 +252,31 @@ it('forbids self-review and locks the draft endpoints to submitters and reviewer
     $this->actingAs($contributor)->postJson("/api/v1/proposals/{$id}/request-changes", ['review_note' => 'Not mine to judge.'])->assertForbidden();
 });
 
-it('scopes request-changes to holders of the record manage permission', function () {
+it('scopes request-changes to holders of the proposal\'s own review_queue permission', function () {
     $proposer = editorUser();
     $artwork = Artwork::factory()->create(['title_en' => 'Old title']);
-    $artistsOnly = makeUser();
-    $artistsOnly->givePermissionTo('artists.manage');
+    $wrongQueue = makeUser();
+    $wrongQueue->givePermissionTo('review_queue.data_audit');
 
     $id = upsertDraft('artworks', $artwork->id, $proposer, ['fields' => ['title' => ['en' => 'New title']]])
         ->assertOk()->json('data.id');
     submitDraft('artworks', $artwork->id, $proposer)->assertOk();
+    expect(EditProposal::find($id)->review_type)->toBe('second_source_needed');
 
     Auth::forgetGuards();
-    $this->actingAs($artistsOnly)->postJson("/api/v1/proposals/{$id}/request-changes", ['review_note' => 'Needs work.'])
+    $this->actingAs($wrongQueue)->postJson("/api/v1/proposals/{$id}/request-changes", ['review_note' => 'Needs work.'])
         ->assertForbidden();
 
     Auth::forgetGuards();
-    $this->actingAs(editorUser())->postJson("/api/v1/proposals/{$id}/request-changes", ['review_note' => 'Needs work.'])
+    $rightQueue = makeUser();
+    $rightQueue->givePermissionTo('review_queue.second_source_needed');
+    $this->actingAs($rightQueue)->postJson("/api/v1/proposals/{$id}/request-changes", ['review_note' => 'Needs work.'])
         ->assertOk()->assertJsonPath('data.status', 'changes_requested');
 });
 
 it('serves a per-section diff to the proposer and managers only', function () {
     $editor = editorUser();
-    $reviewer = editorUser();
+    $reviewer = reviewerUser();
     $outsider = makeUser();
     $outsider->givePermissionTo('artworks.manage');
     $artist = draftableArtist();
@@ -281,7 +284,7 @@ it('serves a per-section diff to the proposer and managers only', function () {
     $id = upsertDraft('artists', $artist->id, $editor, artistDraftPayload())->json('data.id');
     submitDraft('artists', $artist->id, $editor)->assertOk();
 
-    // The reviewer with the record manage permission sees flat field diffs
+    // The reviewer holding this proposal's review_type sees flat field diffs
     // and child-collection diffs for every touched section.
     Auth::forgetGuards();
     $sections = $this->actingAs($reviewer)->getJson("/api/v1/proposals/{$id}/diff")
@@ -336,7 +339,7 @@ it('lets a review-queue permission holder read the diff and request changes with
 
 it('applies an event draft with fields and participants on approval', function () {
     $proposer = editorUser();
-    $reviewer = editorUser();
+    $reviewer = reviewerUser();
     $artist = draftableArtist();
     $event = Event::create(['event_type' => 'exhibition', 'title_ar' => 'معرض']);
 
@@ -360,7 +363,7 @@ it('applies an event draft with fields and participants on approval', function (
 
 it('applies artwork and archive-item field drafts on approval', function () {
     $proposer = editorUser();
-    $reviewer = editorUser();
+    $reviewer = reviewerUser();
 
     $artwork = Artwork::factory()->create(['title_en' => 'Old title']);
     $artworkId = upsertDraft('artworks', $artwork->id, $proposer, [
@@ -388,7 +391,7 @@ it('applies artwork and archive-item field drafts on approval', function () {
 
 it('still rolls back the revision an approved draft produced', function () {
     $proposer = editorUser();
-    $reviewer = editorUser();
+    $reviewer = reviewerUser();
     $artist = draftableArtist();
 
     $id = upsertDraft('artists', $artist->id, $proposer, ['fields' => ['bio' => ['en' => 'Version two.']]])->json('data.id');
@@ -398,8 +401,9 @@ it('still rolls back the revision an approved draft produced', function () {
     $this->actingAs($reviewer)->postJson("/api/v1/proposals/{$id}/approve")->assertOk();
 
     $revision = Revision::where('citable_id', $artist->id)->sole();
+    // Rolling back is a content-modifying action (artists.manage), not review work.
     Auth::forgetGuards();
-    $new = $this->actingAs($reviewer)
+    $new = $this->actingAs($proposer)
         ->postJson("/api/v1/records/artists/{$artist->id}/revisions/{$revision->id}/rollback")
         ->assertOk()->json('data');
 

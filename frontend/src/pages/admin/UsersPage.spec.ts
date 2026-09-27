@@ -11,6 +11,15 @@ import type { AdminUserRow } from "@/types/user";
 const api = vi.hoisted(() => ({ fetchAdminUsers: vi.fn(), deleteUser: vi.fn() }));
 vi.mock("@/api/users", () => api);
 
+const rolesApi = vi.hoisted(() => ({ listRoles: vi.fn() }));
+vi.mock("@/api/roles", () => rolesApi);
+
+let nextRoleId = 1;
+const roleOption = (name: string, en: string) => ({
+  id: nextRoleId++, name, display_name: { ar: en, en }, description: { ar: null, en: null },
+  is_built_in: true, permissions_editable: true, users_count: 0, permissions_count: 0,
+});
+
 const row = (id: number, roles: string[] = ["reader"], isActive = true): AdminUserRow => ({
   id, name: `User ${id}`, email: `user${id}@example.com`, roles, is_active: isActive,
 });
@@ -37,6 +46,9 @@ beforeEach(() => {
   signIn(["users.manage"]);
   api.fetchAdminUsers.mockReset().mockResolvedValue({ data: [row(1)], links: [], meta });
   api.deleteUser.mockReset().mockResolvedValue(undefined);
+  rolesApi.listRoles.mockReset().mockResolvedValue([
+    roleOption("admin", "Admin"), roleOption("editor", "Editor"), roleOption("reviewer", "Reviewer"),
+  ]);
   router = createRouter({
     history: createMemoryHistory(),
     routes: [

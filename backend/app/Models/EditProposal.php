@@ -31,6 +31,7 @@ class EditProposal extends Model
             'payload' => 'array',
             'proposed_citations' => 'array',
             'reviewed_at' => 'datetime',
+            'is_creation' => 'boolean',
         ];
     }
 

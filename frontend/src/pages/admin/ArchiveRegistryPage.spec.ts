@@ -21,10 +21,10 @@ const row = (id: number, patch: Partial<AdminArchiveRow> = {}): AdminArchiveRow 
 
 let router: Router;
 
-async function mountPage() {
+async function mountPage(permissions: string[] = ["archive.manage"]) {
   const pinia = createPinia();
   setActivePinia(pinia);
-  useAuthStore().$patch({ user: { id: 1, name: "E", email: "e@x", roles: ["editor"], permissions: ["archive.manage"] } as never, initialized: true });
+  useAuthStore().$patch({ user: { id: 1, name: "E", email: "e@x", roles: ["editor"], permissions } as never, initialized: true });
   await router.push("/en/admin/archive");
   const wrapper = mountWithPlugins(ArchiveRegistryPage, { locale: "en", router, pinia });
   await flushPromises();
@@ -58,7 +58,7 @@ describe("ArchiveRegistryPage", () => {
   });
 
   it("selects rows, sends a bulk status change and lists the items that failed", async () => {
-    const wrapper = await mountPage();
+    const wrapper = await mountPage(["archive.manage", "archive.publish"]);
 
     await wrapper.findAll("[data-testid=row-select]")[0].setValue(true);
     await wrapper.findAll("[data-testid=row-select]")[1].setValue(true);
@@ -69,6 +69,15 @@ describe("ArchiveRegistryPage", () => {
 
     expect(api.bulkArchive).toHaveBeenCalledWith({ ids: [1, 2], action: "set_status", status: "published" });
     expect(wrapper.get("[data-testid=bulk-failures]").text()).toContain("Rights unknown");
+  });
+
+  it("hides the Published bulk-status option without archive.publish", async () => {
+    const wrapper = await mountPage(["archive.manage"]);
+
+    await wrapper.findAll("[data-testid=row-select]")[0].setValue(true);
+
+    const options = wrapper.get("[data-testid=bulk-status]").findAll("option").map((o) => o.attributes("value"));
+    expect(options).toEqual(["", "draft", "hidden"]);
   });
 
   it("asks for confirmation before a bulk delete", async () => {

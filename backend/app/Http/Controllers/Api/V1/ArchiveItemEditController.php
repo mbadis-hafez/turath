@@ -7,6 +7,7 @@ use App\Models\Artist;
 use App\Models\Artwork;
 use App\Models\Event;
 use App\Models\ReviewQueueItem;
+use App\Support\Completeness\RecomputesCompleteness;
 use App\Support\Curation\ArchiveItemChecklist;
 use App\ValueObjects\PartialDate;
 use Illuminate\Http\JsonResponse;
@@ -15,6 +16,8 @@ use Illuminate\Validation\ValidationException;
 
 class ArchiveItemEditController
 {
+    use RecomputesCompleteness;
+
     public function show(ArchiveItem $archiveItem): JsonResponse
     {
         return response()->json(['data' => self::bundle($archiveItem)]);
@@ -36,6 +39,9 @@ class ArchiveItemEditController
                 'review_type' => 'archivist_review',
                 'submitted_by_user_id' => $request->user()?->id,
             ]);
+            // The dashboard's "pending_review" severity reads record_completeness,
+            // which only changes on save — recompute now so it doesn't stay stale.
+            $this->recomputeCompleteness($archiveItem);
         }
 
         return response()->json(['data' => self::bundle($archiveItem->refresh())]);
@@ -65,6 +71,7 @@ class ArchiveItemEditController
             'rights_holder' => ['ar' => $item->rights_holder_ar, 'en' => $item->rights_holder_en],
             'rights_status' => $item->rights_status,
             'license' => $item->license,
+            'digitized_at' => $item->digitized_at?->toDateString(),
             'verification_reference' => $item->getAttribute('verification_reference'),
             'access_level' => $item->access_level,
             'publication_status' => $item->publication_status,

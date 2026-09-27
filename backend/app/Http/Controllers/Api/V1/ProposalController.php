@@ -7,6 +7,7 @@ use App\Enums\ReviewType;
 use App\Models\EditProposal;
 use App\Support\Completeness\CitableTypeResolver;
 use App\Support\Proposals\ConflictRequired;
+use App\Support\Proposals\CreationReviewService;
 use App\Support\Proposals\EditorialDraftService;
 use App\Support\Proposals\ProposableFields;
 use App\Support\Proposals\ProposalService;
@@ -67,13 +68,12 @@ class ProposalController
 
         $query = EditProposal::query()->with(['proposedBy', 'reviewedBy', 'citable']);
 
-        // A contributor only ever sees their own; reviewers see everything they can act on.
+        // A contributor/editor only ever sees their own; a reviewer sees everything
+        // they can act on (mayReview() is what actually gates approve/reject either way).
         $reviewTypes = $this->reviewableTypes($request);
-        if ($request->boolean('mine') || (! $this->canManageRecords($request) && $reviewTypes === [])) {
+        if ($request->boolean('mine') || $reviewTypes === []) {
             $query->where('proposed_by_user_id', $user->id);
-        } elseif ($reviewTypes !== []) {
-            // Holders of review_queue.* permissions work exactly the queues they hold,
-            // the same scoping /review-queue applies.
+        } else {
             $query->whereIn('review_type', $reviewTypes);
         }
         if (! empty($data['status'])) {
@@ -120,13 +120,21 @@ class ProposalController
         $request->merge(['edit_summary' => 'Approved edit proposal '.$proposal->id]);
 
         try {
-            // Payload-carrying proposals are editorial drafts: their sections
-            // apply through the draft applier, not the flat-field path.
-            $revision = $proposal->payload !== null
-                ? (new EditorialDraftService)->apply($proposal, $record, $request->user(), $request->boolean('confirm_conflict'))
-                : (new ProposalService)->approve(
-                    $proposal, $record, $request->user(), $data['review_note'] ?? null, $request->boolean('confirm_conflict'),
-                );
+            if ($proposal->is_creation) {
+                // Nothing to apply — the record's creator already holds every
+                // field on the live record (005 research.md R1/R3). Approval
+                // is a pure confirmation, not a diff application.
+                (new CreationReviewService)->approve($proposal, $record, $request->user(), $data['review_note'] ?? null);
+                $revision = null;
+            } else {
+                // Payload-carrying proposals are editorial drafts: their sections
+                // apply through the draft applier, not the flat-field path.
+                $revision = $proposal->payload !== null
+                    ? (new EditorialDraftService)->apply($proposal, $record, $request->user(), $request->boolean('confirm_conflict'))
+                    : (new ProposalService)->approve(
+                        $proposal, $record, $request->user(), $data['review_note'] ?? null, $request->boolean('confirm_conflict'),
+                    );
+            }
         } catch (ConflictRequired $e) {
             return response()->json([
                 'message' => $e->getMessage(),
@@ -169,35 +177,18 @@ class ProposalController
             && ($user->id === $proposal->proposed_by_user_id || $this->mayReview($request, $proposal));
     }
 
-    /** Reviewing means holding the record-type manage permission or the proposal's own review_queue.* permission. */
+    /**
+     * Reviewing means holding the proposal's own review_queue.* permission —
+     * holding the record-type's manage permission (Editor/Admin) is
+     * deliberately NOT enough on its own; an Editor doesn't review proposals,
+     * only the Reviewer role (and Admin, who also holds every review_queue.*).
+     */
     private function mayReview(Request $request, EditProposal $proposal): bool
     {
         $user = $request->user();
-        if ($user === null || ! $user->can($this->managePermission($proposal))) {
-            $type = ReviewType::tryFrom($proposal->review_type);
+        $type = ReviewType::tryFrom($proposal->review_type);
 
-            return $type !== null && ($user?->can($type->permission()) ?? false);
-        }
-
-        return true;
-    }
-
-    private function managePermission(EditProposal $proposal): string
-    {
-        $segment = CitableTypeResolver::segmentFor($proposal->citable_type) ?? '';
-
-        return CitableTypeResolver::forSegment($segment)['manage_permission'] ?? 'artists.manage';
-    }
-
-    private function canManageRecords(Request $request): bool
-    {
-        foreach (config('completeness.types', []) as $entry) {
-            if ($request->user()?->can($entry['manage_permission'])) {
-                return true;
-            }
-        }
-
-        return false;
+        return $type !== null && ($user?->can($type->permission()) ?? false);
     }
 
     /**
@@ -207,13 +198,7 @@ class ProposalController
      */
     private function reviewableTypes(Request $request): array
     {
-        return array_map(
-            fn (ReviewType $type) => $type->value,
-            array_filter(
-                ReviewType::cases(),
-                fn (ReviewType $type) => $request->user()?->can($type->permission()) ?? false,
-            ),
-        );
+        return ReviewType::reviewableBy($request->user());
     }
 
     private function recordFor(EditProposal $proposal): ?Model
@@ -248,6 +233,7 @@ class ProposalController
                 'label' => $record?->getAttribute('title_en') ?? $record?->getAttribute('title_ar')
                     ?? $record?->getAttribute('name_en') ?? $record?->getAttribute('name_ar'),
             ],
+            'is_creation' => $proposal->is_creation,
             'status' => $proposal->status,
             'review_type' => $proposal->review_type,
             'field_diffs' => $proposal->field_diffs,

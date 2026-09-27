@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import { useRoute } from "vue-router";
 
 import { listProposals } from "@/api/proposals";
 import EmptyState from "@/components/common/EmptyState.vue";
@@ -15,12 +16,26 @@ import { PROPOSAL_STATUSES, REVIEW_TYPES, type Proposal, type ProposalStatus, ty
 
 const { t } = useI18n();
 const auth = useAuthStore();
+const route = useRoute();
 
 const canReview = computed(() => canReviewProposals((p) => auth.can(p)));
 
-const status = ref<ProposalStatus | "">("pending");
-const reviewType = ref<ReviewType | "">("");
-const mine = ref(false);
+// Entry points like the reviewer dashboard deep-link into this page via
+// ?status=&review_type=&mine= — read once on load, never synced back to the URL.
+const initialStatus = route.query.status;
+const initialReviewType = route.query.review_type;
+
+const status = ref<ProposalStatus | "">(
+  typeof initialStatus === "string" && PROPOSAL_STATUSES.includes(initialStatus as ProposalStatus)
+    ? (initialStatus as ProposalStatus)
+    : "pending",
+);
+const reviewType = ref<ReviewType | "">(
+  typeof initialReviewType === "string" && REVIEW_TYPES.includes(initialReviewType as ReviewType)
+    ? (initialReviewType as ReviewType)
+    : "",
+);
+const mine = ref(route.query.mine === "1");
 const page = ref(1);
 
 const items = ref<Proposal[]>([]);
@@ -100,7 +115,7 @@ const field = "rounded-md border border-line bg-surface px-3 py-2 text-sm text-i
             >
               <span>
                 <span class="block text-sm font-semibold text-ink">{{ p.record.label ?? `#${p.record.id}` }}</span>
-                <span class="block text-xs text-ink-muted">{{ t("proposals.fieldsChanged", { count: Object.keys(p.field_diffs).length }) }} · {{ t(`proposals.reviewTypes.${p.review_type}`) }}</span>
+                <span class="block text-xs text-ink-muted">{{ p.is_creation ? t("proposals.newRecord") : t("proposals.fieldsChanged", { count: Object.keys(p.field_diffs).length }) }} · {{ t(`proposals.reviewTypes.${p.review_type}`) }}</span>
               </span>
               <span class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="p.status === 'pending' ? 'bg-warn-soft text-warn' : 'bg-neutral-soft text-ink-muted'">{{ t(`proposals.statuses.${p.status}`) }}</span>
             </button>

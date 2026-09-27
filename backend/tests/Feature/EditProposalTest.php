@@ -11,7 +11,9 @@ use Spatie\Activitylog\Models\Activity;
 
 function proposableArtist(array $overrides = []): Artist
 {
-    return Artist::factory()->create(array_merge([
+    // Near-complete by default so completeness/publish semantics in these
+    // tests hinge only on the fields each test manipulates.
+    return Artist::factory()->complete()->create(array_merge([
         'name_ar' => 'أحمد', 'name_en' => 'Ahmad', 'bio_en' => null, 'living_status' => 'unknown',
     ], $overrides));
 }
@@ -71,7 +73,7 @@ it('recomputes the diff server-side and refuses fields that are not proposable',
 });
 
 it('applies an approved proposal through the normal update path: audit log, completeness and search all fire', function () {
-    $editor = editorUser();
+    $editor = reviewerUser();
     $contributor = makeUser('contributor');
     $artist = proposableArtist();
     $before = (float) DB::table('record_completeness')->where('citable_id', $artist->id)->value('completeness_pct');
@@ -105,7 +107,7 @@ it('applies an approved proposal through the normal update path: audit log, comp
 });
 
 it('blocks approval when the field drifted, and applies against the current value once confirmed', function () {
-    $editor = editorUser();
+    $editor = reviewerUser();
     $artist = proposableArtist();
     $id = propose($artist, makeUser('contributor'), ['bio_en' => 'From the proposal.'])->json('data.id');
     Auth::forgetGuards();
@@ -128,7 +130,7 @@ it('blocks approval when the field drifted, and applies against the current valu
 });
 
 it('supersedes only the pending proposals that overlap the approved fields', function () {
-    $editor = editorUser();
+    $editor = reviewerUser();
     $contributor = makeUser('contributor');
     $artist = proposableArtist();
 
@@ -149,7 +151,7 @@ it('supersedes only the pending proposals that overlap the approved fields', fun
 });
 
 it('leaves the record untouched when a proposal is rejected, and keeps the proposal with its reason', function () {
-    $editor = editorUser();
+    $editor = reviewerUser();
     $artist = proposableArtist();
     $snapshot = $artist->only(['name_ar', 'name_en', 'bio_en', 'living_status']);
     $id = propose($artist, makeUser('contributor'), ['bio_en' => 'Unsourced claim.'])->json('data.id');
@@ -166,7 +168,7 @@ it('leaves the record untouched when a proposal is rejected, and keeps the propo
 });
 
 it('promotes a proposal citation only on approval', function () {
-    $editor = editorUser();
+    $editor = reviewerUser();
     $artist = proposableArtist();
     $source = Source::factory()->create();
 
@@ -208,10 +210,9 @@ it('rolls back by adding a reversing revision rather than deleting history', fun
 
 it('requires explicit confirmation when a rollback would unpublish a live record', function () {
     $editor = editorUser();
-    $artist = proposableArtist(['living_status' => 'unknown']);
-    FieldCitation::factory()->create(['citable_type' => Artist::class, 'citable_id' => $artist->id, 'field_key' => 'name', 'source_id' => Source::factory()->create()->id]);
+    $artist = proposableArtist(['living_status' => 'unknown', 'bio_en' => 'A painter from Alahsa.']);
 
-    // Confirming the artist is living clears the last blocking gap, so it can be published.
+    // Confirming the artist is living clears the remaining life-date gaps, so it can be published.
     $this->actingAs($editor)->patchJson("/api/v1/artists/{$artist->id}", ['living_status' => 'living'])->assertOk();
     $this->actingAs($editor)->patchJson("/api/v1/artists/{$artist->id}", ['publication_status' => 'published'])->assertOk();
 
@@ -219,7 +220,7 @@ it('requires explicit confirmation when a rollback would unpublish a live record
 
     $blocked = $this->actingAs($editor)->postJson("/api/v1/records/artists/{$artist->id}/revisions/{$revision->id}/rollback")->assertStatus(409);
     expect($blocked->json('would_unpublish'))->toBeTrue()
-        ->and($blocked->json('blocking'))->toContain('death_year_or_living_confirmed');
+        ->and($blocked->json('blocking'))->toContain('death_year_or_living');
     expect($artist->refresh()->living_status)->toBe('living')
         ->and($artist->publication_status)->toBe('published');
 
@@ -240,7 +241,7 @@ it('routes proposals into F10 queue with the right review type and leaves its ro
     expect([$claim, $measured, $plain])->toBe(['second_source_needed', 'data_audit', 'editorial_review']);
 
     Auth::forgetGuards();
-    $queue = $this->actingAs(editorUser())->getJson('/api/v1/review-queue')->assertOk()->json('data');
+    $queue = $this->actingAs(reviewerUser())->getJson('/api/v1/review-queue')->assertOk()->json('data');
     expect(collect($queue)->pluck('review_type')->sort()->values()->all())->toBe(['data_audit', 'editorial_review', 'second_source_needed']);
 
     // A reader still sees nothing: F10's role scoping is untouched.
@@ -259,7 +260,7 @@ it('lets a contributor see only their own proposals and reviewers see all', func
 
     $this->actingAs($mine)->getJson('/api/v1/proposals')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $id);
     Auth::forgetGuards();
-    $this->actingAs(editorUser())->getJson('/api/v1/proposals')->assertOk()->assertJsonCount(2, 'data');
+    $this->actingAs(reviewerUser())->getJson('/api/v1/proposals')->assertOk()->assertJsonCount(2, 'data');
     Auth::forgetGuards();
     $this->actingAs($other)->getJson("/api/v1/proposals/{$id}")->assertForbidden();
     Auth::forgetGuards();

@@ -102,6 +102,29 @@ it('merges duplicates: re-points links and citations, tombstones the old id, and
     expect(Activity::where('subject_type', ArtworkMerge::class)->exists())->toBeTrue();
 });
 
+it('leaves the survivor with exactly one primary image after merging in an image-bearing duplicate', function () {
+    Storage::fake('local');
+    $editor = editorUser();
+    // The survivor starts with no images of its own — the case that used to
+    // leave it with images and no primary, because ArtworkMerger's bulk
+    // update() clears is_final on every moved image without model events
+    // firing to re-assign one.
+    $survivor = Artwork::factory()->published()->create();
+    $duplicate = Artwork::factory()->published()->create();
+
+    $this->actingAs($editor)->post("/api/v1/artworks/{$duplicate->id}/images", ['image' => UploadedFile::fake()->image('a.jpg', 100, 100)], ['Accept' => 'application/json'])->assertCreated();
+    $this->actingAs($editor)->post("/api/v1/artworks/{$duplicate->id}/images", ['image' => UploadedFile::fake()->image('b.jpg', 120, 90)], ['Accept' => 'application/json'])->assertCreated();
+
+    $this->actingAs($editor)->postJson('/api/v1/artworks/merge', [
+        'survivor_id' => $survivor->id,
+        'duplicate_id' => $duplicate->id,
+        'field_resolution' => [],
+    ])->assertCreated();
+
+    expect(ArtworkImage::where('artwork_id', $survivor->id)->count())->toBe(2)
+        ->and(ArtworkImage::where('artwork_id', $survivor->id)->where('is_final', true)->count())->toBe(1);
+});
+
 it('promotes a candidate into a draft artwork with stages and provenance, and dismisses others', function () {
     $editor = editorUser();
     $item = ArchiveItem::factory()->create();
@@ -155,11 +178,14 @@ it('uploads artwork images privately, marks one final, and only serves publicly 
     Storage::fake('local');
     $editor = editorUser();
     $artwork = Artwork::factory()->create(['publication_status' => 'draft']);
-    $upload = fn () => UploadedFile::fake()->image('a.jpg', 3000, 2000);
+    // Distinct dimensions so the two fakes aren't byte-identical — a real,
+    // separate photo, not a duplicate of the same file (the upload endpoint
+    // now blocks byte-identical duplicates on the same artwork).
+    $upload = fn (int $w) => UploadedFile::fake()->image('a.jpg', $w, 2000);
 
-    $first = $this->actingAs($editor)->post("/api/v1/artworks/{$artwork->id}/images", ['image' => $upload(), 'rights_status' => 'licensed'], ['Accept' => 'application/json'])
+    $first = $this->actingAs($editor)->post("/api/v1/artworks/{$artwork->id}/images", ['image' => $upload(3000), 'rights_status' => 'licensed'], ['Accept' => 'application/json'])
         ->assertCreated()->assertJsonPath('data.0.width_px', 3000)->json('data.0');
-    $this->actingAs($editor)->post("/api/v1/artworks/{$artwork->id}/images", ['image' => $upload()], ['Accept' => 'application/json'])->assertCreated();
+    $this->actingAs($editor)->post("/api/v1/artworks/{$artwork->id}/images", ['image' => $upload(3001)], ['Accept' => 'application/json'])->assertCreated();
     $second = ArtworkImage::where('artwork_id', $artwork->id)->where('id', '!=', $first['id'])->firstOrFail();
 
     $this->actingAs($editor)->patchJson("/api/v1/artworks/{$artwork->id}/images/{$second->id}", ['is_final' => true])->assertOk();

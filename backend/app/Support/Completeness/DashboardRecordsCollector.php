@@ -6,6 +6,8 @@ use App\Models\ArchiveItem;
 use App\Models\Artist;
 use App\Models\Artwork;
 use App\Models\RecordCompleteness;
+use App\Models\ReviewQueueItem;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
 /**
@@ -31,6 +33,74 @@ class DashboardRecordsCollector
      */
     public function collect(int $userId, array $entityTypes, array $severities): Collection
     {
+        return $this->build($entityTypes, $severities, fn (string $modelClass) => $modelClass::query()
+            ->where('created_by_user_id', $userId)->get());
+    }
+
+    /**
+     * The gaps a user should see on their own dashboard: their own records,
+     * plus — if they hold any review_queue.* permission — records pending
+     * review in the queues they work. A user can be both a record creator
+     * and a reviewer (e.g. dashboard.manage no longer implies "not also a
+     * reviewer"), so these are additive rather than either/or.
+     *
+     * @param  array<int, string>  $reviewTypes
+     * @param  array<int, string>  $entityTypes
+     * @param  array<int, string>  $severities
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function collectForUser(int $userId, array $reviewTypes, array $entityTypes, array $severities): Collection
+    {
+        $own = $this->collect($userId, $entityTypes, $severities);
+
+        if ($reviewTypes === []) {
+            return $own;
+        }
+
+        return $this->sorted(
+            $own->concat($this->collectForReview($reviewTypes, $entityTypes, $severities))
+                ->unique(fn (array $row) => $row['entity_type'].':'.$row['id']),
+        );
+    }
+
+    /**
+     * A reviewer's gaps view: records with a pending review-queue item in one
+     * of the review types the reviewer holds review_queue.* for — the same
+     * scoping /proposals applies (ProposalController::reviewableTypes),
+     * rather than the "records I created" scoping `collect()` uses.
+     *
+     * @param  array<int, string>  $reviewTypes
+     * @param  array<int, string>  $entityTypes
+     * @param  array<int, string>  $severities
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function collectForReview(array $reviewTypes, array $entityTypes, array $severities): Collection
+    {
+        if ($reviewTypes === []) {
+            return collect();
+        }
+
+        return $this->build($entityTypes, $severities, function (string $modelClass) use ($reviewTypes) {
+            $citableIds = ReviewQueueItem::query()
+                ->where('citable_type', $modelClass)
+                ->where('status', 'pending')
+                ->whereIn('review_type', $reviewTypes)
+                ->pluck('citable_id');
+
+            return $citableIds->isEmpty()
+                ? new EloquentCollection
+                : $modelClass::query()->whereIn('id', $citableIds)->get();
+        });
+    }
+
+    /**
+     * @param  array<int, string>  $entityTypes
+     * @param  array<int, string>  $severities
+     * @param  callable(class-string): EloquentCollection<int, Artist|Artwork|ArchiveItem>  $recordsFor
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function build(array $entityTypes, array $severities, callable $recordsFor): Collection
+    {
         $rows = collect();
 
         foreach (self::ENTITY_TYPES as $key => $modelClass) {
@@ -38,7 +108,7 @@ class DashboardRecordsCollector
                 continue;
             }
 
-            $records = $modelClass::query()->where('created_by_user_id', $userId)->get();
+            $records = $recordsFor($modelClass);
             $completenessById = RecordCompleteness::query()
                 ->where('citable_type', $modelClass)
                 ->whereIn('citable_id', $records->pluck('id'))
@@ -67,6 +137,15 @@ class DashboardRecordsCollector
             }
         }
 
+        return $this->sorted($rows);
+    }
+
+    /**
+     * @param  Collection<int, array<string, mixed>>  $rows
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function sorted(Collection $rows): Collection
+    {
         return $rows->sortBy(fn (array $row) => match ($row['severity']) {
             'blocking' => 0,
             'conflict' => 1,

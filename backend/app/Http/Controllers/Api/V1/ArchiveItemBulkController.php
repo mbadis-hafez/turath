@@ -33,7 +33,7 @@ class ArchiveItemBulkController
         foreach (ArchiveItem::whereIn('id', $data['ids'])->get() as $item) {
             try {
                 match ($data['action']) {
-                    'set_status' => $this->setStatus($item, $data['status']),
+                    'set_status' => $this->setStatus($item, $data['status'], $user->id),
                     'link_artist' => $this->linkArtist($item, (int) $data['artist_id']),
                     default => $item->delete(),
                 };
@@ -46,10 +46,12 @@ class ArchiveItemBulkController
         return response()->json(['data' => ['succeeded' => $succeeded, 'failed' => $failed]]);
     }
 
-    private function setStatus(ArchiveItem $item, string $status): void
+    private function setStatus(ArchiveItem $item, string $status, int $actorId): void
     {
         if ($status === 'published') {
             ArchiveItemPublishController::assertPublishable($item);
+            $item->published_by_user_id = $actorId;
+            $item->published_at = now();
         }
         $item->publication_status = $status;
         $item->save();

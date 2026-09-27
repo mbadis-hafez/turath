@@ -1,0 +1,116 @@
+{
+  "title": "مساحة عمل المراجع",
+  "subtitle": "ما يحتاج مراجعتك الآن",
+  "greeting": {
+    "morning": "صباح الخير، {name}",
+    "afternoon": "مساء الخير، {name}",
+    "evening": "مساء الخير، {name}"
+  },
+  "waitingBanner": "لديك عنصر واحد بانتظار المراجعة. | لديك {count} عناصر بانتظار المراجعة.",
+  "noPermission": {
+    "title": "لا تملك صلاحيات المراجعة",
+    "description": "هذه المساحة مخصصة للمراجعين. تواصل مع مسؤول النظام إذا كنت تعتقد أن هذا خطأ."
+  },
+  "summary": {
+    "title": "قائمة المراجعة",
+    "waitingReview": "بانتظار المراجعة",
+    "verificationIssues": "مسائل التوثيق",
+    "changesReturned": "تعديلات مُعادة",
+    "reviewedToday": "روجعت اليوم"
+  },
+  "needsReview": {
+    "title": "بحاجة إلى مراجعة",
+    "empty": "لا شيء بانتظارك الآن.",
+    "review": "مراجعة",
+    "viewAll": "عرض قائمة المراجعة",
+    "submittedBy": "قدَّمه {name}",
+    "untitled": "سجل بلا عنوان"
+  },
+  "priorityQueue": {
+    "title": "التالي للمراجعة",
+    "empty": "لا يوجد ما يستدعي الأولوية."
+  },
+  "verificationIssues": {
+    "title": "مسائل التوثيق",
+    "empty": "لا توجد مسائل توثيق تتطلب انتباهك.",
+    "kind": {
+      "verification": "بحاجة إلى دليل",
+      "conflict": "تعارض مصادر"
+    }
+  },
+  "returnedContent": {
+    "title": "تعديلات مطلوبة",
+    "empty": "لا يوجد محتوى بانتظار إعادة المراجعة.",
+    "reReview": "إعادة مراجعة",
+    "previousNote": "الملاحظة السابقة: {note}",
+    "viewAll": "عرض العناصر المُعادة"
+  },
+  "pipeline": {
+    "title": "مسار المراجعة",
+    "stages": {
+      "ready_for_review": "جاهز للمراجعة",
+      "changes_requested": "تعديلات مطلوبة",
+      "approved": "موافَق عليه (آخر ٣٠ يومًا)",
+      "rejected": "مرفوض (آخر ٣٠ يومًا)"
+    },
+    "infoNote": "الموافقة تعني اكتمال خطوة المراجعة فقط — النشر خطوة منفصلة يتولاها المسؤول."
+  },
+  "contentOverview": {
+    "title": "محتوى بانتظار المراجعة",
+    "artists": "الفنانون",
+    "artworks": "الأعمال الفنية",
+    "archive_items": "المواد الأرشيفية",
+    "material_submissions": "المواد المقدَّمة"
+  },
+  "recentlyReviewed": {
+    "title": "روجعت مؤخرًا",
+    "empty": "ستظهر قراراتك هنا.",
+    "viewHistory": "عرض السجل",
+    "decision": {
+      "approved": "موافَق عليه — بانتظار النشر",
+      "rejected": "مرفوض",
+      "changes_requested": "طُلبت تعديلات"
+    }
+  },
+  "activity": {
+    "title": "نشاط المراجعة",
+    "empty": "سيظهر نشاط مراجعتك هنا.",
+    "events": {
+      "created": "أُنشئ",
+      "updated": "حُدّث",
+      "deleted": "حُذف"
+    }
+  },
+  "quickActions": {
+    "title": "إجراءات سريعة",
+    "reviewNext": "مراجعة العنصر التالي",
+    "viewQueue": "عرض قائمة المراجعة",
+    "viewVerification": "عرض مسائل التوثيق",
+    "viewRecentlyReviewed": "عرض ما روجع مؤخرًا"
+  },
+  "citableType": {
+    "artists": "فنان",
+    "artworks": "عمل فني",
+    "archive-items": "مادة أرشيفية",
+    "material_submission": "مادة مقدَّمة"
+  },
+  "reviewType": {
+    "archivist_review": "مراجعة أرشيفية",
+    "data_audit": "تدقيق بيانات",
+    "second_source_needed": "مصدر إضافي مطلوب",
+    "editorial_review": "مراجعة تحريرية",
+    "material_intake": "استلام مواد"
+  },
+  "verificationStatus": {
+    "unverified": "قيد الانتظار",
+    "disputed": "محل خلاف",
+    "verified": "موثّق"
+  },
+  "completeness": "الاكتمال: {pct}٪",
+  "verification": "التوثيق: {status}",
+  "review": "المراجعة: {status}",
+  "error": {
+    "title": "تعذّر تحميل مساحة عمل المراجعة.",
+    "retry": "إعادة المحاولة"
+  }
+}

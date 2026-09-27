@@ -34,6 +34,11 @@ function editorUser(): User
     return makeUser('editor');
 }
 
+function reviewerUser(): User
+{
+    return makeUser('reviewer');
+}
+
 /**
  * Valid nested artist payload, overridable per key.
  *

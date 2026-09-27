@@ -4,11 +4,12 @@ import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 import {
-  addArchiveLink, createArchiveItem, deleteArchiveFile, getAdminArchiveItem, removeArchiveLink,
+  addArchiveLink, createArchiveItem, deleteArchiveFile, getAdminArchiveItem, publishArchiveItem, removeArchiveLink,
   submitArchiveReview, syncArchiveItemThemes, updateArchiveItem, uploadArchiveFile,
 } from "@/api/archive";
-import { listThemes } from "@/api/artistCuration";
+import { listThemes, updateArtistCuration } from "@/api/artistCuration";
 import { listAdminArtworks } from "@/api/artworkCuration";
+import { addFieldCitation } from "@/api/dashboard";
 import { listAdminEvents } from "@/api/events";
 import DraftStatusBanner from "@/components/curation/DraftStatusBanner.vue";
 import ErrorState from "@/components/common/ErrorState.vue";
@@ -27,7 +28,7 @@ import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
 import type { Theme } from "@/types/artistCuration";
 import type { ArchiveItemDraftPayload } from "@/types/proposal";
-import { ARCHIVE_ITEM_TYPES, LINK_ROLES, type AccessLevel, type ArchiveEdit, type ArchiveEditLink, type ArchiveItemType, type RightsStatus } from "@/types/archive";
+import { ARCHIVE_ITEM_TYPES, ARTIST_PROOF_LINK_ROLES, LINK_ROLES, type AccessLevel, type ArchiveEdit, type ArchiveEditLink, type ArchiveItemType, type RightsStatus } from "@/types/archive";
 import { formatRelativeTime } from "@/utils/format";
 import type { AppLocale } from "@/i18n";
 
@@ -40,6 +41,7 @@ const auth = useAuthStore();
 
 const forbidden = new ApiError("forbidden", "Forbidden", { status: 403 });
 const canManage = computed(() => auth.can("archive.manage"));
+const canPublish = computed(() => auth.can("archive.publish"));
 const id = computed(() => (route.params.id ? Number(route.params.id) : null));
 const isNew = computed(() => id.value === null);
 
@@ -115,6 +117,7 @@ function applyDraftToForm(): void {
   }
   if (f.license !== undefined) form.license = f.license ?? "";
   if (f.rights_status) form.rightsStatus = f.rights_status as RightsStatus;
+  if (f.digitized_at !== undefined) form.digitizedAt = f.digitized_at ?? "";
   if (f.verification_reference !== undefined) form.verification = f.verification_reference ?? "";
   if (f.access_level) form.access = f.access_level as AccessLevel;
   if (f.legacy_ref !== undefined) form.code = f.legacy_ref ?? "";
@@ -306,11 +309,38 @@ async function sendForReview(): Promise<void> {
   }
 }
 
+async function publish(): Promise<void> {
+  busy.value = true;
+  error.value = null;
+  fieldErrors.value = {};
+  try {
+    await publishArchiveItem(id.value!);
+    await loadItem();
+  } catch (err) {
+    fail(err);
+  } finally {
+    busy.value = false;
+  }
+}
+
 // ---- links
 const linkOpen = ref(false);
 const linkKind = ref<"artist" | "artwork" | "event">("artist");
 const linkRole = ref<string>("about");
 const linkEntity = ref<PickerOption | null>(null);
+
+// These two roles don't just tag the relationship — picking one also acts on the
+// linked artist record (signs their authorization letter, or cites this item as
+// their primary source). Only meaningful once the item exists and has a file/id
+// to point at, and only for someone who can actually edit that artist.
+const artistProofRolesAvailable = computed(() => !isNew.value && linkKind.value === "artist" && auth.can("artists.manage"));
+const roleOptions = computed<string[]>(() => (artistProofRolesAvailable.value ? [...LINK_ROLES, ...ARTIST_PROOF_LINK_ROLES] : [...LINK_ROLES]));
+const isProofRole = (role: string): boolean => (ARTIST_PROOF_LINK_ROLES as readonly string[]).includes(role);
+
+function onLinkKindChange(): void {
+  linkEntity.value = null;
+  if (!roleOptions.value.includes(linkRole.value)) linkRole.value = "about";
+}
 
 const searchArtworks = async (q: string): Promise<PickerOption[]> =>
   (await listAdminArtworks({ q })).data.map((a) => ({ id: a.id, label: labelOf(a.title) }));
@@ -319,9 +349,38 @@ const searchEvents = async (q: string): Promise<PickerOption[]> =>
   (await listAdminEvents({ q })).data.map((e) => ({ id: e.id, label: labelOf(e.title) }));
 const searchFor = (kind: "artist" | "artwork" | "event") => (kind === "artist" ? searchArtistOptions : kind === "artwork" ? searchArtworks : searchEvents);
 
+async function applyArtistProof(role: string, artistId: number, artistName: string): Promise<boolean> {
+  try {
+    if (role === "authorization_letter") {
+      if (!item.value?.file) {
+        error.value = t("archive.edit.linkNeedsFile");
+        return false;
+      }
+      await updateArtistCuration(artistId, { authorization_letter_status: "signed", authorization_letter_file_id: item.value.file.id });
+    } else if (role === "name_verification") {
+      // field_key must be "name": the curation page's name-verified check
+      // looks for a name citation specifically. Completeness's separate
+      // "primary_source" gap uses any_citation, so any field_key —
+      // including this one — satisfies it too; no need to cite it twice.
+      await addFieldCitation("artist", artistId, {
+        field_key: "name",
+        new_source: { linked_archive_item_id: id.value! },
+        claimed_value: artistName,
+      });
+    }
+    return true;
+  } catch (err) {
+    fail(err);
+    return false;
+  }
+}
+
 async function addLink(): Promise<void> {
   if (!linkEntity.value) return;
-  const link: ArchiveEditLink = { role: linkRole.value, kind: linkKind.value, entity_id: linkEntity.value.id, label: { ar: linkEntity.value.label, en: linkEntity.value.label } };
+  const role = linkRole.value;
+  if (isProofRole(role) && !(await applyArtistProof(role, linkEntity.value.id, linkEntity.value.label))) return;
+
+  const link: ArchiveEditLink = { role, kind: linkKind.value, entity_id: linkEntity.value.id, label: { ar: linkEntity.value.label, en: linkEntity.value.label } };
   if (isNew.value) {
     pendingLinks.value = [...pendingLinks.value, link];
   } else {
@@ -391,6 +450,9 @@ const err = (key: string) => fieldErrors.value[key]?.[0];
           </button>
           <button v-if="!isNew" type="button" class="rounded-md bg-ink px-4 py-2 text-sm font-semibold text-paper disabled:cursor-not-allowed disabled:bg-neutral-soft disabled:text-ink-muted" :disabled="!complete || busy || item?.under_review" :title="complete ? undefined : t('archive.edit.reviewBlocked')" data-testid="send-review" @click="sendForReview">
             {{ item?.under_review ? t("archive.edit.inReview") : t("archive.edit.sendReview") }}
+          </button>
+          <button v-if="!isNew && canPublish" type="button" class="rounded-md bg-success px-4 py-2 text-sm font-semibold text-paper disabled:cursor-not-allowed disabled:bg-neutral-soft disabled:text-ink-muted" :disabled="busy || item?.publication_status === 'published'" data-testid="publish" @click="publish">
+            {{ item?.publication_status === "published" ? t("archive.edit.published") : t("archive.edit.publish") }}
           </button>
         </div>
       </div>
@@ -498,6 +560,7 @@ const err = (key: string) => fieldErrors.value[key]?.[0];
                 <select v-model="form.license" :class="[input, missing('rights_holder_license')]" data-testid="license"><option value="">{{ t("archive.edit.licensePlaceholder") }}</option><option v-for="l in LICENSES" :key="l" :value="l">{{ l }}</option><option v-if="form.license && !LICENSES.includes(form.license)" :value="form.license">{{ form.license }}</option></select>
               </label>
               <label class="text-xs text-ink-muted">{{ t("archive.edit.rightsStatus") }}<select v-model="form.rightsStatus" :class="input"><option v-for="r in RIGHTS" :key="r" :value="r">{{ t(`archive.admin.rightsOptions.${r}`) }}</option></select></label>
+              <label class="text-xs text-ink-muted">{{ t("archive.edit.digitizedAt") }}<input v-model="form.digitizedAt" type="date" :class="input" data-testid="digitized-at" /></label>
               <label class="text-xs text-ink-muted sm:col-span-2">{{ t("archive.edit.verification") }}<input v-model="form.verification" type="text" :class="input" /></label>
               <p v-if="missingKeys.has('rights_holder_license')" class="text-xs text-danger sm:col-span-2">{{ t("archive.edit.rightsHelp") }}</p>
             </div>
@@ -516,9 +579,12 @@ const err = (key: string) => fieldErrors.value[key]?.[0];
               </li>
             </ul>
             <div v-if="linkOpen" class="mt-3 grid gap-3 rounded-md border border-line p-3 text-sm sm:grid-cols-3" data-testid="link-form">
-              <label class="text-xs text-ink-muted">{{ t("archive.edit.linkKind") }}<select v-model="linkKind" :class="input" @change="linkEntity = null"><option value="artist">{{ t("archive.edit.linkKinds.artist") }}</option><option value="artwork">{{ t("archive.edit.linkKinds.artwork") }}</option><option value="event">{{ t("archive.edit.linkKinds.event") }}</option></select></label>
-              <label class="text-xs text-ink-muted">{{ t("archive.edit.linkRole") }}<select v-model="linkRole" :class="input"><option v-for="r in LINK_ROLES" :key="r" :value="r">{{ t(`archive.edit.linkRoles.${r}`) }}</option></select></label>
+              <label class="text-xs text-ink-muted">{{ t("archive.edit.linkKind") }}<select v-model="linkKind" :class="input" data-testid="link-kind" @change="onLinkKindChange">
+                <option value="artist">{{ t("archive.edit.linkKinds.artist") }}</option><option value="artwork">{{ t("archive.edit.linkKinds.artwork") }}</option><option value="event">{{ t("archive.edit.linkKinds.event") }}</option>
+              </select></label>
+              <label class="text-xs text-ink-muted">{{ t("archive.edit.linkRole") }}<select v-model="linkRole" :class="input" data-testid="link-role"><option v-for="r in roleOptions" :key="r" :value="r">{{ t(`archive.edit.linkRoles.${r}`) }}</option></select></label>
               <div class="text-xs text-ink-muted">{{ t("archive.edit.linkTarget") }}<EntityPicker :key="linkKind" v-model="linkEntity" :search="searchFor(linkKind)" :placeholder="t('archive.edit.linkSearch')" /></div>
+              <p v-if="isProofRole(linkRole)" class="text-xs text-ink-muted sm:col-span-3" data-testid="link-role-help">{{ t(`archive.edit.linkRoleHelp.${linkRole}`) }}</p>
               <button type="button" class="rounded-md bg-ink px-3 py-2 text-sm text-paper disabled:opacity-50 sm:col-span-3 sm:w-fit" :disabled="!linkEntity" data-testid="link-apply" @click="addLink">{{ t("archive.admin.apply") }}</button>
             </div>
           </section>

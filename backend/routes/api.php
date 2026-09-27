@@ -6,6 +6,11 @@ use App\Http\Controllers\Api\V1\AdminArtistIndexController;
 use App\Http\Controllers\Api\V1\AdminArtworkIndexController;
 use App\Http\Controllers\Api\V1\AdminEventIndexController;
 use App\Http\Controllers\Api\V1\AdminHolderIndexController;
+use App\Http\Controllers\Api\V1\AdminRoleDestroyController;
+use App\Http\Controllers\Api\V1\AdminRoleIndexController;
+use App\Http\Controllers\Api\V1\AdminRoleShowController;
+use App\Http\Controllers\Api\V1\AdminRoleStoreController;
+use App\Http\Controllers\Api\V1\AdminRoleUpdateController;
 use App\Http\Controllers\Api\V1\AdminUserDestroyController;
 use App\Http\Controllers\Api\V1\AdminUserIndexController;
 use App\Http\Controllers\Api\V1\AdminUserInvitationController;
@@ -27,6 +32,7 @@ use App\Http\Controllers\Api\V1\ArchiveItemUpdateController;
 use App\Http\Controllers\Api\V1\ArtistArchiveItemsController;
 use App\Http\Controllers\Api\V1\ArtistArtworksController;
 use App\Http\Controllers\Api\V1\ArtistAssignmentController;
+use App\Http\Controllers\Api\V1\ArtistCompletenessPreviewController;
 use App\Http\Controllers\Api\V1\ArtistCurationShowController;
 use App\Http\Controllers\Api\V1\ArtistCurationUpdateController;
 use App\Http\Controllers\Api\V1\ArtistDestroyController;
@@ -64,9 +70,13 @@ use App\Http\Controllers\Api\V1\Auth\UserController;
 use App\Http\Controllers\Api\V1\CandidateArtworkDismissController;
 use App\Http\Controllers\Api\V1\CandidateArtworkIndexController;
 use App\Http\Controllers\Api\V1\CandidateArtworkPromoteController;
+use App\Http\Controllers\Api\V1\ContentPermissionRequestDecideController;
+use App\Http\Controllers\Api\V1\ContentPermissionRequestIndexController;
+use App\Http\Controllers\Api\V1\ContentPermissionRequestStoreController;
 use App\Http\Controllers\Api\V1\DashboardCompletenessController;
 use App\Http\Controllers\Api\V1\DashboardExportController;
 use App\Http\Controllers\Api\V1\DashboardRecordsController;
+use App\Http\Controllers\Api\V1\EditorDashboardController;
 use App\Http\Controllers\Api\V1\EditorialDraftController;
 use App\Http\Controllers\Api\V1\EventController;
 use App\Http\Controllers\Api\V1\EventParticipantsController;
@@ -90,9 +100,11 @@ use App\Http\Controllers\Api\V1\ImportBatchStoreController;
 use App\Http\Controllers\Api\V1\ImportMappingProfileIndexController;
 use App\Http\Controllers\Api\V1\ImportMappingProfileStoreController;
 use App\Http\Controllers\Api\V1\MaterialSubmissionController;
+use App\Http\Controllers\Api\V1\PermissionCatalogueController;
 use App\Http\Controllers\Api\V1\PipelineNoteSuggestionAcceptController;
 use App\Http\Controllers\Api\V1\ProposalController;
 use App\Http\Controllers\Api\V1\RecordCompletenessController;
+use App\Http\Controllers\Api\V1\ReviewerDashboardController;
 use App\Http\Controllers\Api\V1\ReviewQueueAcknowledgeController;
 use App\Http\Controllers\Api\V1\ReviewQueueIndexController;
 use App\Http\Controllers\Api\V1\RevisionController;
@@ -141,6 +153,7 @@ Route::prefix('v1')->group(function () {
         Route::post('auth/password', ChangePasswordController::class)->middleware('throttle:api');
 
         Route::post('artists', ArtistStoreController::class)->middleware('can:create,App\Models\Artist');
+        Route::post('artists/completeness-preview', ArtistCompletenessPreviewController::class);
         Route::patch('artists/{artist}', ArtistUpdateController::class)->whereNumber('artist')->middleware('can:update,artist');
         Route::delete('artists/{artist}', ArtistDestroyController::class)->whereNumber('artist')->middleware('can:delete,artist');
         Route::post('artists/{id}/restore', ArtistRestoreController::class)->whereNumber('id')->middleware('can:restore,App\Models\Artist');
@@ -189,6 +202,8 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::get('dashboard/completeness', DashboardCompletenessController::class);
+        Route::get('dashboard/editor', EditorDashboardController::class);
+        Route::get('dashboard/reviewer', ReviewerDashboardController::class);
         Route::get('dashboard/records', DashboardRecordsController::class);
         Route::get('dashboard/export', DashboardExportController::class);
 
@@ -202,12 +217,18 @@ Route::prefix('v1')->group(function () {
         Route::put('records/{type}/{id}/draft', [EditorialDraftController::class, 'upsert'])->whereNumber('id');
         Route::get('records/{type}/{id}/draft', [EditorialDraftController::class, 'show'])->whereNumber('id');
         Route::post('records/{type}/{id}/draft/submit', [EditorialDraftController::class, 'submit'])->whereNumber('id');
+        Route::post('records/{type}/{id}/creation/submit', [EditorialDraftController::class, 'submitCreation'])->whereNumber('id');
         Route::post('proposals/{proposal}/request-changes', [EditorialDraftController::class, 'requestChanges']);
         Route::get('proposals/{proposal}/diff', [EditorialDraftController::class, 'diff']);
         Route::get('records/{type}/{id}/revisions', [RevisionController::class, 'index'])->whereNumber('id');
         Route::post('records/{type}/{id}/revisions/{revision}/rollback', [RevisionController::class, 'rollback'])->whereNumber('id');
         Route::post('records/{type}/{id}/citations', FieldCitationStoreController::class)->whereNumber('id');
         Route::delete('citations/{citation}', FieldCitationDestroyController::class);
+
+        Route::post('records/{type}/{id}/permission-requests', ContentPermissionRequestStoreController::class)->whereNumber('id');
+        Route::get('permission-requests', ContentPermissionRequestIndexController::class);
+        Route::post('permission-requests/{permissionRequest}/approve', [ContentPermissionRequestDecideController::class, 'approve']);
+        Route::post('permission-requests/{permissionRequest}/reject', [ContentPermissionRequestDecideController::class, 'reject']);
 
         Route::post('source-conflicts/{sourceConflict}/resolve', SourceConflictResolveController::class)
             ->middleware('can:source_conflicts.resolve');
@@ -241,11 +262,12 @@ Route::prefix('v1')->group(function () {
             Route::get('material-submissions/{submission}/files/{file}', [MaterialSubmissionController::class, 'file'])->whereNumber(['submission', 'file']);
         });
 
+        Route::patch('events/{event}', [EventController::class, 'update'])->whereNumber('event')->middleware('can:update,event');
+        Route::post('events/{event}/publish', [EventController::class, 'publish'])->whereNumber('event')->middleware('can:publish,event');
+
         Route::middleware('can:events.manage')->group(function () {
             Route::get('admin/events', AdminEventIndexController::class);
             Route::post('events', [EventController::class, 'store']);
-            Route::patch('events/{event}', [EventController::class, 'update'])->whereNumber('event');
-            Route::post('events/{event}/publish', [EventController::class, 'publish'])->whereNumber('event');
             Route::patch('events/{event}/participants', EventParticipantsController::class)->whereNumber('event');
             Route::patch('events/{event}/themes', [ThemeController::class, 'syncEvent'])->whereNumber('event');
         });
@@ -290,6 +312,19 @@ Route::prefix('v1')->group(function () {
             Route::patch('admin/users/{user}', AdminUserUpdateController::class);
             Route::delete('admin/users/{user}', AdminUserDestroyController::class);
             Route::post('admin/users/{user}/invitation', AdminUserInvitationController::class);
+        });
+
+        // The list is also read by the user screens' role picker, so it is reachable by either
+        // permission; the controller itself enforces that (no route-level "or" exists). Every other
+        // roles endpoint is roles.manage only.
+        Route::get('admin/roles', AdminRoleIndexController::class);
+
+        Route::middleware('can:roles.manage')->group(function () {
+            Route::get('admin/roles/{role}', AdminRoleShowController::class)->whereNumber('role');
+            Route::post('admin/roles', AdminRoleStoreController::class);
+            Route::patch('admin/roles/{role}', AdminRoleUpdateController::class)->whereNumber('role');
+            Route::delete('admin/roles/{role}', AdminRoleDestroyController::class)->whereNumber('role');
+            Route::get('admin/permissions', PermissionCatalogueController::class);
         });
     });
 });

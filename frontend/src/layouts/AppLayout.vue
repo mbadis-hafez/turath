@@ -21,6 +21,7 @@ const archiveLink = computed(() => localePath(auth.can("archive.manage") ? "admi
 const adminArchiveLink = computed(() => localePath("admin.archive"));
 const activityLink = computed(() => localePath("admin.activity"));
 const usersLink = computed(() => localePath("admin.users"));
+const rolesLink = computed(() => localePath("admin.roles"));
 const importsLink = computed(() => localePath("admin.imports"));
 const dashboardLink = computed(() => localePath("dashboard"));
 const timelineLink = computed(() => localePath("timeline"));
@@ -79,6 +80,7 @@ const toolGroups = computed<ToolGroup[]>(() => {
     ]],
     ["administration", [
       [auth.can("users.manage"), "users", t("nav.users"), usersLink.value],
+      [auth.can("roles.manage"), "roles", t("nav.roles"), rolesLink.value],
       [auth.can("activity.view"), "activity", t("nav.activity"), activityLink.value],
     ]],
   ];

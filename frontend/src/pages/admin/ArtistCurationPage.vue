@@ -4,14 +4,17 @@ import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 import {
-  deleteArtistPortrait, searchStaffOptions, setArtistPortraitRights, syncArtistEntries, syncArtistSocialLinks,
+  deleteArtistPortrait, publishArtist, searchStaffOptions, setArtistPortraitRights, syncArtistEntries, syncArtistSocialLinks,
   updateArtist, updateArtistAssignment, updateArtistCuration, uploadArtistPortrait, verifyArtist,
 } from "@/api/artistCuration";
+import { getRecordCompleteness } from "@/api/dashboard";
+import { submitCreationReview } from "@/api/editorial";
 import ContactsEditor from "@/components/curation/ContactsEditor.vue";
 import DraftStatusBanner from "@/components/curation/DraftStatusBanner.vue";
 import EntityPicker, { type PickerOption } from "@/components/curation/EntityPicker.vue";
 import EntryListEditor from "@/components/curation/EntryListEditor.vue";
 import PortraitPicker from "@/components/curation/PortraitPicker.vue";
+import ProfileCompletenessPanel from "@/components/curation/ProfileCompletenessPanel.vue";
 import SocialLinksEditor from "@/components/curation/SocialLinksEditor.vue";
 import { useArtistProfileForm, dateValueToInput } from "@/composables/useArtistProfileForm";
 import RevisionHistoryPanel from "@/components/proposals/RevisionHistoryPanel.vue";
@@ -25,9 +28,8 @@ import { useRecordDraft } from "@/composables/useRecordDraft";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
 import type { ArtistDraftPayload } from "@/types/proposal";
-import type {
-  ArtistCuration, AuthLetterStatus, BioSourceType, CurationUpdate, OwnerType, PortraitRights, PreAgreementStatus, StaffOption,
-} from "@/types/artistCuration";
+import type { ArtistCuration, AuthLetterStatus, BioSourceType, ChecklistSection, CurationUpdate, OwnerType, PortraitRights, PreAgreementStatus, StaffOption } from "@/types/artistCuration";
+import type { CompletenessSection, ProfileCompletenessSummary } from "@/types/completeness";
 import { SEVERITY_BADGE_CLASS } from "@/utils/severity";
 import { firstBlockReason } from "@/utils/verifyBlocker";
 
@@ -82,7 +84,17 @@ const {
   draftPayload, dirtySections, hasContent, init: initDraft, saveSection, submit: submitDraftForReview,
   resetLocally: resetDraftLocally,
 } = useRecordDraft();
-const draftLocked = computed(() => draftMode.value && (draftStatus.value === "pending" || draftBlocker.value !== null));
+// Unreviewed creation (005): nothing about this artist — verifying,
+// publishing, its content read as established — is final until a reviewer
+// approves the creation-review item every new artist gets automatically.
+const creationPending = computed(() => curation.value !== null && curation.value.creation_approved_at === null);
+const creationReview = computed(() => curation.value?.creation_review ?? null);
+const isCreationCreator = computed(() => creationReview.value !== null && auth.user?.id === creationReview.value.created_by_user_id);
+
+const draftLocked = computed(() =>
+  (draftMode.value && (draftStatus.value === "pending" || draftBlocker.value !== null))
+  || (creationPending.value && !isCreationCreator.value),
+);
 
 const form = reactive({
   identified_through_note: "",
@@ -151,19 +163,70 @@ const verifying = ref(false);
 const actionError = ref<string | null>(null);
 
 const blockReason = computed(() => (curation.value ? firstBlockReason(curation.value.verify_blockers) : null));
-const canVerify = computed(() => curation.value !== null && curation.value.verified_status !== "verified" && blockReason.value === null);
-const verifyTooltip = computed(() =>
-  blockReason.value ? t("curation.detail.verifyBlocked", { reason: blockReason.value }) : t("curation.detail.verifyReady"),
+const canVerify = computed(() =>
+  curation.value !== null && curation.value.verified_status !== "verified" && blockReason.value === null && !creationPending.value,
 );
-const metCount = computed(() => curation.value?.checklist.filter((c) => c.met).length ?? 0);
+const verifyTooltip = computed(() => {
+  if (creationPending.value) return t("draft.creationVerifyBlocked");
+  return blockReason.value ? t("curation.detail.verifyBlocked", { reason: blockReason.value }) : t("curation.detail.verifyReady");
+});
+
+const publishing = ref(false);
+const publishBlockReason = computed(() => (curation.value ? firstBlockReason(curation.value.publish_blockers) : null));
+const canPublish = computed(() =>
+  curation.value !== null && curation.value.publication_status !== "published" && publishBlockReason.value === null && canManage.value,
+);
+const publishTooltip = computed(() =>
+  publishBlockReason.value ? t("curation.detail.publishBlocked", { reason: publishBlockReason.value }) : t("curation.detail.publishReady"),
+);
 const isMet = (key: string): boolean => curation.value?.checklist.find((c) => c.key === key)?.met ?? false;
-const IDENTITY_KEYS = ["name", "artist_code", "city", "name_verified", "life_dates"];
-const identityMissing = computed(() => curation.value?.checklist.filter((c) => IDENTITY_KEYS.includes(c.key) && !c.met).length ?? 0);
-const contactComplete = computed(() => isMet("contact") && isMet("authorization_letter"));
+const isAdminMet = (key: string): boolean => curation.value?.admin_checklist.find((c) => c.key === key)?.met ?? false;
+/** Profile summary derived from the 11-item checklist, for the completeness panel. */
+const SECTION_KEYS: ChecklistSection[] = ["identity", "biography", "media"];
+const profileSummary = computed<ProfileCompletenessSummary>(() => {
+  const items = curation.value?.checklist ?? [];
+  const met = items.filter((c) => c.met).length;
+  const sections = Object.fromEntries(
+    SECTION_KEYS.map((section): [ChecklistSection, CompletenessSection] => {
+      const inSection = items.filter((c) => c.section === section);
+      const sectionMet = inSection.filter((c) => c.met).length;
+      return [section, {
+        met: sectionMet,
+        total: inSection.length,
+        percentage: inSection.length === 0 ? 0 : Math.round((sectionMet / inSection.length) * 100),
+      }];
+    }),
+  ) as ProfileCompletenessSummary["sections"];
+  return {
+    percentage: items.length === 0 ? 0 : Math.round((met / items.length) * 100),
+    met_count: met,
+    total_count: items.length,
+    complete: items.length > 0 && met === items.length,
+    sections,
+    missing: items
+      .filter((c) => !c.met)
+      .map((c) => ({ key: c.key, label: { ar: "", en: "" }, section: c.section ?? "identity" })),
+  };
+});
+const identityMissing = computed(() => curation.value?.checklist.filter((c) => c.section === "identity" && !c.met).length ?? 0);
+const contactComplete = computed(() => isAdminMet("contact") && isAdminMet("authorization_letter"));
+// "Name verified" reads its own citation data (a field citation on "name"),
+// not the profile checklist — the checklist no longer carries that item.
+const nameVerified = ref(false);
+getRecordCompleteness("artist", id.value)
+  .then(({ data }) => {
+    nameVerified.value = (data.citations ?? []).some((c) => c.field_key === "name");
+  })
+  .catch(() => {
+    nameVerified.value = false;
+  });
 const lifeDates = computed(() => {
   const l = curation.value?.life_dates;
   return l && (l.birth || l.death) ? `${l.birth ?? "?"} – ${l.death ?? "?"}` : null;
 });
+// Dates count as recorded once either the birth year or the
+// death-year-or-living item is met.
+const lifeDatesMissing = computed(() => !isMet("birth_year") && !isMet("death_year_or_living"));
 const badgeClass = (met: boolean): string => (met ? "bg-success-soft text-success" : "bg-danger-soft text-danger");
 
 function payload(): CurationUpdate {
@@ -185,7 +248,11 @@ async function save(): Promise<void> {
   actionError.value = null;
   try {
     const current = curation.value;
-    if (draftMode.value) {
+    // While its creation is unreviewed, the creator edits the live record
+    // directly — there is no established state for the section-diff draft
+    // pipeline to protect yet (005 research.md R3). draftMode's normal
+    // section-diff path only applies once creation_approved_at is set.
+    if (draftMode.value && !creationPending.value) {
       // Nothing changes live: each section is merged into the draft payload.
       const entries = profile.entriesPayload();
       await saveSection("fields", profile.profilePayload(current?.city, true));
@@ -215,8 +282,27 @@ async function sendForReview(): Promise<void> {
   try {
     await submitDraftForReview();
     draftNotice.value = t("draft.submitSuccess");
-  } catch {
-    actionError.value = t("draft.submitError");
+  } catch (err) {
+    // A submit refusal (e.g. "nothing in this draft differs from the
+    // current record", a 422 from the review-type check, ...) has a specific,
+    // actionable reason; showing only the generic fallback here hid it.
+    actionError.value = err instanceof Error ? err.message : t("draft.submitError");
+  }
+}
+
+const creationSubmitting = ref(false);
+async function sendCreationForReview(): Promise<void> {
+  draftNotice.value = null;
+  actionError.value = null;
+  creationSubmitting.value = true;
+  try {
+    await submitCreationReview("artists", id.value);
+    draftNotice.value = t("draft.submitSuccess");
+    await retry();
+  } catch (err) {
+    actionError.value = err instanceof Error ? err.message : t("draft.submitError");
+  } finally {
+    creationSubmitting.value = false;
   }
 }
 
@@ -238,6 +324,19 @@ async function verify(): Promise<void> {
     actionError.value = err instanceof Error ? err.message : t("errors.generic");
   } finally {
     verifying.value = false;
+  }
+}
+
+async function publish(): Promise<void> {
+  publishing.value = true;
+  actionError.value = null;
+  try {
+    await publishArtist(id.value);
+    await retry();
+  } catch (err) {
+    actionError.value = err instanceof Error ? err.message : t("errors.generic");
+  } finally {
+    publishing.value = false;
   }
 }
 
@@ -319,10 +418,31 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
           >
             {{ verifying ? t("curation.detail.verifying") : curation.verified_status === "verified" ? t("curation.detail.verified") : t("curation.detail.verify") }}
           </button>
+          <button
+            v-if="canManage"
+            type="button"
+            class="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-surface disabled:cursor-not-allowed disabled:bg-neutral-soft disabled:text-ink-muted"
+            data-testid="publish-button"
+            :disabled="!canPublish || publishing"
+            :title="publishTooltip"
+            @click="publish"
+          >
+            {{ publishing ? t("curation.detail.publishing") : curation.publication_status === "published" ? t("curation.detail.published") : t("curation.detail.publish") }}
+          </button>
         </div>
       </div>
       <DraftStatusBanner
-        v-if="draftMode"
+        v-if="creationPending"
+        :status="creationReview?.status ?? null"
+        :blocker="isCreationCreator ? null : { proposal_id: creationReview?.proposal_id ?? '' }"
+        :can-submit="true"
+        :submitting="creationSubmitting"
+        :review-note="creationReview?.review_note ?? null"
+        :is-creation="true"
+        @submit="sendCreationForReview"
+      />
+      <DraftStatusBanner
+        v-else-if="draftMode"
         :status="draftStatus"
         :blocker="draftBlocker"
         :can-submit="dirtySections.size > 0 || hasContent"
@@ -348,28 +468,30 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
             />
           </section>
 
-          <section class="rounded-lg border p-4" :class="curation.public_visibility === 'visible' ? 'border-line bg-surface' : 'border-danger bg-danger-soft'">
-            <h2 class="text-base font-semibold" :class="curation.public_visibility === 'visible' ? 'text-ink' : 'text-danger'">{{ t("curation.detail.checklist") }}</h2>
-            <ul class="mt-3 space-y-2" data-testid="checklist">
-              <li v-for="item in curation.checklist" :key="item.key" class="flex items-center gap-2 text-sm" :class="item.met ? 'text-ink-muted' : 'text-ink'">
+          <ProfileCompletenessPanel
+            :summary="profileSummary"
+            :items="curation.checklist"
+            :tone="curation.public_visibility === 'visible' ? 'neutral' : 'danger'"
+          />
+
+          <section v-if="curation.admin_checklist.length" class="rounded-lg border border-line bg-surface p-4">
+            <h2 class="text-base font-semibold text-ink">{{ t("curation.detail.adminChecklist") }}</h2>
+            <ul class="mt-3 space-y-2" data-testid="admin-checklist">
+              <li v-for="item in curation.admin_checklist" :key="item.key" class="flex items-center gap-2 text-sm" :class="item.met ? 'text-ink-muted' : 'text-ink'">
                 <input type="checkbox" class="size-4" :checked="item.met" disabled :aria-label="t(`curation.checklistItem.${item.key}`)" />
                 <span>{{ t(`curation.checklistItem.${item.key}`) }}</span>
                 <span v-if="!item.supported" class="text-xs text-ink-muted">({{ t("curation.detail.unsupported") }})</span>
               </li>
             </ul>
-            <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-neutral-soft">
-              <div class="h-full rounded-full" :class="curation.public_visibility === 'visible' ? 'bg-success' : 'bg-danger'" :style="{ width: `${(metCount / curation.checklist.length) * 100}%` }" />
-            </div>
-            <p class="mt-1 text-xs tabular-nums text-ink-muted">{{ t("curation.detail.requiredMet", { met: metCount, total: curation.checklist.length }) }}</p>
           </section>
 
           <section>
             <h2 class="border-b-2 border-ink pb-2 text-xs font-semibold text-ink-muted">{{ t("curation.detail.workPath") }}</h2>
             <dl class="divide-y divide-line text-sm" data-testid="work-path">
               <div class="flex items-center justify-between py-3"><dt class="text-ink">{{ t("curation.detail.materialsCount") }}</dt><dd class="rounded-sm bg-info-soft px-1.5 py-0.5 text-xs font-medium tabular-nums text-info">{{ curation.linked_materials.length }}</dd></div>
-              <div class="flex items-center justify-between py-3"><dt class="text-ink">{{ t("curation.detail.authorizationLetter") }}</dt><dd class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="badgeClass(isMet('authorization_letter'))">{{ t(`curation.docStatus.${form.authorization_letter_status}`) }}</dd></div>
+              <div class="flex items-center justify-between py-3"><dt class="text-ink">{{ t("curation.detail.authorizationLetter") }}</dt><dd class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="badgeClass(isAdminMet('authorization_letter'))">{{ t(`curation.docStatus.${form.authorization_letter_status}`) }}</dd></div>
               <div class="flex items-center justify-between py-3"><dt class="text-ink">{{ t("curation.detail.ownerPreAgreement") }}</dt><dd class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="badgeClass(['yes', 'not_applicable'].includes(form.owner_pre_agreement_status))">{{ t(`curation.docStatus.${form.owner_pre_agreement_status}`) }}</dd></div>
-              <div class="flex items-center justify-between py-3"><dt class="text-ink">{{ t("curation.detail.nameVerified") }}</dt><dd class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="badgeClass(isMet('name_verified'))">{{ isMet("name_verified") ? t("curation.detail.yes") : t("curation.detail.no") }}</dd></div>
+              <div class="flex items-center justify-between py-3"><dt class="text-ink">{{ t("curation.detail.nameVerified") }}</dt><dd class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="badgeClass(nameVerified)">{{ nameVerified ? t("curation.detail.yes") : t("curation.detail.no") }}</dd></div>
               <div class="flex items-center justify-between py-3"><dt class="text-ink">{{ t("curation.detail.publicVisibility") }}</dt><dd class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="badgeClass(curation.public_visibility === 'visible')" data-testid="visibility">{{ t(`curation.detail.${curation.public_visibility}`) }}</dd></div>
             </dl>
           </section>
@@ -387,9 +509,9 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
               <div><dt class="text-xs text-ink-muted">{{ t("curation.detail.nameAr") }}</dt><dd class="mt-1 rounded-md border border-line bg-surface px-3 py-2 text-ink">{{ curation.name.ar ?? "—" }}</dd></div>
               <div><dt class="text-xs text-ink-muted">{{ t("curation.detail.nameEn") }}</dt><dd class="mt-1 rounded-md border border-line bg-surface px-3 py-2 text-ink">{{ curation.name.en ?? "—" }}</dd></div>
               <div>
-                <dt class="flex justify-between text-xs text-ink-muted"><span>{{ t("curation.detail.nameVerified") }}</span><span v-if="!isMet('name_verified')" class="text-danger">{{ t("curation.detail.missing") }}</span></dt>
-                <dd class="mt-1 rounded-md border px-3 py-2" :class="isMet('name_verified') ? 'border-line bg-surface text-ink' : 'border-danger bg-danger-soft text-danger'" data-testid="name-verified-field">
-                  {{ isMet("name_verified") ? t("curation.detail.yes") : t("curation.detail.nameNotVerified") }}
+                <dt class="flex justify-between text-xs text-ink-muted"><span>{{ t("curation.detail.nameVerified") }}</span><span v-if="!nameVerified" class="text-danger">{{ t("curation.detail.missing") }}</span></dt>
+                <dd class="mt-1 rounded-md border px-3 py-2" :class="nameVerified ? 'border-line bg-surface text-ink' : 'border-danger bg-danger-soft text-danger'" data-testid="name-verified-field">
+                  {{ nameVerified ? t("curation.detail.yes") : t("curation.detail.nameNotVerified") }}
                 </dd>
               </div>
               <div>
@@ -401,8 +523,8 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
                 <dd class="mt-1 rounded-md border border-line bg-surface px-3 py-2 text-ink"><LocalizedText v-if="curation.city.ar || curation.city.en" :text="curation.city" /><template v-else>—</template></dd>
               </div>
               <div>
-                <dt class="flex justify-between text-xs text-ink-muted"><span>{{ t("curation.detail.lifeDates") }}</span><span v-if="!isMet('life_dates')" class="text-danger">{{ t("curation.detail.missing") }}</span></dt>
-                <dd class="mt-1 rounded-md border px-3 py-2" :class="isMet('life_dates') ? 'border-line bg-surface text-ink' : 'border-danger bg-danger-soft text-danger'" data-testid="life-dates-field">
+                <dt class="flex justify-between text-xs text-ink-muted"><span>{{ t("curation.detail.lifeDates") }}</span><span v-if="lifeDatesMissing" class="text-danger">{{ t("curation.detail.missing") }}</span></dt>
+                <dd class="mt-1 rounded-md border px-3 py-2" :class="lifeDatesMissing ? 'border-danger bg-danger-soft text-danger' : 'border-line bg-surface text-ink'" data-testid="life-dates-field">
                   {{ lifeDates ?? t("curation.detail.notRecorded") }}
                 </dd>
               </div>

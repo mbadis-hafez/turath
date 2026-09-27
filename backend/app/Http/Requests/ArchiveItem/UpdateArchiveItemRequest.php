@@ -28,7 +28,7 @@ class UpdateArchiveItemRequest extends ArchiveItemPayloadRequest
      */
     public function rules(): array
     {
-        $itemId = $this->route('archive_item');
+        $itemId = $this->route('archiveItem');
 
         return array_merge(
             $this->titleRules(partial: true),

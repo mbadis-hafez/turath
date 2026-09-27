@@ -4,7 +4,7 @@ import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 import {
-  approveArtwork, deleteArtworkImage, updateArtwork, updateArtworkImage, updateArtworkStage, uploadArtworkImage,
+  approveArtwork, deleteArtworkImage, updateArtwork, updateArtworkImage, updateArtworkStage, uploadArtworkImages,
 } from "@/api/artworkCuration";
 import ArtworkImagesPanel from "@/components/curation/ArtworkImagesPanel.vue";
 import ArtworkFormSections from "@/components/curation/ArtworkFormSections.vue";
@@ -22,7 +22,7 @@ import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
 import type { ArtworkDraftPayload } from "@/types/proposal";
 import {
-  PIPELINE_STATUSES, type ArtworkStatus, type ImageRights, type PipelineStatus,
+  MAX_ARTWORK_IMAGES, PIPELINE_STATUSES, type ArtworkStatus, type ImageRights, type PipelineStatus,
 } from "@/types/artworkCuration";
 
 const route = useRoute();
@@ -142,8 +142,11 @@ async function sendForReview(): Promise<void> {
   try {
     await submitDraftForReview();
     draftNotice.value = t("draft.submitSuccess");
-  } catch {
-    actionError.value = t("draft.submitError");
+  } catch (err) {
+    // A submit refusal (e.g. "nothing in this draft differs from the
+    // current record") has a specific, actionable reason; showing only the
+    // generic fallback here hid it.
+    actionError.value = err instanceof Error ? err.message : t("draft.submitError");
   }
 }
 
@@ -171,7 +174,17 @@ async function imageAction(action: () => Promise<unknown>): Promise<void> {
   }
 }
 
-const onUpload = (file: File, rights: ImageRights) => imageAction(() => uploadArtworkImage(id.value, file, rights));
+async function onUpload(files: File[], rights: ImageRights): Promise<void> {
+  await imageAction(async () => {
+    const { results } = await uploadArtworkImages(id.value, files, rights);
+    const issues = results
+      .filter((r) => r.status !== "attached")
+      .map((r) => (r.status === "duplicate"
+        ? t("curation.artworkImages.alreadyAttached", { filename: r.filename })
+        : t("curation.artworkImages.rejected", { filename: r.filename, message: r.message })));
+    if (issues.length > 0) actionError.value = issues.join(" ");
+  });
+}
 const onMakeFinal = (imageId: number) => imageAction(() => updateArtworkImage(id.value, imageId, { is_final: true }));
 const onRights = (imageId: number, rights: ImageRights) => imageAction(() => updateArtworkImage(id.value, imageId, { rights_status: rights }));
 const onRemove = (imageId: number) => imageAction(() => deleteArtworkImage(id.value, imageId));
@@ -280,7 +293,7 @@ const stageClass = (s: PipelineStatus) =>
 
       <div class="mt-8 grid gap-10 lg:grid-cols-[20rem_1fr]">
         <aside class="space-y-6">
-          <ArtworkImagesPanel :images="curation.images" :busy="imageBusy" @upload="onUpload" @final="onMakeFinal" @rights="onRights" @remove="onRemove" />
+          <ArtworkImagesPanel :images="curation.images" :busy="imageBusy" :max="MAX_ARTWORK_IMAGES" @upload="onUpload" @final="onMakeFinal" @rights="onRights" @remove="onRemove" />
 
           <section class="rounded-lg border p-4" :class="blockerCount === 0 ? 'border-line bg-surface' : 'border-danger bg-danger-soft'">
             <h2 class="text-base font-semibold" :class="blockerCount === 0 ? 'text-ink' : 'text-danger'">{{ t("curation.artworkDetail.checklist") }}</h2>

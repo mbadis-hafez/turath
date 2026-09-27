@@ -19,6 +19,8 @@ class ArchiveItemPublishController
         self::assertPublishable($archiveItem);
 
         $archiveItem->publication_status = PublicationStatus::Published->value;
+        $archiveItem->published_by_user_id = $request->user()->id;
+        $archiveItem->published_at = now();
         $archiveItem->save();
         $archiveItem->load(['links.linkable', 'files']);
 

@@ -5,6 +5,8 @@ namespace App\Policies;
 use App\Models\ArchiveItem;
 use App\Models\User;
 use App\Support\ArchiveAccessResolver;
+use App\Support\Proposals\PublishedContentGuard;
+use App\Support\Proposals\ReviewerScope;
 
 class ArchiveItemPolicy
 {
@@ -35,12 +37,16 @@ class ArchiveItemPolicy
 
     public function update(User $user, ArchiveItem $item): bool
     {
-        return $user->can('archive.manage');
+        return $user->can('archive.manage') && PublishedContentGuard::manageHolderMayActDirectly($user, $item);
     }
 
     public function delete(User $user, ArchiveItem $item): bool
     {
-        return $user->can('archive.manage');
+        if ($user->can('archive.manage')) {
+            return PublishedContentGuard::manageHolderMayActDirectly($user, $item);
+        }
+
+        return PublishedContentGuard::hasApprovedRequest($user, $item, 'delete');
     }
 
     public function restore(User $user, ?ArchiveItem $item = null): bool
@@ -51,5 +57,15 @@ class ArchiveItemPolicy
     public function publish(User $user, ArchiveItem $item): bool
     {
         return $user->can('archive.publish');
+    }
+
+    public function requestEdit(User $user, ArchiveItem $item): bool
+    {
+        return ReviewerScope::canReview($user) && ! $user->can('archive.manage');
+    }
+
+    public function requestDelete(User $user, ArchiveItem $item): bool
+    {
+        return ReviewerScope::canReview($user) && ! $user->can('archive.manage');
     }
 }

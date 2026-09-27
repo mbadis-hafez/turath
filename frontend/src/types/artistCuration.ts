@@ -76,6 +76,8 @@ export interface AdminArtistRow {
   legacy_code: string | null;
   name: Localized;
   verified_status: VerifiedStatus;
+  /** null until a reviewer approves this artist's creation-review item (005). */
+  creation_approved_at: string | null;
   city: Localized;
   owner_type: OwnerType | null;
   linked_material_count: number;
@@ -91,14 +93,21 @@ export interface AdminArtistsQuery {
   owner_type?: OwnerType;
   theme_id?: number;
   has_priority_materials?: 1;
+  /** Excludes artists whose creation hasn't been reviewed yet — for pickers that link an artist elsewhere, not the registry itself (005). */
+  linkable_only?: 1;
   page?: number;
 }
 
+export type ChecklistTier = "core" | "important" | "administrative";
+export type ChecklistSection = "identity" | "biography" | "media";
+
 export interface ChecklistItem {
   key: string;
-  tier: "core" | "important";
+  tier: ChecklistTier;
   met: boolean;
   supported: boolean;
+  /** Profile items are grouped by section; administrative items have none. */
+  section?: ChecklistSection;
 }
 
 export interface LinkedMaterial {
@@ -122,6 +131,17 @@ export interface ArtistCuration {
   identified_through: { note: string | null; date: string | null };
   bio: { ar: string | null; en: string | null; source_type: BioSourceType };
   verified_status: VerifiedStatus;
+  publication_status: "draft" | "published" | "hidden";
+  published_at: string | null;
+  /** null until a reviewer approves this artist's creation-review item (005); gates Verify/publish. */
+  creation_approved_at: string | null;
+  /** The open creation-review item, while creation_approved_at is null; null once approved. */
+  creation_review: {
+    proposal_id: string;
+    status: "draft" | "pending" | "changes_requested";
+    review_note: string | null;
+    created_by_user_id: number;
+  } | null;
   nationality: Localized;
   classification: Localized;
   birth: DateValue | null;
@@ -138,8 +158,11 @@ export interface ArtistCuration {
     owner_pre_agreement: { status: PreAgreementStatus };
   };
   checklist: ChecklistItem[];
+  /** Administrative requirements (contact, authorization letter, owner pre-agreement) — excluded from the profile percentage. */
+  admin_checklist: ChecklistItem[];
   public_visibility: "visible" | "hidden";
   verify_blockers: Record<string, string[]>;
+  publish_blockers: Record<string, string[]>;
   themes: Theme[];
   linked_materials: LinkedMaterial[];
 }
@@ -149,6 +172,7 @@ export interface CurationUpdate {
   owner_type?: OwnerType | null;
   contacts?: ArtistContact[];
   authorization_letter_status?: AuthLetterStatus;
+  authorization_letter_file_id?: number | null;
   owner_pre_agreement_status?: PreAgreementStatus;
   bio_source_type?: BioSourceType;
   ref_supervisor_note?: string | null;

@@ -82,6 +82,8 @@
     "sendReview": "Send for review",
     "inReview": "Under review",
     "reviewBlocked": "Complete the publishing checklist first",
+    "publish": "Publish",
+    "published": "Published",
     "partialFailure": "The item was created, but its file or links could not be saved. Add them from the item page.",
     "openItem": "Open the item",
     "uploadedFile": "Uploaded file",
@@ -109,8 +111,8 @@
         "help": "Appears in search; the original is by request and needs a verified account."
       },
       "institution_only": {
-        "label": "Hidden",
-        "help": "Not visible outside the archive team."
+        "label": "Internal only",
+        "help": "The description and files stay private to the archive team — the title, place and linked artists can still surface in public search."
       },
       "researcher": {
         "label": "Researchers",
@@ -143,6 +145,7 @@
     "license": "License type",
     "licensePlaceholder": "Choose a license…",
     "rightsStatus": "Rights status",
+    "digitizedAt": "Digitization date",
     "verification": "Verification reference",
     "rightsHelp": "A rights holder and a license are required to lift the access restriction.",
     "links": "Links",
@@ -151,6 +154,7 @@
     "linkRole": "Relationship",
     "linkTarget": "Record",
     "linkSearch": "Search…",
+    "linkNeedsFile": "Upload this item's file before using it as an authorization letter.",
     "linkKinds": {
       "artist": "Artist",
       "artwork": "Artwork",
@@ -164,7 +168,13 @@
       "donor": "Donor",
       "subject": "Subject",
       "primary_documentation": "Primary documentation",
-      "event_documentation": "Event documentation"
+      "event_documentation": "Event documentation",
+      "authorization_letter": "Authorization letter",
+      "name_verification": "Name verified by a published source"
+    },
+    "linkRoleHelp": {
+      "authorization_letter": "Also marks the artist's authorization letter as signed, using this item's file as the letter.",
+      "name_verification": "Also cites this item as the artist's primary source, clearing that completeness gap."
     },
     "themes": "Themes",
     "themesHelp": "Themes appear as a filter on the public archive page."

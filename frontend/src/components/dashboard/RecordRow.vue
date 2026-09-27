@@ -33,15 +33,21 @@ function fieldLabel(key: string): string {
   return te(`dashboard.field.${key}`) ? t(`dashboard.field.${key}`) : key;
 }
 
-/** Records with a public detail page link there; archive items have none yet. */
+/**
+ * Links to the record's own admin curation/edit page, not the public detail
+ * page — the public page 404s for anything not yet published (every record
+ * this button targets, since gaps are what block publishing in the first
+ * place), and has no edit form even when it doesn't 404. Same routing
+ * ProposalDiffViewer uses for reviewers reading a record's content.
+ */
+const RECORD_ROUTE: Partial<Record<DashboardRecord["entity_type"], string>> = {
+  artist: "admin.artists.show",
+  artwork: "admin.artworks.show",
+  archive_item: "admin.archive.edit",
+};
 const recordLink = computed(() => {
-  if (props.record.entity_type === "artist" && props.record.slug) {
-    return localePath("artists.show", { slug: props.record.slug });
-  }
-  if (props.record.entity_type === "artwork") {
-    return localePath("artworks.show", { id: props.record.id });
-  }
-  return null;
+  const routeName = RECORD_ROUTE[props.record.entity_type];
+  return routeName ? localePath(routeName, { id: props.record.id }) : null;
 });
 </script>
 

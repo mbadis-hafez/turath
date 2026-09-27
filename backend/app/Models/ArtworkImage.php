@@ -63,4 +63,9 @@ class ArtworkImage extends Model
             'original_filename' => ['ar' => 'اسم الملف الأصلي', 'en' => 'Original filename'],
         ];
     }
+
+    protected static function booted(): void
+    {
+        static::observe(Observers\ArtworkImageObserver::class);
+    }
 }

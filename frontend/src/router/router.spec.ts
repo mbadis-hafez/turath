@@ -14,7 +14,12 @@ vi.mock("@/api/activity", () => ({
   fetchActivity: vi.fn(),
 }));
 
+vi.mock("@/api/auth", () => ({
+  fetchUser: vi.fn(),
+}));
+
 import { fetchActivity } from "@/api/activity";
+import { fetchUser } from "@/api/auth";
 
 const feedEntry: ActivityEntry = {
   id: 1,
@@ -91,6 +96,10 @@ describe("router", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(fetchActivity).mockResolvedValue(paginated);
+    // Router-triggered refetches (T060) are a no-op by default here; the
+    // store keeps whatever user buildApp() seeded on a failed refetch, so
+    // tests that don't care about refetching don't need to mock it per-user.
+    vi.mocked(fetchUser).mockRejectedValue(new Error("not mocked in this test"));
   });
 
   it("/ redirects to the default /ar", async () => {
@@ -159,5 +168,26 @@ describe("router", () => {
       expect.any(AbortSignal),
     );
     expect(wrapper.text()).toContain("Inji Efflatoun");
+  });
+
+  it("refetches the user on navigation into a permission-gated route (T060, FR-008)", async () => {
+    vi.mocked(fetchUser).mockResolvedValue(editor);
+    await buildApp(editor, "/ar/admin/activity");
+
+    expect(fetchUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("picks up a permission granted mid-session on the very next admin navigation", async () => {
+    vi.mocked(fetchUser).mockResolvedValueOnce({
+      ...reader,
+      permissions: ["activity.view"],
+    });
+    const { router, wrapper } = await buildApp(reader, "/ar/dashboard");
+
+    await router.push("/ar/admin/activity");
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain("لا تملك صلاحية الوصول");
+    expect(fetchActivity).toHaveBeenCalled();
   });
 });

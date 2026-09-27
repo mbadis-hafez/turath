@@ -1,7 +1,9 @@
 import { request } from "@/api/http";
 import type { PaginationMeta } from "@/types/api";
 import type { Localized } from "@/types/artistCuration";
-import type { AdminArtworkRow, AdminArtworksQuery, ArtworkCuration, ArtworkImage, ImageRights, PipelineStatus } from "@/types/artworkCuration";
+import type {
+  AdminArtworkRow, AdminArtworksQuery, ArtworkCuration, ArtworkImage, ArtworkImageUploadResult, ImageRights, PipelineStatus,
+} from "@/types/artworkCuration";
 
 export async function listAdminArtworks(
   params: AdminArtworksQuery,
@@ -53,9 +55,13 @@ export function mergeArtworks(payload: {
   return request({ method: "POST", url: "/api/v1/artworks/merge", data: payload });
 }
 
-export function uploadArtworkImage(id: number, file: File, rights: ImageRights): Promise<{ data: ArtworkImage[] }> {
+export function uploadArtworkImages(
+  id: number,
+  files: File[],
+  rights: ImageRights,
+): Promise<{ data: ArtworkImage[]; results: ArtworkImageUploadResult[] }> {
   const data = new FormData();
-  data.append("image", file);
+  for (const file of files) data.append("images[]", file);
   data.append("rights_status", rights);
   return request({ method: "POST", url: `/api/v1/artworks/${id}/images`, data });
 }

@@ -1,5 +1,6 @@
 import { request } from "@/api/http";
 import type { PaginationMeta } from "@/types/api";
+import type { EditorDashboardData } from "@/types/editorDashboard";
 import type {
   DashboardEntityType,
   DashboardRecord,
@@ -8,6 +9,7 @@ import type {
   RecordCompletenessDetail,
   ReviewQueueItem,
 } from "@/types/completeness";
+import type { ReviewerDashboardData } from "@/types/reviewerDashboard";
 
 /** URL segment used by /records/{type}/{id}/… for each dashboard entity. */
 const SEGMENTS: Record<DashboardEntityType, string> = {
@@ -20,6 +22,18 @@ export function getDashboardStats(
   signal?: AbortSignal,
 ): Promise<{ data: DashboardStats }> {
   return request({ method: "GET", url: "/api/v1/dashboard/completeness", signal });
+}
+
+export function getEditorDashboard(
+  signal?: AbortSignal,
+): Promise<{ data: EditorDashboardData }> {
+  return request({ method: "GET", url: "/api/v1/dashboard/editor", signal });
+}
+
+export function getReviewerDashboard(
+  signal?: AbortSignal,
+): Promise<{ data: ReviewerDashboardData }> {
+  return request({ method: "GET", url: "/api/v1/dashboard/reviewer", signal });
 }
 
 export async function listDashboardRecords(
@@ -56,6 +70,25 @@ export function getRecordCompleteness(
     url: `/api/v1/records/${SEGMENTS[entity]}/${id}/completeness`,
     signal,
   });
+}
+
+export interface NewCitationSource {
+  linked_archive_item_id?: number;
+  source_type?: string;
+  title_ar?: string | null;
+  title_en?: string | null;
+  publisher_or_outlet?: string | null;
+  reference_note?: string | null;
+  url?: string | null;
+  year?: number | null;
+}
+
+export function addFieldCitation(
+  entity: DashboardEntityType,
+  id: number,
+  payload: { field_key: string; source_id?: string; new_source?: NewCitationSource; claimed_value: unknown },
+): Promise<unknown> {
+  return request({ method: "POST", url: `/api/v1/records/${SEGMENTS[entity]}/${id}/citations`, data: payload });
 }
 
 export function resolveSourceConflict(

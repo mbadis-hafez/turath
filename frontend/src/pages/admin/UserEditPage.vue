@@ -7,15 +7,19 @@ import { createUser, fetchUser, sendInvitation, updateUser } from "@/api/users";
 import ErrorState from "@/components/common/ErrorState.vue";
 import Spinner from "@/components/common/Spinner.vue";
 import { useLocalePath } from "@/composables/useLocalePath";
+import { useLocalized } from "@/composables/useLocalized";
+import { useRoles } from "@/composables/useRoles";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
-import { ADMIN_ROLES, type AdminUserDetail } from "@/types/user";
+import type { AdminUserDetail } from "@/types/user";
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
+const { pick } = useLocalized();
 const { localePath } = useLocalePath();
 const auth = useAuthStore();
+const { roles } = useRoles();
 
 const forbidden = new ApiError("forbidden", "Forbidden", { status: 403 });
 const canManage = computed(() => auth.can("users.manage"));
@@ -253,7 +257,7 @@ async function invite(): Promise<void> {
               <label class="text-xs text-ink-muted">{{ t("users.edit.role") }}
                 <select v-model="form.role" :class="input" data-testid="user-role">
                   <option value="" disabled>—</option>
-                  <option v-for="role in ADMIN_ROLES" :key="role" :value="role">{{ t(`users.roles.${role}`) }}</option>
+                  <option v-for="role in roles" :key="role.id" :value="role.name">{{ pick(role.display_name)?.text }}</option>
                 </select>
                 <span v-if="firstError('role')" class="text-danger">{{ firstError("role") }}</span>
               </label>

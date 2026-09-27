@@ -1,6 +1,7 @@
 import { flushPromises } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createMemoryHistory, createRouter } from "vue-router";
 
 import ProposalDiffViewer from "@/components/proposals/ProposalDiffViewer.vue";
 import { mountWithPlugins } from "@/test/utils";
@@ -16,7 +17,7 @@ vi.mock("@/api/editorial", () => editorial);
 
 function proposal(patch: Partial<Proposal> = {}): Proposal {
   return {
-    id: "p1", record: { type: "artists", id: 7, label: "Ahmad" }, status: "pending", review_type: "second_source_needed",
+    id: "p1", record: { type: "artists", id: 7, label: "Ahmad" }, is_creation: false, status: "pending", review_type: "second_source_needed",
     field_diffs: { bio_en: { old_value_at_proposal_time: "Old bio.", proposed_value: "New bio." } },
     field_labels: { bio_en: { ar: "السيرة", en: "Biography (English)" } },
     rationale: "Page 12 of the catalogue.", proposed_citations: [],
@@ -60,7 +61,30 @@ beforeEach(() => {
 
 const mount = (props: Record<string, unknown>) => mountWithPlugins(ProposalDiffViewer, { locale: "en", props });
 
+async function mountWithRouter(props: Record<string, unknown>) {
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [{ path: "/:locale/admin/artists/:id", name: "admin.artists.show", component: { template: "<div />" } }],
+  });
+  await router.push("/en/admin/artists/7");
+  return mountWithPlugins(ProposalDiffViewer, { locale: "en", router, props });
+}
+
 describe("ProposalDiffViewer", () => {
+  it("shows the record's content directly for a creation-review item, not a diff", async () => {
+    const wrapper = await mountWithRouter({
+      proposal: proposal({ is_creation: true, field_diffs: {}, review_type: "editorial_review" }),
+      canReview: false,
+      currentUserId: null,
+    });
+    await flushPromises();
+
+    expect(wrapper.find("[data-testid=creation-review-notice]").exists()).toBe(true);
+    expect(wrapper.find("[data-testid=field-diff]").exists()).toBe(false);
+    expect(editorial.getProposalDiff).not.toHaveBeenCalled();
+    expect(wrapper.get("[data-testid=creation-review-record-link]").text()).toBe("Open the record");
+  });
+
   it("shows the labelled diff and the rationale, and hides review actions from non-reviewers", () => {
     const wrapper = mount({ proposal: proposal(), canReview: false, currentUserId: null });
 

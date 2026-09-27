@@ -22,6 +22,11 @@ export function submitDraft(type: RecordType, id: number): Promise<{ data: Propo
   return request({ method: "POST", url: `/api/v1/records/${type}/${id}/draft/submit` });
 }
 
+/** Sends a newly created record's creation-review item to the review queue (005). */
+export function submitCreationReview(type: RecordType, id: number): Promise<{ data: Proposal }> {
+  return request({ method: "POST", url: `/api/v1/records/${type}/${id}/creation/submit` });
+}
+
 /** Per-section diff of a sectioned (editorial draft) proposal, for reviewers. */
 export function getProposalDiff(id: string, signal?: AbortSignal): Promise<{ data: { sections: SectionDiff[] } }> {
   return request({ method: "GET", url: `/api/v1/proposals/${id}/diff`, signal });

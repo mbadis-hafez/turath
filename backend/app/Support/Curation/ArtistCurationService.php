@@ -4,13 +4,16 @@ namespace App\Support\Curation;
 
 use App\Models\Artist;
 use App\Models\FieldCitation;
+use App\Support\Completeness\ArtistCompletenessRules;
 use App\Support\Completeness\CompletenessCalculator;
 
 class ArtistCurationService
 {
     /**
-     * D96: verification needs F10 completeness plus the two documentation
-     * stages. One itemized list, shared with the checklist and visibility.
+     * D96: verification needs the complete 11-field profile plus the two
+     * documentation stages, and — for deceased artists with a death year —
+     * a death-year citation (citations moved out of completeness into
+     * verification).
      *
      * @return array<string, array<int, string>>
      */
@@ -24,12 +27,46 @@ class ArtistCurationService
             $errors["data.{$key}"] = ["Missing required field: {$rules->fieldLabel($key)['en']}."];
         }
 
+        if ($artist->living_status === 'deceased'
+            && $artist->getAttribute('death_year_from') !== null
+            && ! FieldCitation::where('citable_type', Artist::class)->where('citable_id', $artist->id)->where('field_key', 'death_year')->exists()) {
+            $errors['verification.death_year_citation'] = ['A death-year citation is required for a deceased artist.'];
+        }
+
         if (! in_array($artist->authorization_letter_status, ['signed', 'not_applicable'], true)) {
             $errors['pipeline.authorization_letter'] = ["Authorization letter is {$artist->authorization_letter_status}."];
         }
 
         if (! in_array($artist->owner_pre_agreement_status, ['yes', 'not_applicable'], true)) {
             $errors['pipeline.owner_pre_agreement'] = ["Owner pre-agreement is {$artist->owner_pre_agreement_status}."];
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Read-side preview of ArtistUpdateController's publish gate (D48): a
+     * creation-review approval plus no blocking completeness gap. Mirrors
+     * CreationReviewGate::assertApproved and PublishGate::assertPublishable
+     * without throwing, so the curation page can show why publishing is
+     * blocked before the user attempts it — the write-time gates remain the
+     * actual enforcement.
+     *
+     * @return array<string, array<int, string>>
+     */
+    public function publishErrors(Artist $artist): array
+    {
+        $errors = [];
+
+        if ($artist->creation_approved_at === null) {
+            $errors['completeness.creation_review'] = ["This record hasn't been reviewed yet."];
+        }
+
+        $calculator = new CompletenessCalculator;
+        $rules = $calculator->rulesFor(Artist::class);
+
+        foreach ($calculator->evaluate($artist)['blocking'] as $key) {
+            $errors["data.{$key}"] = ["Missing required field: {$rules->fieldLabel($key)['en']}."];
         }
 
         return $errors;
@@ -42,29 +79,53 @@ class ArtistCurationService
     }
 
     /**
-     * D99: the eight mockup checklist fields (the portrait needs an uploaded
-     * image with rights other than `unknown`).
+     * The 11-item profile checklist (all core/blocking), grouped by
+     * section. Administrative requirements (contact, authorization
+     * letter, owner pre-agreement) live in adminChecklist(), not here.
      *
-     * @return array<int, array{key: string, tier: string, met: bool, supported: bool}>
+     * @return array<int, array{key: string, tier: string, met: bool, supported: bool, section: string}>
      */
     public function checklist(Artist $artist): array
     {
-        $blocking = (new CompletenessCalculator)->evaluate($artist)['blocking'];
-        $nameCited = FieldCitation::where('citable_type', Artist::class)->where('citable_id', $artist->id)->where('field_key', 'name')->exists();
+        $rules = new ArtistCompletenessRules;
 
-        $items = [
-            ['name', 'core', $artist->name_ar !== null && $artist->name_en !== null],
-            ['artist_code', 'core', $artist->legacy_code !== null],
-            ['city', 'important', $artist->birth_place_ar !== null || $artist->birth_place_en !== null],
-            ['contact', 'core', $artist->contacts->contains(fn ($c) => $c->name !== null && ($c->email !== null || $c->phone !== null))],
-            ['authorization_letter', 'core', in_array($artist->authorization_letter_status, ['signed', 'not_applicable'], true)],
-            ['name_verified', 'core', $nameCited],
-            ['life_dates', 'core', ! in_array('death_year_or_living_confirmed', $blocking, true)],
+        return array_map(fn (string $key) => [
+            'key' => $key,
+            'tier' => 'core',
+            'met' => $rules->isFieldPresent($artist, $key),
+            'supported' => true,
+            'section' => $rules->fieldSection($key),
+        ], array_keys($rules->coreFields()));
+    }
+
+    /**
+     * The administrative requirements on the curation screen — ownership
+     * and documentation, deliberately outside the profile completeness
+     * percentage.
+     *
+     * @return array<int, array{key: string, tier: string, met: bool, supported: bool}>
+     */
+    public function adminChecklist(Artist $artist): array
+    {
+        return [
+            [
+                'key' => 'contact',
+                'tier' => 'administrative',
+                'met' => $artist->contacts->contains(fn ($c) => $c->name !== null && ($c->email !== null || $c->phone !== null)),
+                'supported' => true,
+            ],
+            [
+                'key' => 'authorization_letter',
+                'tier' => 'administrative',
+                'met' => in_array($artist->authorization_letter_status, ['signed', 'not_applicable'], true),
+                'supported' => true,
+            ],
+            [
+                'key' => 'owner_pre_agreement',
+                'tier' => 'administrative',
+                'met' => in_array($artist->owner_pre_agreement_status, ['yes', 'not_applicable'], true),
+                'supported' => true,
+            ],
         ];
-
-        $result = array_map(fn (array $i) => ['key' => $i[0], 'tier' => $i[1], 'met' => $i[2], 'supported' => true], $items);
-        $result[] = ['key' => 'portrait', 'tier' => 'important', 'met' => in_array('portrait_with_clear_rights', (new CompletenessCalculator)->evaluate($artist)['minor'], true) === false, 'supported' => true];
-
-        return $result;
     }
 }

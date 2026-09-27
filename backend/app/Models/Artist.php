@@ -12,7 +12,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon|null $creation_approved_at
+ */
 class Artist extends Model
 {
     /** @use HasFactory<ArtistFactory> */
@@ -30,8 +34,10 @@ class Artist extends Model
             'birth' => PartialDateCast::class.':birth',
             'death' => PartialDateCast::class.':death',
             'verified_at' => 'datetime',
+            'published_at' => 'datetime',
             'identified_through_date' => 'date',
             'name_as_in_sources' => 'array',
+            'creation_approved_at' => 'datetime',
         ];
     }
 
@@ -97,6 +103,14 @@ class Artist extends Model
     public function verifiedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by_user_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function publishedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'published_by_user_id');
     }
 
     /**

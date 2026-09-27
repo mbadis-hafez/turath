@@ -66,28 +66,45 @@ it('audits contact changes by field name without leaking values', function () {
         ->and(json_encode($entries->map->attribute_changes))->toContain('gallery');
 });
 
-it('derives name_verified from a citation and public visibility from the verify gate', function () {
+it('exposes the 11-item profile checklist with sections and gates public visibility on the verify gate', function () {
     $editor = editorUser();
     $artist = Artist::factory()->create(['living_status' => 'living']);
 
     $bundle = $this->actingAs($editor)->getJson("/api/v1/artists/{$artist->id}/curation")->json('data');
-    expect(collect($bundle['checklist'])->firstWhere('key', 'name_verified')['met'])->toBeFalse()
+    expect($bundle['checklist'])->toHaveCount(11)
+        ->and(collect($bundle['checklist'])->every(fn (array $i) => $i['tier'] === 'core' && $i['supported'] && isset($i['section'])))->toBeTrue()
+        ->and(collect($bundle['checklist'])->firstWhere('key', 'portrait_with_clear_rights')['section'])->toBe('media')
         ->and($bundle['public_visibility'])->toBe('hidden');
 
-    FieldCitation::factory()->create(['citable_type' => Artist::class, 'citable_id' => $artist->id, 'field_key' => 'name']);
-    $bundle = $this->actingAs($editor)->getJson("/api/v1/artists/{$artist->id}/curation")->json('data');
-    expect(collect($bundle['checklist'])->firstWhere('key', 'name_verified')['met'])->toBeTrue();
+    // A complete deceased artist still hides until the death-year citation exists.
+    $deceased = Artist::factory()->complete()->create([
+        'living_status' => 'deceased', 'death_year_from' => 2000, 'owner_pre_agreement_status' => 'not_applicable',
+    ]);
+    $bundle = $this->actingAs($editor)->getJson("/api/v1/artists/{$deceased->id}/curation")->json('data');
+    expect($bundle['public_visibility'])->toBe('hidden')
+        ->and($bundle['verify_blockers'])->toHaveKey('verification.death_year_citation');
+
+    FieldCitation::factory()->create(['citable_type' => Artist::class, 'citable_id' => $deceased->id, 'field_key' => 'death_year']);
+    $bundle = $this->actingAs($editor)->getJson("/api/v1/artists/{$deceased->id}/curation")->json('data');
+    expect($bundle['public_visibility'])->toBe('visible')
+        ->and($bundle['verify_blockers'])->not->toHaveKey('verification.death_year_citation');
 });
 
-it('refuses verification with one itemized list and succeeds when all three conditions clear', function () {
+it('refuses verification with one itemized list and succeeds when all conditions clear', function () {
     $editor = editorUser();
     $artist = Artist::factory()->create(['living_status' => 'living']);
 
     $errors = $this->actingAs($editor)->postJson("/api/v1/artists/{$artist->id}/verify", ['status' => 'verified'])
         ->assertStatus(422)->json('errors');
-    expect($errors)->toHaveKeys(['data.primary_source', 'pipeline.authorization_letter', 'pipeline.owner_pre_agreement']);
+    expect($errors)->toHaveKeys(['data.artist_code', 'data.birth_year', 'pipeline.authorization_letter', 'pipeline.owner_pre_agreement']);
 
-    FieldCitation::factory()->create(['citable_type' => Artist::class, 'citable_id' => $artist->id, 'field_key' => 'name']);
+    // A profile-complete artist only lacks the documentation pipeline.
+    $artist = Artist::factory()->complete()->create(['authorization_letter_status' => 'not_started', 'owner_pre_agreement_status' => 'not_started']);
+    $errors = $this->actingAs($editor)->postJson("/api/v1/artists/{$artist->id}/verify", ['status' => 'verified'])
+        ->assertStatus(422)->json('errors');
+    expect($errors)->toHaveKeys(['pipeline.authorization_letter', 'pipeline.owner_pre_agreement'])
+        ->and($errors)->not->toHaveKey('data.artist_code');
+
     $this->actingAs($editor)->patchJson("/api/v1/artists/{$artist->id}/curation", ['authorization_letter_status' => 'signed', 'owner_pre_agreement_status' => 'not_applicable'])->assertOk();
 
     $this->actingAs($editor)->getJson("/api/v1/artists/{$artist->id}/curation")->assertJsonPath('data.public_visibility', 'visible');
@@ -161,7 +178,7 @@ it('supports multiple contacts, updating in place and removing dropped ones', fu
 it('counts a contact as met only with a name and a way to reach them', function () {
     $editor = editorUser();
     $artist = Artist::factory()->create();
-    $met = fn () => collect($this->actingAs($editor)->getJson("/api/v1/artists/{$artist->id}/curation")->json('data.checklist'))->firstWhere('key', 'contact')['met'];
+    $met = fn () => collect($this->actingAs($editor)->getJson("/api/v1/artists/{$artist->id}/curation")->json('data.admin_checklist'))->firstWhere('key', 'contact')['met'];
 
     expect($met())->toBeFalse();
     $artist->contacts()->create(['name' => 'Only name']);
@@ -171,7 +188,10 @@ it('counts a contact as met only with a name and a way to reach them', function 
 });
 
 it('shows nationality, classification, dates, education and activities (awards, exhibitions, talks) publicly, plus only public social links', function () {
-    $editor = editorUser();
+    // Directly editing a published artist is admin-only (an editor would go
+    // through the proposal pipeline instead) — this test only cares about
+    // what ends up publicly visible, so the actor here is an admin.
+    $editor = makeUser('admin');
     $artist = Artist::factory()->published()->create();
 
     $this->actingAs($editor)->patchJson("/api/v1/artists/{$artist->id}", [
@@ -319,7 +339,7 @@ it('uploads a portrait, keeps it private until rights are clear and the artist i
     expect($this->getJson("/api/v1/artists/{$artist->slug}")->json('data.portrait_url'))->toBe("/api/v1/artists/{$artist->id}/portrait");
     $this->get("/api/v1/artists/{$artist->id}/portrait")->assertOk();
 
-    $checklist = collect($this->actingAs($editor)->getJson("/api/v1/artists/{$artist->id}/curation")->json('data.checklist'))->firstWhere('key', 'portrait');
+    $checklist = collect($this->actingAs($editor)->getJson("/api/v1/artists/{$artist->id}/curation")->json('data.checklist'))->firstWhere('key', 'portrait_with_clear_rights');
     expect($checklist['met'])->toBeTrue()->and($checklist['supported'])->toBeTrue();
 
     $this->actingAs($editor)->deleteJson("/api/v1/artists/{$artist->id}/portrait")->assertOk()->assertJsonPath('data.has_portrait', false);
@@ -364,4 +384,35 @@ it('shows the public profile its themes and record date, but never the owner typ
 
     $body = $res->getContent();
     expect($body)->not->toContain('gallery')->not->toContain('Site visit')->not->toContain('0505000000')->not->toContain('Faisal')->not->toContain('Secret Person')->not->toContain('secret@example.com');
+});
+
+it('reports the artist as ready to publish once creation review is approved and nothing is missing', function () {
+    $editor = editorUser();
+    $artist = Artist::factory()->complete()->create(['living_status' => 'living']);
+
+    $curation = $this->actingAs($editor)->getJson("/api/v1/artists/{$artist->id}/curation")->assertOk()->json('data');
+
+    expect($curation['publication_status'])->toBe('draft')
+        ->and($curation['published_at'])->toBeNull()
+        ->and($curation['publish_blockers'])->toBe([]);
+
+    $this->actingAs($editor)->patchJson("/api/v1/artists/{$artist->id}", ['publication_status' => 'published'])->assertOk();
+
+    $after = $this->actingAs($editor)->getJson("/api/v1/artists/{$artist->id}/curation")->assertOk()->json('data');
+    expect($after['publication_status'])->toBe('published')
+        ->and($after['published_at'])->not->toBeNull();
+});
+
+it('blocks publish and explains why when creation review is pending or a core field is missing', function () {
+    $editor = editorUser();
+
+    $pendingReview = Artist::factory()->complete()->unreviewed()->create(['living_status' => 'living']);
+    $blockers = $this->actingAs($editor)->getJson("/api/v1/artists/{$pendingReview->id}/curation")->assertOk()->json('data.publish_blockers');
+    expect($blockers)->toHaveKey('completeness.creation_review');
+    $this->actingAs($editor)->patchJson("/api/v1/artists/{$pendingReview->id}", ['publication_status' => 'published'])->assertStatus(422);
+
+    $incomplete = Artist::factory()->complete()->create(['living_status' => 'living', 'bio_en' => null]);
+    $blockers = $this->actingAs($editor)->getJson("/api/v1/artists/{$incomplete->id}/curation")->assertOk()->json('data.publish_blockers');
+    expect($blockers)->toHaveKey('data.bio_en');
+    $this->actingAs($editor)->patchJson("/api/v1/artists/{$incomplete->id}", ['publication_status' => 'published'])->assertStatus(422);
 });

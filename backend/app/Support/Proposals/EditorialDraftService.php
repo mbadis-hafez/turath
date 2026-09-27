@@ -168,7 +168,7 @@ class EditorialDraftService
                 'reviewed_at' => now(),
                 'review_note' => $note,
             ]);
-            $this->closeQueueItem($proposal, 'dismissed');
+            $this->closeQueueItem($proposal, 'dismissed', $reviewer->id);
         });
     }
 
@@ -207,8 +207,8 @@ class EditorialDraftService
                 'reviewed_at' => now(),
                 'resulting_revision_id' => $revision?->id,
             ]);
-            $this->closeQueueItem($proposal, 'acknowledged');
-            $this->supersedeOtherPending($proposal);
+            $this->closeQueueItem($proposal, 'acknowledged', $reviewer->id);
+            $this->supersedeOtherPending($proposal, $reviewer->id);
 
             return $revision;
         }));
@@ -475,13 +475,14 @@ class EditorialDraftService
             ->whereIn('status', self::OPEN_STATUSES);
     }
 
-    private function closeQueueItem(EditProposal $proposal, string $status): void
+    private function closeQueueItem(EditProposal $proposal, string $status, int $actedByUserId): void
     {
-        ReviewQueueItem::where('edit_proposal_id', $proposal->id)->update(['status' => $status]);
+        ReviewQueueItem::where('edit_proposal_id', $proposal->id)
+            ->update(['status' => $status, 'acted_by_user_id' => $actedByUserId, 'acted_at' => now()]);
     }
 
     /** Child sections have no per-field overlap notion: every other pending proposal on the record is stale. */
-    private function supersedeOtherPending(EditProposal $proposal): void
+    private function supersedeOtherPending(EditProposal $proposal, int $actedByUserId): void
     {
         EditProposal::query()
             ->where('citable_type', $proposal->citable_type)
@@ -489,9 +490,9 @@ class EditorialDraftService
             ->where('status', ProposalStatus::Pending->value)
             ->where('id', '!=', $proposal->id)
             ->get()
-            ->each(function (EditProposal $other) {
+            ->each(function (EditProposal $other) use ($actedByUserId) {
                 $other->update(['status' => ProposalStatus::Superseded->value]);
-                $this->closeQueueItem($other, 'dismissed');
+                $this->closeQueueItem($other, 'dismissed', $actedByUserId);
             });
     }
 }

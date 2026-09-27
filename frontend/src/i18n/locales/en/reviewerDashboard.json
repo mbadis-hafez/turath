@@ -1,0 +1,116 @@
+{
+  "title": "Reviewer workspace",
+  "subtitle": "What needs your review right now",
+  "greeting": {
+    "morning": "Good morning, {name}",
+    "afternoon": "Good afternoon, {name}",
+    "evening": "Good evening, {name}"
+  },
+  "waitingBanner": "You have {count} item waiting for review. | You have {count} items waiting for review.",
+  "noPermission": {
+    "title": "You don't have review permissions",
+    "description": "This workspace is for reviewers. Ask an administrator if you believe this is a mistake."
+  },
+  "summary": {
+    "title": "Review queue",
+    "waitingReview": "Waiting review",
+    "verificationIssues": "Verification issues",
+    "changesReturned": "Changes returned",
+    "reviewedToday": "Reviewed today"
+  },
+  "needsReview": {
+    "title": "Needs review",
+    "empty": "You're all caught up.",
+    "review": "Review",
+    "viewAll": "View review queue",
+    "submittedBy": "Submitted by {name}",
+    "untitled": "Untitled record"
+  },
+  "priorityQueue": {
+    "title": "Review next",
+    "empty": "Nothing to prioritize."
+  },
+  "verificationIssues": {
+    "title": "Verification issues",
+    "empty": "No verification issues require your attention.",
+    "kind": {
+      "verification": "Needs evidence",
+      "conflict": "Source conflict"
+    }
+  },
+  "returnedContent": {
+    "title": "Changes requested",
+    "empty": "No content is waiting for re-review.",
+    "reReview": "Re-review",
+    "previousNote": "Previous note: {note}",
+    "viewAll": "View returned items"
+  },
+  "pipeline": {
+    "title": "Review pipeline",
+    "stages": {
+      "ready_for_review": "Ready for review",
+      "changes_requested": "Changes requested",
+      "approved": "Approved (last 30 days)",
+      "rejected": "Rejected (last 30 days)"
+    },
+    "infoNote": "Approved means the review step is complete — publication is a separate step and stays with an admin."
+  },
+  "contentOverview": {
+    "title": "Content awaiting review",
+    "artists": "Artists",
+    "artworks": "Artworks",
+    "archive_items": "Archive materials",
+    "material_submissions": "Material submissions"
+  },
+  "recentlyReviewed": {
+    "title": "Recently reviewed",
+    "empty": "Your review decisions will appear here.",
+    "viewHistory": "View history",
+    "decision": {
+      "approved": "Approved — awaiting publication",
+      "rejected": "Rejected",
+      "changes_requested": "Changes requested"
+    }
+  },
+  "activity": {
+    "title": "Review activity",
+    "empty": "Your review activity will appear here.",
+    "events": {
+      "created": "Created",
+      "updated": "Updated",
+      "deleted": "Deleted"
+    }
+  },
+  "quickActions": {
+    "title": "Quick actions",
+    "reviewNext": "Review next item",
+    "viewQueue": "View review queue",
+    "viewVerification": "View verification issues",
+    "viewRecentlyReviewed": "View recently reviewed"
+  },
+  "citableType": {
+    "artists": "Artist",
+    "artworks": "Artwork",
+    "archive-items": "Archive material",
+    "material_submission": "Material submission"
+  },
+  "reviewType": {
+    "archivist_review": "Archivist review",
+    "data_audit": "Data audit",
+    "second_source_needed": "Second source needed",
+    "editorial_review": "Editorial review",
+    "material_intake": "Material intake"
+  },
+  "verificationStatus": {
+    "unverified": "Pending",
+    "disputed": "Disputed",
+    "verified": "Verified"
+  },
+  "completeness": "Completeness: {pct}%",
+  "verification": "Verification: {status}",
+  "review": "Review: {status}",
+  "error": {
+    "title": "We couldn't load your review dashboard.",
+    "retry": "Retry"
+  }
+}

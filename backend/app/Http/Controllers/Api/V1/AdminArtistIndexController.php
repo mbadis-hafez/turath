@@ -17,6 +17,12 @@ class AdminArtistIndexController
         if ($request->boolean('unverified')) {
             $query->where('verified_status', 'unverified');
         }
+        // Picker usages (linking an artist elsewhere) ask for this; the
+        // registry itself never does, since staff still need to see and work
+        // an unapproved creation (005 research.md R5).
+        if ($request->boolean('linkable_only')) {
+            $query->whereNotNull('creation_approved_at');
+        }
         if ($owner = $request->input('owner_type')) {
             $query->where('owner_type', $owner);
         }
@@ -49,6 +55,7 @@ class AdminArtistIndexController
                 'legacy_code' => $a->legacy_code,
                 'name' => ['ar' => $a->name_ar, 'en' => $a->name_en],
                 'verified_status' => $a->verified_status,
+                'creation_approved_at' => $a->creation_approved_at?->toIso8601String(),
                 'city' => ['ar' => $a->birth_place_ar, 'en' => $a->birth_place_en],
                 'owner_type' => $a->owner_type,
                 'linked_material_count' => (int) $a->getAttribute('archive_item_links_count'),

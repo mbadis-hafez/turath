@@ -13,12 +13,14 @@ import arAuth from "./locales/ar/auth.json";
 import arCommon from "./locales/ar/common.json";
 import arCuration from "./locales/ar/curation.json";
 import arDashboard from "./locales/ar/dashboard.json";
+import arReviewerDashboard from "./locales/ar/reviewerDashboard.json";
 import arDates from "./locales/ar/dates.json";
 import arDraft from "./locales/ar/draft.json";
 import arErrors from "./locales/ar/errors.json";
 import arHome from "./locales/ar/home.json";
 import arImports from "./locales/ar/imports.json";
 import arNav from "./locales/ar/nav.json";
+import arRoles from "./locales/ar/roles.json";
 import arSearch from "./locales/ar/search.json";
 import arUsers from "./locales/ar/users.json";
 import enActivity from "./locales/en/activity.json";
@@ -34,12 +36,14 @@ import enAuth from "./locales/en/auth.json";
 import enCommon from "./locales/en/common.json";
 import enCuration from "./locales/en/curation.json";
 import enDashboard from "./locales/en/dashboard.json";
+import enReviewerDashboard from "./locales/en/reviewerDashboard.json";
 import enDates from "./locales/en/dates.json";
 import enDraft from "./locales/en/draft.json";
 import enErrors from "./locales/en/errors.json";
 import enHome from "./locales/en/home.json";
 import enImports from "./locales/en/imports.json";
 import enNav from "./locales/en/nav.json";
+import enRoles from "./locales/en/roles.json";
 import enSearch from "./locales/en/search.json";
 import enUsers from "./locales/en/users.json";
 
@@ -107,7 +111,9 @@ export const i18n = createI18n({
       users: arUsers,
       imports: arImports,
       dashboard: arDashboard,
+      reviewerDashboard: arReviewerDashboard,
       curation: arCuration,
+      roles: arRoles,
     },
     en: {
       common: enCommon,
@@ -130,7 +136,9 @@ export const i18n = createI18n({
       users: enUsers,
       imports: enImports,
       dashboard: enDashboard,
+      reviewerDashboard: enReviewerDashboard,
       curation: enCuration,
+      roles: enRoles,
     },
   },
 });

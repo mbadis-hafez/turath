@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Requests\Artist\VerifyArtistRequest;
 use App\Http\Resources\ArtistResource;
 use App\Models\Artist;
+use App\Support\Completeness\CreationReviewGate;
 use App\Support\Curation\ArtistCurationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -14,6 +15,7 @@ class ArtistVerifyController
     public function __invoke(VerifyArtistRequest $request, Artist $artist): JsonResponse
     {
         if ($request->input('status') === 'verified') {
+            CreationReviewGate::assertApproved($artist);
             $errors = (new ArtistCurationService)->verifyErrors($artist);
             if ($errors !== []) {
                 throw ValidationException::withMessages($errors);

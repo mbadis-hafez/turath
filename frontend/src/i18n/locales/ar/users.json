@@ -45,16 +45,5 @@
     "name": "الاسم",
     "email": "البريد الإلكتروني",
     "roles": "الأدوار"
-  },
-  "roles": {
-    "reader": "قارئ",
-    "contributor": "مساهم",
-    "verified_researcher": "باحث موثّق",
-    "institution": "مؤسسة",
-    "artist_claimed": "فنان موثّق",
-    "editor": "محرر",
-    "reviewer": "مراجع",
-    "admin": "مدير",
-    "superadmin": "مدير أعلى"
   }
 }

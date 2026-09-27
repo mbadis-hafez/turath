@@ -1,3 +1,5 @@
+import type { PortraitRights } from "@/types/artistCuration";
+
 export type CompletenessSeverity =
   | "blocking"
   | "conflict"
@@ -62,8 +64,76 @@ export interface OpenConflict {
   citations: ConflictCitation[];
 }
 
+/** A gap on the records-completeness payload, labelled in both locales. */
+export interface CompletenessGap {
+  field_key: string;
+  label: { ar: string; en: string };
+}
+
+export interface RecordCompletenessCitation {
+  id: string;
+  field_key: string;
+  claimed_value: unknown;
+  is_primary: boolean;
+  source: ConflictCitation["source"];
+  created_at: string;
+}
+
 export interface RecordCompletenessDetail {
+  citable_type: string;
+  citable_id: number;
+  completeness_pct: number;
+  severity: CompletenessSeverity;
+  blocking_gaps: CompletenessGap[];
+  minor_gaps: CompletenessGap[];
   open_conflicts: OpenConflict[];
+  citations: RecordCompletenessCitation[];
+  /** Artist-only extras, computed live by the backend (see sectionedExtras). */
+  met_count?: number;
+  total_count?: number;
+  complete?: boolean;
+  sections?: ProfileCompletenessSections;
+  missing?: CompletenessMissingItem[];
+}
+
+export type CompletenessSectionKey = "identity" | "biography" | "media";
+
+export interface CompletenessSection {
+  met: number;
+  total: number;
+  percentage: number;
+}
+
+export type ProfileCompletenessSections = Record<CompletenessSectionKey, CompletenessSection>;
+
+export interface CompletenessMissingItem {
+  key: string;
+  label: { ar: string; en: string };
+  section: CompletenessSectionKey;
+}
+
+/** Normalized profile-completeness shape shared by the records and preview endpoints. */
+export interface ProfileCompletenessSummary {
+  percentage: number;
+  met_count: number;
+  total_count: number;
+  complete: boolean;
+  sections: ProfileCompletenessSections;
+  missing: CompletenessMissingItem[];
+}
+
+/** Body of POST /artists/completeness-preview (every field optional). */
+export interface ProfileCompletenessPreviewRequest {
+  name?: { ar: string | null; en: string | null };
+  bio?: { ar: string | null; en: string | null };
+  living_status?: "living" | "deceased" | "unknown";
+  birth?: { year_from: number | null } | null;
+  death?: { year_from: number | null } | null;
+  birth_place?: { ar: string | null; en: string | null };
+  nationality?: { ar: string | null; en: string | null };
+  legacy_code?: string | null;
+  portrait_uploaded?: boolean;
+  portrait_rights_status?: PortraitRights;
 }
 
 export type ReviewType =

@@ -26,6 +26,7 @@ class ReviewQueueItem extends Model
     {
         return [
             'submitted_at' => 'datetime',
+            'acted_at' => 'datetime',
         ];
     }
 
@@ -43,5 +44,13 @@ class ReviewQueueItem extends Model
     public function submittedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'submitted_by_user_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function actedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'acted_by_user_id');
     }
 }

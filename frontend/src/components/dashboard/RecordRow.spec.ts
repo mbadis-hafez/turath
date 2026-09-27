@@ -26,11 +26,12 @@ beforeEach(async () => {
   router = createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: "/:locale/artists/:slug", name: "artists.show", component: { template: "<div />" } },
-      { path: "/:locale/artworks/:id", name: "artworks.show", component: { template: "<div />" } },
+      { path: "/:locale/admin/artists/:id", name: "admin.artists.show", component: { template: "<div />" } },
+      { path: "/:locale/admin/artworks/:id", name: "admin.artworks.show", component: { template: "<div />" } },
+      { path: "/:locale/admin/archive/:id", name: "admin.archive.edit", component: { template: "<div />" } },
     ],
   });
-  await router.push("/en/artists/x");
+  await router.push("/en/admin/artists/13");
   await router.isReady();
 });
 
@@ -47,10 +48,10 @@ describe("RecordRow", () => {
     expect(wrapper.text()).toContain("English biography");
   });
 
-  it("links the complete action to the record page", () => {
+  it("links the complete action to the record's admin curation page", () => {
     const wrapper = mountRow(makeRecord());
 
-    expect(wrapper.get("[data-testid=row-action]").attributes("href")).toBe("/en/artists/abdulhalim-radwi");
+    expect(wrapper.get("[data-testid=row-action]").attributes("href")).toBe("/en/admin/artists/13");
     expect(wrapper.get("[data-testid=row-action]").text()).toBe("Complete");
   });
 

@@ -56,6 +56,9 @@
     "back": "Artists registry",
     "verify": "Verify artist",
     "verifying": "Verifying…",
+    "publish": "Publish artist",
+    "publishing": "Publishing…",
+    "published": "Published",
     "save": "Save",
     "saving": "Saving…",
     "saved": "Saved",
@@ -95,6 +98,8 @@
     "missing": "Missing",
     "verifyBlocked": "Cannot verify yet: {reason}",
     "verifyReady": "Ready to verify",
+    "publishBlocked": "Cannot publish yet: {reason}",
+    "publishReady": "Ready to publish",
     "type": "Artist",
     "portraitCaption": "No portrait in the sheet. Available images are archival materials in which the artist appears.",
     "requiredMet": "{met} of {total} required fields met",
@@ -110,17 +115,30 @@
     "authorizationFile": "Authorization letter file",
     "yes": "Yes",
     "no": "No",
-    "noFile": "No file attached"
+    "noFile": "No file attached",
+    "missingRequired": "Missing required information:",
+    "adminChecklist": "Administrative requirements"
+  },
+  "sections": {
+    "identity": "Identity",
+    "biography": "Biography",
+    "media": "Media"
   },
   "checklistItem": {
-    "name": "Arabic and English name",
     "artist_code": "Artist code",
-    "city": "City",
+    "name_ar": "Name (Arabic)",
+    "name_en": "Name (English)",
+    "birth_city": "City of birth",
+    "living_status_known": "Living status known",
+    "birth_year": "Birth year",
+    "death_year_or_living": "Death year, or confirmed living",
+    "nationality": "Nationality",
+    "bio_ar": "Biography (Arabic)",
+    "bio_en": "Biography (English)",
+    "portrait_with_clear_rights": "Portrait with clear rights",
     "contact": "Contact data",
     "authorization_letter": "Signed authorization letter",
-    "name_verified": "Name verified by a published source",
-    "life_dates": "Life dates",
-    "portrait": "Portrait with clear rights"
+    "owner_pre_agreement": "Owner pre-agreement"
   },
   "merge": {
     "title": "Merge duplicate artists",
@@ -292,8 +310,8 @@
     "conditionLink": "Condition report link",
     "imageQuality": "Image quality",
     "editingStatus": "Editing status",
-    "finalImage": "Final selected high-resolution image",
-    "noFinalImage": "No high-resolution copy",
+    "finalImage": "Primary image",
+    "noFinalImage": "No primary image yet",
     "checklistItem": {
       "code": "Identification code",
       "titles": "Arabic and English title",
@@ -374,12 +392,17 @@
     "search": "Search artworks…"
   },
   "artworkImages": {
-    "finalCaption": "Approved final image. Only the image marked final is used as the work's main image.",
-    "noFinalCaption": "No approved image yet. Upload one and mark it as the final high-resolution image.",
-    "final": "Final image",
-    "makeFinal": "Make final",
+    "finalCaption": "This is the primary image. It's used as the work's main image wherever the artwork is shown as a single picture.",
+    "noFinalCaption": "No primary image yet. Upload one and mark it as primary.",
+    "final": "Primary image",
+    "makeFinal": "Make primary",
     "remove": "Remove",
     "upload": "Upload image",
-    "uploading": "Uploading…"
+    "uploading": "Uploading…",
+    "alreadyQueued": "\"{filename}\" is already queued.",
+    "alreadyAttached": "\"{filename}\" is already attached to this artwork.",
+    "rejected": "\"{filename}\" couldn't be attached: {message}",
+    "capReached": "This artwork already has the maximum of {max} images.",
+    "dropHint": "Or drag images here"
   }
 }

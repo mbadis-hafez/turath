@@ -6,6 +6,7 @@ use App\Enums\AccessLevel;
 use App\Enums\PublicationStatus;
 use App\Models\ArchiveItem;
 use App\Models\User;
+use App\Support\Proposals\ReviewerScope;
 use Carbon\CarbonImmutable;
 
 class ArchiveAccessResolver
@@ -16,7 +17,7 @@ class ArchiveAccessResolver
      */
     public static function canViewFull(?User $user, ArchiveItem $item): bool
     {
-        if ($user?->can('archive.manage')) {
+        if (($user?->can('archive.manage') ?? false) || ReviewerScope::canReview($user)) {
             return true;
         }
 
@@ -41,7 +42,7 @@ class ArchiveAccessResolver
      */
     public static function canViewMetadataOnly(?User $user, ArchiveItem $item): bool
     {
-        if ($user?->can('archive.manage')) {
+        if (($user?->can('archive.manage') ?? false) || ReviewerScope::canReview($user)) {
             return true;
         }
 

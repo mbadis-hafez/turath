@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Requests\Artwork\StoreArtworkImagesRequest;
 use App\Models\Artwork;
 use App\Models\ArtworkImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -30,30 +33,72 @@ class ArtworkImageController
         return Storage::disk('local')->response($file->path);
     }
 
-    public function store(Request $request, Artwork $artwork): JsonResponse
+    /**
+     * Accepts the legacy single `image` field or the new `images[]` batch
+     * field (never both — StoreArtworkImagesRequest enforces that). Each
+     * file is validated and checksummed independently, so one bad or
+     * duplicate file never discards its valid siblings (FR-004); every file
+     * gets a per-file outcome in `results` alongside the always-present
+     * `data` list, whose shape is unchanged for existing callers.
+     */
+    public function store(StoreArtworkImagesRequest $request, Artwork $artwork): JsonResponse
     {
-        $data = $request->validate([
-            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
-            'rights_status' => ['nullable', Rule::in(ArtworkImage::RIGHTS)],
-            'edit_summary' => ['nullable', 'string', 'max:255'],
-        ]);
+        $rights = $request->validated('rights_status') ?? 'unknown';
+        $results = [];
 
-        $upload = $request->file('image');
+        foreach ($request->uploadedFiles() as $upload) {
+            $results[] = $this->attachOne($artwork, $upload, $rights, $request->user()?->id);
+        }
+
+        if (collect($results)->every(fn (array $r) => $r['status'] !== 'attached')) {
+            return response()->json(['message' => 'No file in this batch could be attached.', 'results' => $results], 422);
+        }
+
+        return response()->json(['data' => self::present($artwork->refresh()), 'results' => $results], 201);
+    }
+
+    /**
+     * Validates, checksums and (if new) stores one file. The duplicate check
+     * queries the artwork's images fresh on every call, so it catches both a
+     * file that matches one already on the artwork *and* a file that matches
+     * one attached earlier in this same batch (each successful create()
+     * above is immediately visible to the next iteration's query).
+     *
+     * @return array{filename: string|null, status: string, image_id: int|null, message: string|null}
+     */
+    private function attachOne(Artwork $artwork, UploadedFile $upload, string $rights, ?int $userId): array
+    {
+        $filename = $upload->getClientOriginalName();
+
+        $validator = Validator::make(['image' => $upload], [
+            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
+        ]);
+        if ($validator->fails()) {
+            return ['filename' => $filename, 'status' => 'rejected', 'image_id' => null, 'message' => $validator->errors()->first('image')];
+        }
+
+        $checksum = hash_file('sha256', $upload->getRealPath());
+        $matchedId = ArtworkImage::where('artwork_id', $artwork->id)->where('sha256', $checksum)->value('id');
+
+        if ($matchedId !== null) {
+            return ['filename' => $filename, 'status' => 'duplicate', 'image_id' => $matchedId, 'message' => 'Already attached to this artwork.'];
+        }
+
         $size = @getimagesize($upload->getRealPath()) ?: [null, null];
 
-        $artwork->images()->create([
+        $image = $artwork->images()->create([
             'path' => $upload->store('artwork-images'),
-            'original_filename' => $upload->getClientOriginalName(),
+            'original_filename' => $filename,
             'mime_type' => $upload->getMimeType() ?? 'image/jpeg',
             'size_bytes' => $upload->getSize(),
-            'sha256' => hash_file('sha256', $upload->getRealPath()),
+            'sha256' => $checksum,
             'width_px' => $size[0],
             'height_px' => $size[1],
-            'rights_status' => $data['rights_status'] ?? 'unknown',
-            'uploaded_by_user_id' => $request->user()?->id,
+            'rights_status' => $rights,
+            'uploaded_by_user_id' => $userId,
         ]);
 
-        return response()->json(['data' => self::present($artwork->refresh())], 201);
+        return ['filename' => $filename, 'status' => 'attached', 'image_id' => $image->id, 'message' => null];
     }
 
     public function update(Request $request, Artwork $artwork, int $image): JsonResponse

@@ -125,6 +125,7 @@ export interface ArchiveEdit {
   rights_status: RightsStatus;
   license: string | null;
   verification_reference: string | null;
+  digitized_at: string | null;
   access_level: AccessLevel;
   publication_status: "draft" | "published" | "hidden";
   under_review: boolean;
@@ -136,3 +137,5 @@ export interface ArchiveEdit {
 }
 
 export const LINK_ROLES = ["about", "depicts", "mentions", "authored_by", "donor", "subject", "primary_documentation", "event_documentation"] as const;
+/** Artist-only roles: picking one also acts on the linked artist record (see ArchiveEditPage's addLink). */
+export const ARTIST_PROOF_LINK_ROLES = ["authorization_letter", "name_verification"] as const;

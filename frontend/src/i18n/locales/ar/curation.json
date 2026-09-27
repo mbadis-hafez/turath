@@ -56,6 +56,9 @@
     "back": "سجل الفنانين",
     "verify": "توثيق الفنان",
     "verifying": "جارٍ التوثيق…",
+    "publish": "نشر الفنان",
+    "publishing": "جارٍ النشر…",
+    "published": "منشور",
     "save": "حفظ",
     "saving": "جارٍ الحفظ…",
     "saved": "تم الحفظ",
@@ -95,6 +98,8 @@
     "missing": "ناقص",
     "verifyBlocked": "لا يمكن التوثيق بعد: {reason}",
     "verifyReady": "جاهز للتوثيق",
+    "publishBlocked": "لا يمكن النشر بعد: {reason}",
+    "publishReady": "جاهز للنشر",
     "type": "فنان",
     "portraitCaption": "لا توجد صورة شخصية في الجدول. الصور المتاحة كلها مواد أرشيفية يظهر فيها الفنان.",
     "requiredMet": "{met} من {total} حقول إلزامية مستوفاة",
@@ -110,17 +115,30 @@
     "authorizationFile": "ملف خطاب التفويض",
     "yes": "نعم",
     "no": "لا",
-    "noFile": "لا يوجد ملف مرفق"
+    "noFile": "لا يوجد ملف مرفق",
+    "missingRequired": "معلومات إلزامية ناقصة:",
+    "adminChecklist": "المتطلبات الإدارية"
+  },
+  "sections": {
+    "identity": "الهوية",
+    "biography": "النبذة",
+    "media": "الوسائط"
   },
   "checklistItem": {
-    "name": "اسم عربي وإنجليزي",
-    "artist_code": "رمز فنان",
-    "city": "مدينة",
+    "artist_code": "رمز الفنان",
+    "name_ar": "الاسم (عربي)",
+    "name_en": "الاسم (إنجليزي)",
+    "birth_city": "مدينة الميلاد",
+    "living_status_known": "حالة الحياة معروفة",
+    "birth_year": "سنة الميلاد",
+    "death_year_or_living": "سنة الوفاة أو إثبات أنه على قيد الحياة",
+    "nationality": "الجنسية",
+    "bio_ar": "النبذة (عربي)",
+    "bio_en": "النبذة (إنجليزي)",
+    "portrait_with_clear_rights": "صورة شخصية بحقوق واضحة",
     "contact": "بيانات تواصل",
     "authorization_letter": "خطاب تفويض موقّع",
-    "name_verified": "توثيق الاسم بمصدر منشور",
-    "life_dates": "تواريخ الحياة",
-    "portrait": "صورة شخصية بحقوق واضحة"
+    "owner_pre_agreement": "موافقة المالك المبدئية"
   },
   "merge": {
     "title": "دمج فنانين مكررين",
@@ -292,8 +310,8 @@
     "conditionLink": "رابط تقرير الحالة",
     "imageQuality": "جودة الصورة",
     "editingStatus": "حالة التحرير",
-    "finalImage": "الصورة النهائية عالية الدقة",
-    "noFinalImage": "لا توجد نسخة عالية الدقة",
+    "finalImage": "الصورة الرئيسية",
+    "noFinalImage": "لا توجد صورة رئيسية بعد",
     "checklistItem": {
       "code": "رمز تعريف",
       "titles": "عنوان عربي وإنجليزي",
@@ -374,12 +392,17 @@
     "search": "ابحث عن الأعمال…"
   },
   "artworkImages": {
-    "finalCaption": "الصورة النهائية المعتمدة. تُستخدم الصورة المحددة كنهائية وحدها صورةً رئيسية للعمل.",
-    "noFinalCaption": "لا توجد صورة معتمدة بعد. ارفع صورة وحدّدها كصورة نهائية عالية الدقة.",
-    "final": "الصورة النهائية",
-    "makeFinal": "اعتمادها نهائية",
+    "finalCaption": "هذه هي الصورة الرئيسية. تُستخدم كصورة العمل الرئيسية أينما عُرض العمل بصورة واحدة.",
+    "noFinalCaption": "لا توجد صورة رئيسية بعد. ارفع صورة وحدّدها كصورة رئيسية.",
+    "final": "الصورة الرئيسية",
+    "makeFinal": "جعلها رئيسية",
     "remove": "حذف",
     "upload": "رفع صورة",
-    "uploading": "جارٍ الرفع…"
+    "uploading": "جارٍ الرفع…",
+    "alreadyQueued": "الصورة \"{filename}\" مُضافة بالفعل إلى القائمة.",
+    "alreadyAttached": "الصورة \"{filename}\" مرفقة بالفعل بهذا العمل.",
+    "rejected": "تعذّر إرفاق \"{filename}\": {message}",
+    "capReached": "بلغ هذا العمل الحد الأقصى وهو {max} صورة.",
+    "dropHint": "أو اسحب الصور هنا"
   }
 }

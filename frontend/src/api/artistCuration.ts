@@ -1,5 +1,6 @@
 import { request } from "@/api/http";
 import type { PaginationMeta } from "@/types/api";
+import type { ProfileCompletenessPreviewRequest, ProfileCompletenessSummary } from "@/types/completeness";
 import type {
   AdminArtistRow,
   AdminArtistsQuery,
@@ -37,6 +38,14 @@ export function getArtistCuration(
   return request({ method: "GET", url: `/api/v1/artists/${id}/curation`, signal });
 }
 
+/** Live profile-completeness preview for the add-artist form (no record needed). */
+export function previewArtistCompleteness(
+  payload: ProfileCompletenessPreviewRequest,
+  signal?: AbortSignal,
+): Promise<{ data: ProfileCompletenessSummary }> {
+  return request({ method: "POST", url: "/api/v1/artists/completeness-preview", data: payload, signal });
+}
+
 export function updateArtistCuration(
   id: number,
   payload: CurationUpdate,
@@ -46,6 +55,10 @@ export function updateArtistCuration(
 
 export function verifyArtist(id: number): Promise<unknown> {
   return request({ method: "POST", url: `/api/v1/artists/${id}/verify`, data: { status: "verified" } });
+}
+
+export function publishArtist(id: number): Promise<unknown> {
+  return request({ method: "PATCH", url: `/api/v1/artists/${id}`, data: { publication_status: "published" } });
 }
 
 export function searchStaffOptions(q: string, signal?: AbortSignal): Promise<{ data: StaffOption[] }> {

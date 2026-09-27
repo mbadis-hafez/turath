@@ -31,6 +31,8 @@ class ArchiveItem extends Model
             'embargo_until' => 'date',
             'people_names' => 'array',
             'keywords' => 'array',
+            'creation_approved_at' => 'datetime',
+            'published_at' => 'datetime',
         ];
     }
 
@@ -40,6 +42,14 @@ class ArchiveItem extends Model
     public function parent(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function publishedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'published_by_user_id');
     }
 
     /**

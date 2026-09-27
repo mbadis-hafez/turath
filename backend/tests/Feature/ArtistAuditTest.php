@@ -41,7 +41,7 @@ it('audits artist create and update with translated labels and edit summary', fu
 
 it('returns the artist and its variants history from the per entity endpoint', function () {
     $editor = editorUser();
-    $artist = Artist::factory()->published()->create(['name_en' => 'History Artist']);
+    $artist = Artist::factory()->create(['name_en' => 'History Artist']);
 
     $this->actingAs($editor)->patchJson("/api/v1/artists/{$artist->id}", [
         'bio' => ['en' => 'v2'],
@@ -98,7 +98,7 @@ it('forbids the activity endpoints without activity.view', function () {
 
 it('labels variant entries bilingually in the global feed', function () {
     $editor = editorUser();
-    $artist = Artist::factory()->published()->create();
+    $artist = Artist::factory()->create();
 
     $this->actingAs($editor)->postJson("/api/v1/artists/{$artist->id}/variants", [
         'name' => 'Some Alias',

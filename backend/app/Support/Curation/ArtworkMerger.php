@@ -7,6 +7,7 @@ use App\Models\Artwork;
 use App\Models\ArtworkImage;
 use App\Models\ArtworkMerge;
 use App\Models\FieldCitation;
+use App\Models\Observers\ArtworkImageObserver;
 use App\Support\Completeness\CompletenessCalculator;
 use Illuminate\Support\Facades\DB;
 
@@ -41,7 +42,13 @@ class ArtworkMerger
                 $clash ? $link->delete() : $link->update(['linkable_id' => $survivor->id]);
             }
 
+            // A single bulk UPDATE, not per-model saves, so the survivor's own
+            // choice of primary always wins over whatever the duplicate had —
+            // but it also bypasses ArtworkImageObserver, so if the survivor
+            // had no images (and thus no primary) of its own, it would end up
+            // with images and no primary. Re-assert the invariant explicitly.
             ArtworkImage::where('artwork_id', $duplicate->id)->update(['artwork_id' => $survivor->id, 'is_final' => false]);
+            ArtworkImageObserver::promoteOldest($survivor->id);
 
             FieldCitation::where('citable_type', Artwork::class)->where('citable_id', $duplicate->id)
                 ->update(['citable_id' => $survivor->id]);

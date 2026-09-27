@@ -140,6 +140,7 @@ const toggle = (on: boolean) =>
                   </td>
                   <td class="px-3 py-3">
                     <span class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="STATUS_CLASS[a.verified_status]">{{ t(`curation.status.${a.verified_status}`) }}</span>
+                    <span v-if="!a.creation_approved_at" class="mt-1 block w-fit rounded-sm bg-warn-soft px-1.5 py-0.5 text-xs font-medium text-warn" data-testid="creation-pending-badge">{{ t("draft.creationBadge") }}</span>
                   </td>
                   <td class="px-3 py-3 text-ink-muted">
                     <LocalizedText v-if="a.city.ar || a.city.en" :text="a.city" />

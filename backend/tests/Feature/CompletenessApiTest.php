@@ -42,7 +42,7 @@ it('creates exactly one open conflict for disagreeing citations, and auto-resolv
 });
 
 it('resolves a conflict, marks the chosen citation primary, and audits it', function () {
-    $editor = editorUser();
+    $editor = reviewerUser();
     $artist = Artist::factory()->create();
     $one = citeArtist($artist, 'birth_year', ['year' => 1939]);
     $two = citeArtist($artist, 'birth_year', ['year' => 1941]);
@@ -75,7 +75,19 @@ it('rejects publishing an artist with blocking gaps and names the missing fields
         'publication_status' => 'published',
     ])->assertStatus(422);
 
-    expect(array_keys($response->json('errors')))->toContain('completeness.death_year_or_living_confirmed');
+    expect(array_keys($response->json('errors')))->toContain('completeness.death_year_or_living');
+});
+
+it('lets a profile-complete artist publish even with the administrative statuses not started', function () {
+    $editor = editorUser();
+    $artist = Artist::factory()->draft()->complete()->create([
+        'authorization_letter_status' => 'not_started',
+        'owner_pre_agreement_status' => 'not_started',
+    ]);
+
+    $this->actingAs($editor)->patchJson("/api/v1/artists/{$artist->id}", [
+        'publication_status' => 'published',
+    ])->assertOk()->assertJsonPath('data.publication_status', 'published');
 });
 
 it('scopes the dashboard to the current user unless dashboard.manage', function () {
@@ -119,7 +131,7 @@ it('returns the record title and submission time with each review queue item', f
         'submitted_at' => now()->subDays(6),
     ]);
 
-    $this->actingAs(editorUser())->getJson('/api/v1/review-queue')
+    $this->actingAs(reviewerUser())->getJson('/api/v1/review-queue')
         ->assertOk()
         ->assertJsonPath('data.0.title.en', 'Taha Al-Sabban')
         ->assertJsonPath('data.0.title.ar', 'طه الصبان')

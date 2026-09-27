@@ -45,16 +45,5 @@
     "name": "Name",
     "email": "Email",
     "roles": "Roles"
-  },
-  "roles": {
-    "reader": "Reader",
-    "contributor": "Contributor",
-    "verified_researcher": "Verified researcher",
-    "institution": "Institution",
-    "artist_claimed": "Claimed artist",
-    "editor": "Editor",
-    "reviewer": "Reviewer",
-    "admin": "Admin",
-    "superadmin": "Superadmin"
   }
 }

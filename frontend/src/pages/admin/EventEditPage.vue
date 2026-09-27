@@ -213,8 +213,11 @@ async function sendForReview(): Promise<void> {
   try {
     await submitDraftForReview();
     draftNotice.value = t("draft.submitSuccess");
-  } catch {
-    error.value = t("draft.submitError");
+  } catch (err) {
+    // A submit refusal (e.g. "nothing in this draft differs from the
+    // current record") has a specific, actionable reason; showing only the
+    // generic fallback here hid it.
+    error.value = err instanceof Error ? err.message : t("draft.submitError");
   }
 }
 

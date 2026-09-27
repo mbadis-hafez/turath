@@ -136,9 +136,9 @@ class MaterialSubmissionController
 
             if ($newStatus === 'withdrawn') {
                 (new SubmissionCataloger)->purgeFiles($submission);
-                $this->closeQueue($submission, 'dismissed');
+                $this->closeQueue($submission, 'dismissed', $request->user()->id);
             } elseif ($newStatus !== null) {
-                $this->closeQueue($submission, 'acknowledged');
+                $this->closeQueue($submission, 'acknowledged', $request->user()->id);
             }
         });
 
@@ -165,7 +165,7 @@ class MaterialSubmissionController
         }
 
         $items = (new SubmissionCataloger)->catalog($submission, $data['items'], $request->user());
-        $this->closeQueue($submission, 'acknowledged');
+        $this->closeQueue($submission, 'acknowledged', $request->user()->id);
 
         return response()->json(['data' => [
             ...self::present($submission->refresh(), true),
@@ -186,7 +186,7 @@ class MaterialSubmissionController
                 'reviewed_at' => now(),
             ]);
             (new SubmissionCataloger)->purgeFiles($submission);
-            $this->closeQueue($submission, 'dismissed');
+            $this->closeQueue($submission, 'dismissed', $request->user()->id);
         });
 
         return response()->json(['data' => self::present($submission->refresh(), true)]);
@@ -201,10 +201,10 @@ class MaterialSubmissionController
         return Storage::disk($record->disk)->response($record->path, $record->original_filename);
     }
 
-    private function closeQueue(MaterialSubmission $submission, string $status): void
+    private function closeQueue(MaterialSubmission $submission, string $status, int $actedByUserId): void
     {
         ReviewQueueItem::where('citable_type', MaterialSubmission::class)->where('citable_id', $submission->id)
-            ->where('status', 'pending')->update(['status' => $status]);
+            ->where('status', 'pending')->update(['status' => $status, 'acted_by_user_id' => $actedByUserId, 'acted_at' => now()]);
     }
 
     /**

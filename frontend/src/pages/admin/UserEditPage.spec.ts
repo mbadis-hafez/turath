@@ -12,6 +12,15 @@ import type { AdminUserDetail } from "@/types/user";
 const api = vi.hoisted(() => ({ fetchUser: vi.fn(), createUser: vi.fn(), updateUser: vi.fn(), sendInvitation: vi.fn() }));
 vi.mock("@/api/users", () => api);
 
+const rolesApi = vi.hoisted(() => ({ listRoles: vi.fn() }));
+vi.mock("@/api/roles", () => rolesApi);
+
+let nextRoleId = 1;
+const roleOption = (name: string, en: string) => ({
+  id: nextRoleId++, name, display_name: { ar: en, en }, description: { ar: null, en: null },
+  is_built_in: true, permissions_editable: true, users_count: 0, permissions_count: 0,
+});
+
 const detail: AdminUserDetail = {
   id: 2, name: "Samar", email: "samar@example.com", roles: ["reviewer"], permissions: [], is_active: true,
 };
@@ -57,6 +66,9 @@ beforeEach(() => {
   api.createUser.mockReset().mockResolvedValue({ data: detail });
   api.updateUser.mockReset().mockResolvedValue({ data: detail });
   api.sendInvitation.mockReset().mockResolvedValue(undefined);
+  rolesApi.listRoles.mockReset().mockResolvedValue([
+    roleOption("reader", "Reader"), roleOption("reviewer", "Reviewer"),
+  ]);
   router = makeRouter();
 });
 

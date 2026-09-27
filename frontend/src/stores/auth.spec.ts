@@ -76,6 +76,52 @@ describe("stores/auth", () => {
     expect(auth.hasRole("admin")).toBe(false);
   });
 
+  it("can() reflects a permission granted after the initial load, once refetched", async () => {
+    // Simulates FR-008: an administrator grants a permission mid-session.
+    // The interface only learns about it by calling fetchUser() again — this
+    // is what the router guard does on navigation into a permission-gated
+    // route (research R4), not tested here since that's routing, not store
+    // behaviour; this asserts the store side actually updates when it does.
+    vi.mocked(authApi.fetchUser).mockResolvedValueOnce(user);
+    const auth = useAuthStore();
+    await auth.fetchUser();
+    expect(auth.can("roles.manage")).toBe(false);
+
+    vi.mocked(authApi.fetchUser).mockResolvedValueOnce({ ...user, permissions: [...user.permissions, "roles.manage"] });
+    await auth.fetchUser();
+
+    expect(auth.can("roles.manage")).toBe(true);
+  });
+
+  it("can() reflects a permission revoked after the initial load, once refetched", async () => {
+    vi.mocked(authApi.fetchUser).mockResolvedValueOnce({ ...user, permissions: [...user.permissions, "roles.manage"] });
+    const auth = useAuthStore();
+    await auth.fetchUser();
+    expect(auth.can("roles.manage")).toBe(true);
+
+    vi.mocked(authApi.fetchUser).mockResolvedValueOnce(user);
+    await auth.fetchUser();
+
+    expect(auth.can("roles.manage")).toBe(false);
+  });
+
+  it("a refetch failure after the session is established keeps the last-known user, not logs out", async () => {
+    // Guards against a real bug found while wiring T060: navigating into a
+    // permission-gated route refetches the user, and a transient network
+    // error there must not sign someone out mid-session the way an initial
+    // bootstrap failure does.
+    vi.mocked(authApi.fetchUser).mockResolvedValueOnce(user);
+    const auth = useAuthStore();
+    await auth.fetchUser();
+    expect(auth.user).toEqual(user);
+
+    vi.mocked(authApi.fetchUser).mockRejectedValueOnce(new Error("network blip"));
+    await auth.fetchUser();
+
+    expect(auth.user).toEqual(user);
+    expect(auth.isAuthenticated).toBe(true);
+  });
+
   it("logout clears the user even if the request fails", async () => {
     vi.mocked(authApi.logout).mockImplementation(() =>
       Promise.reject(new ApiError("network", "offline")),

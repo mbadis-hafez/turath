@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\ReviewType;
 use App\Support\Completeness\DashboardRecordsCollector;
 use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -12,19 +13,24 @@ class DashboardExportController
 {
     public function __invoke(Request $request): StreamedResponse
     {
-        $canManage = $request->user()?->can('dashboard.manage') ?? false;
+        $user = $request->user();
+        $canManage = $user?->can('dashboard.manage') ?? false;
         $targetUserId = $request->input('user_id');
 
-        if ($targetUserId !== null && (int) $targetUserId !== $request->user()->id) {
+        if ($targetUserId !== null && (int) $targetUserId !== $user->id) {
             abort_unless($canManage, 403);
         }
 
-        $userId = $targetUserId !== null ? (int) $targetUserId : $request->user()->id;
-
         $entityTypes = (array) $request->input('entity_type', array_keys(DashboardRecordsCollector::ENTITY_TYPES));
         $severities = (array) $request->input('severity', []);
+        $collector = new DashboardRecordsCollector;
 
-        $rows = (new DashboardRecordsCollector)->collect($userId, $entityTypes, $severities);
+        // Mirrors DashboardRecordsController: the export matches whatever scope the on-screen list uses.
+        if ($targetUserId === null) {
+            $rows = $collector->collectForUser($user->id, ReviewType::reviewableBy($user), $entityTypes, $severities);
+        } else {
+            $rows = $collector->collect((int) $targetUserId, $entityTypes, $severities);
+        }
 
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();

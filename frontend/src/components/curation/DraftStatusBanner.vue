@@ -11,6 +11,8 @@ defineProps<{
   canSubmit: boolean;
   submitting: boolean;
   reviewNote: string | null;
+  /** True for a record's creation-review item (005) — no discard action, and the draft badge reads as "new record" rather than "unsaved changes." */
+  isCreation?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -51,8 +53,9 @@ const confirmDiscard = ref(false);
     :data-state="status"
   >
     <p class="text-sm font-semibold" :class="status === 'draft' ? 'text-ink' : 'text-danger'">
-      {{ status === "draft" ? t("draft.draftBadge") : t("draft.changesRequested") }}
+      {{ status === "draft" ? t(isCreation ? "draft.creationBadge" : "draft.draftBadge") : t("draft.changesRequested") }}
     </p>
+    <p v-if="status === 'draft' && isCreation" class="mt-1 text-sm text-ink-muted">{{ t("draft.creationHint") }}</p>
     <p v-if="status === 'changes_requested' && reviewNote" class="mt-1 text-sm text-ink" data-testid="reviewer-note">
       {{ t("draft.reviewerNote", { note: reviewNote }) }}
     </p>
@@ -69,7 +72,7 @@ const confirmDiscard = ref(false);
         {{ submitting ? t("common.loading") : t("draft.sendForReview") }}
       </button>
       <button
-        v-if="status === 'draft'"
+        v-if="status === 'draft' && !isCreation"
         type="button"
         class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-surface"
         data-testid="discard-draft"

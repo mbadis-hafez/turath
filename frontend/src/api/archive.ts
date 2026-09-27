@@ -67,6 +67,10 @@ export function submitArchiveReview(id: number): Promise<{ data: ArchiveEdit }> 
   return request({ method: "POST", url: `/api/v1/archive-items/${id}/submit-review` });
 }
 
+export function publishArchiveItem(id: number): Promise<{ data: ArchiveItem }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${id}/publish` });
+}
+
 export function addArchiveLink(id: number, link: { linkable_type: "artist" | "artwork" | "event"; linkable_id: number; role: string }): Promise<unknown> {
   return request({ method: "POST", url: `/api/v1/archive-items/${id}/links`, data: link });
 }

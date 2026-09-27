@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 
-import { createArtwork, updateArtworkImage, uploadArtworkImage } from "@/api/artworkCuration";
+import { createArtwork, updateArtworkImage, uploadArtworkImages } from "@/api/artworkCuration";
 import ErrorState from "@/components/common/ErrorState.vue";
 import ArtworkFormSections from "@/components/curation/ArtworkFormSections.vue";
 import ArtworkImagesPanel from "@/components/curation/ArtworkImagesPanel.vue";
@@ -11,7 +11,7 @@ import { useArtworkForm } from "@/composables/useArtworkForm";
 import { useLocalePath } from "@/composables/useLocalePath";
 import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
-import type { ArtworkImage, ImageRights } from "@/types/artworkCuration";
+import { MAX_ARTWORK_IMAGES, type ArtworkImage, type ImageRights } from "@/types/artworkCuration";
 
 const router = useRouter();
 const { t } = useI18n();
@@ -34,8 +34,21 @@ const images = computed<ArtworkImage[]>(() =>
   })),
 );
 
-function addImage(file: File, rights: ImageRights): void {
-  pending.value.push({ id: nextId++, file, url: URL.createObjectURL(file), rights, isFinal: pending.value.length === 0 });
+const imageIssues = ref<string[]>([]);
+
+function isSameFile(a: File, b: File): boolean {
+  return a.name === b.name && a.size === b.size && a.lastModified === b.lastModified;
+}
+
+function addImage(files: File[], rights: ImageRights): void {
+  imageIssues.value = [];
+  for (const file of files) {
+    if (pending.value.some((p) => isSameFile(p.file, file))) {
+      imageIssues.value.push(t("curation.artworkImages.alreadyQueued", { filename: file.name }));
+      continue;
+    }
+    pending.value.push({ id: nextId++, file, url: URL.createObjectURL(file), rights, isFinal: pending.value.length === 0 });
+  }
 }
 function makeFinal(id: number): void {
   pending.value.forEach((p) => (p.isFinal = p.id === id));
@@ -78,6 +91,7 @@ const valid = computed(() => form.isUntitled || filled(form.title.ar) || filled(
 const submitting = ref(false);
 const error = ref<string | null>(null);
 const createdId = ref<number | null>(null);
+const hasFailure = ref(false);
 
 async function submit(): Promise<void> {
   submitting.value = true;
@@ -93,16 +107,44 @@ async function submit(): Promise<void> {
   }
 
   // The artwork exists now, so image failures must not block navigation.
+  // Batched per rights value (usually one call): each pending image can carry
+  // its own rights_status (set via the per-row selector before save), and the
+  // upload endpoint applies one rights_status to a whole batch.
   let failed = false;
-  for (const p of pending.value) {
+  let primaryImageId: number | null = null;
+  const groups = new Map<ImageRights, Pending[]>();
+  for (const p of pending.value) groups.set(p.rights, [...(groups.get(p.rights) ?? []), p]);
+
+  imageIssues.value = [];
+  for (const [rights, group] of groups) {
     try {
-      const list = (await uploadArtworkImage(newId, p.file, p.rights)).data;
-      if (p.isFinal) await updateArtworkImage(newId, Math.max(...list.map((i) => i.id)), { is_final: true });
+      const { results } = await uploadArtworkImages(newId, group.map((p) => p.file), rights);
+      results.forEach((r, i) => {
+        if (r.status === "duplicate") {
+          failed = true;
+          imageIssues.value.push(t("curation.artworkImages.alreadyAttached", { filename: r.filename }));
+        } else if (r.status === "rejected") {
+          failed = true;
+          imageIssues.value.push(t("curation.artworkImages.rejected", { filename: r.filename, message: r.message }));
+        } else if (group[i].isFinal) {
+          primaryImageId = r.image_id;
+        }
+      });
     } catch {
       failed = true;
     }
   }
+
+  if (primaryImageId !== null) {
+    try {
+      await updateArtworkImage(newId, primaryImageId, { is_final: true });
+    } catch {
+      failed = true;
+    }
+  }
+
   submitting.value = false;
+  hasFailure.value = failed;
   if (!failed) await router.push(localePath("admin.artworks.show", { id: newId }));
 }
 </script>
@@ -132,14 +174,22 @@ async function submit(): Promise<void> {
       </div>
       <p v-if="!valid" class="mt-2 text-sm text-ink-muted">{{ t("curation.artworkCreate.titleRequired") }}</p>
       <p v-if="error" class="mt-2 text-sm text-danger" role="alert">{{ error }}</p>
-      <p v-if="createdId && !submitting" class="mt-2 text-sm text-warn" data-testid="images-failed">
-        {{ t("curation.artworkCreate.imagesFailed") }}
-        <RouterLink :to="localePath('admin.artworks.show', { id: createdId })" class="font-medium underline">{{ t("curation.artworkCreate.openArtwork") }}</RouterLink>
-      </p>
+      <div v-if="createdId && !submitting && hasFailure" class="mt-2 text-sm text-warn" data-testid="images-failed">
+        <p>
+          {{ t("curation.artworkCreate.imagesFailed") }}
+          <RouterLink :to="localePath('admin.artworks.show', { id: createdId })" class="font-medium underline">{{ t("curation.artworkCreate.openArtwork") }}</RouterLink>
+        </p>
+        <ul v-if="imageIssues.length > 0" class="mt-1 list-inside list-disc" data-testid="image-issues">
+          <li v-for="(issue, i) in imageIssues" :key="i">{{ issue }}</li>
+        </ul>
+      </div>
+      <ul v-else-if="imageIssues.length > 0" class="mt-2 list-inside list-disc text-sm text-warn" data-testid="image-issues">
+        <li v-for="(issue, i) in imageIssues" :key="i">{{ issue }}</li>
+      </ul>
 
       <div class="mt-8 grid gap-10 lg:grid-cols-[20rem_1fr]">
         <aside class="space-y-6">
-          <ArtworkImagesPanel :images="images" @upload="addImage" @final="makeFinal" @rights="setRights" @remove="removeImage" />
+          <ArtworkImagesPanel :images="images" :max="MAX_ARTWORK_IMAGES" @upload="addImage" @final="makeFinal" @rights="setRights" @remove="removeImage" />
 
           <section class="rounded-lg border border-danger bg-danger-soft p-4">
             <h2 class="text-base font-semibold text-danger">{{ t("curation.artworkDetail.checklist") }}</h2>

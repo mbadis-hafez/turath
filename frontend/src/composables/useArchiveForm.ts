@@ -9,7 +9,7 @@ export interface ArchiveFormState {
   code: string; type: ArchiveItemType; titleAr: string; titleEn: string; placeAr: string; placeEn: string;
   descriptionAr: string; descriptionEn: string; people: string[]; keywords: string[];
   sourceName: string; holderAr: string; holderEn: string; license: string; rightsStatus: RightsStatus; verification: string;
-  access: AccessLevel;
+  access: AccessLevel; digitizedAt: string;
 }
 
 /** Editable archive fields shared by the add and edit modes. */
@@ -18,7 +18,7 @@ export function useArchiveForm() {
     code: "", type: "image", titleAr: "", titleEn: "", placeAr: "", placeEn: "",
     descriptionAr: "", descriptionEn: "", people: [], keywords: [],
     sourceName: "", holderAr: "", holderEn: "", license: "", rightsStatus: "unknown", verification: "",
-    access: "institution_only",
+    access: "institution_only", digitizedAt: "",
   });
   const date = useFuzzyDate();
 
@@ -33,7 +33,7 @@ export function useArchiveForm() {
     form.sourceName = a.source_name ?? "";
     form.holderAr = a.rights_holder.ar ?? ""; form.holderEn = a.rights_holder.en ?? "";
     form.license = a.license ?? ""; form.rightsStatus = a.rights_status; form.verification = a.verification_reference ?? "";
-    form.access = a.access_level;
+    form.access = a.access_level; form.digitizedAt = a.digitized_at ?? "";
   }
 
   /** On existing items the date is only sent when edited, so untouched dates survive byte for byte. */
@@ -49,6 +49,7 @@ export function useArchiveForm() {
       rights_holder: { ar: blank(form.holderAr), en: blank(form.holderEn) },
       rights_status: form.rightsStatus,
       license: blank(form.license),
+      digitized_at: blank(form.digitizedAt),
       verification_reference: blank(form.verification),
       access_level: form.access,
       legacy_ref: blank(form.code),

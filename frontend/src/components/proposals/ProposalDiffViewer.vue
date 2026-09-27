@@ -6,8 +6,9 @@ import { getProposalDiff, requestChanges as requestProposalChanges } from "@/api
 import { approveProposal, rejectProposal } from "@/api/proposals";
 import FieldDiffTable from "@/components/proposals/FieldDiffTable.vue";
 import ProposalSectionDiffs from "@/components/proposals/ProposalSectionDiffs.vue";
+import { useLocalePath } from "@/composables/useLocalePath";
 import { ApiError } from "@/types/api";
-import type { Proposal, ProposalConflict } from "@/types/proposal";
+import type { Proposal, ProposalConflict, RecordType } from "@/types/proposal";
 import type { SectionDiff } from "@/types/proposalDiff";
 import { formatDateTime } from "@/utils/format";
 import type { AppLocale } from "@/i18n";
@@ -16,6 +17,22 @@ const props = defineProps<{ proposal: Proposal; canReview: boolean; currentUserI
 const emit = defineEmits<{ reviewed: [] }>();
 
 const { t, locale } = useI18n();
+const { localePath } = useLocalePath();
+
+/** Where this record's own curation/edit page lives — there is no diff for a
+ * creation review (nothing to diff against), so reviewers read the proposed
+ * content directly on the record's page instead (005). */
+const RECORD_ROUTE: Record<RecordType, string> = {
+  artists: "admin.artists.show",
+  artworks: "admin.artworks.show",
+  events: "admin.events.edit",
+  "archive-items": "admin.archive.edit",
+};
+const recordHref = computed(() => {
+  const type = props.proposal.record.type;
+  if (type === null) return null;
+  return localePath(RECORD_ROUTE[type], { id: props.proposal.record.id });
+});
 
 const busy = ref(false);
 const error = ref<string | null>(null);
@@ -46,7 +63,7 @@ let controller: AbortController | null = null;
 
 async function loadDiff(): Promise<void> {
   controller?.abort();
-  if (!isSectioned.value) return;
+  if (!isSectioned.value || props.proposal.is_creation) return;
   const self = new AbortController();
   controller = self;
   sections.value = null;
@@ -149,7 +166,11 @@ const STATUS_CLASS: Record<string, string> = {
       </ul>
     </div>
 
-    <template v-if="isSectioned">
+    <div v-if="proposal.is_creation" class="mt-4 rounded-md border border-line bg-neutral-soft p-3 text-sm text-ink" data-testid="creation-review-notice">
+      <p>{{ t("proposals.creationNoDiff") }}</p>
+      <RouterLink v-if="recordHref" :to="recordHref" target="_blank" class="mt-2 inline-block font-medium underline" data-testid="creation-review-record-link">{{ t("proposals.creationViewRecord") }}</RouterLink>
+    </div>
+    <template v-else-if="isSectioned">
       <p v-if="sections === null && !diffFailed" class="mt-4 text-xs text-ink-muted" data-testid="diff-loading">{{ t("proposals.diffLoading") }}</p>
       <ProposalSectionDiffs v-else-if="!diffFailed && sections !== null" class="mt-4" :sections="sections" />
       <FieldDiffTable v-else class="mt-4" :rows="rows" :labels="proposal.field_labels" />

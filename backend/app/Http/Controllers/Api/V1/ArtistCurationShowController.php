@@ -7,6 +7,7 @@ use App\Models\Artist;
 use App\Models\File;
 use App\Models\RecordCompleteness;
 use App\Support\Curation\ArtistCurationService;
+use App\Support\Proposals\CreationReviewService;
 use App\ValueObjects\PartialDate;
 use Illuminate\Http\JsonResponse;
 
@@ -18,6 +19,7 @@ class ArtistCurationShowController
 
         $materials = $artist->archiveItemLinks()->with('archiveItem')->get()->pluck('archiveItem')->filter()->unique('id');
         $completeness = RecordCompleteness::where('citable_type', ArchiveItem::class)->whereIn('citable_id', $materials->pluck('id'))->get()->keyBy('citable_id');
+        $creationReview = $artist->creation_approved_at === null ? (new CreationReviewService)->openFor($artist) : null;
 
         return response()->json(['data' => [
             'id' => $artist->id,
@@ -30,6 +32,15 @@ class ArtistCurationShowController
             'identified_through' => ['note' => $artist->identified_through_note, 'date' => $artist->identified_through_date?->toDateString()],
             'bio' => ['ar' => $artist->bio_ar, 'en' => $artist->bio_en, 'source_type' => $artist->bio_source_type],
             'verified_status' => $artist->verified_status,
+            'publication_status' => $artist->publication_status,
+            'published_at' => $artist->published_at?->toIso8601String(),
+            'creation_approved_at' => $artist->creation_approved_at?->toIso8601String(),
+            'creation_review' => $creationReview === null ? null : [
+                'proposal_id' => $creationReview->id,
+                'status' => $creationReview->status,
+                'review_note' => $creationReview->review_note,
+                'created_by_user_id' => $creationReview->proposed_by_user_id,
+            ],
             'nationality' => ['ar' => $artist->nationality_ar, 'en' => $artist->nationality_en],
             'classification' => ['ar' => $artist->classification_ar, 'en' => $artist->classification_en],
             'birth' => $artist->birth?->toArray(),
@@ -52,8 +63,10 @@ class ArtistCurationShowController
                 'owner_pre_agreement' => ['status' => $artist->owner_pre_agreement_status],
             ],
             'checklist' => $service->checklist($artist),
+            'admin_checklist' => $service->adminChecklist($artist),
             'public_visibility' => $service->publicVisibility($artist),
             'verify_blockers' => $service->verifyErrors($artist),
+            'publish_blockers' => $service->publishErrors($artist),
             'themes' => $artist->themes->map(fn ($t) => ['id' => $t->id, 'label' => ['ar' => $t->label_ar, 'en' => $t->label_en]])->values(),
             'linked_materials' => $materials->map(fn ($m) => [
                 'id' => $m->id,

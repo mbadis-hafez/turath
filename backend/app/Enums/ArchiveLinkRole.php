@@ -12,4 +12,6 @@ enum ArchiveLinkRole: string
     case Subject = 'subject';
     case PrimaryDocumentation = 'primary_documentation';
     case EventDocumentation = 'event_documentation';
+    case AuthorizationLetter = 'authorization_letter';
+    case NameVerification = 'name_verification';
 }

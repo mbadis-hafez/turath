@@ -23,17 +23,3 @@ export interface UserPayload {
   role?: string;
   is_active?: boolean;
 }
-
-export const ADMIN_ROLES = [
-  "reader",
-  "contributor",
-  "verified_researcher",
-  "institution",
-  "artist_claimed",
-  "editor",
-  "reviewer",
-  "admin",
-  "superadmin",
-] as const;
-
-export type AdminRole = (typeof ADMIN_ROLES)[number];

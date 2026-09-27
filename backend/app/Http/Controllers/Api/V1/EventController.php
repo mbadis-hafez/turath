@@ -98,7 +98,7 @@ class EventController
         return response()->json(['data' => $this->bundle($event->load(['holder', 'themes', 'participants.participant']), true)]);
     }
 
-    public function publish(Event $event): JsonResponse
+    public function publish(Request $request, Event $event): JsonResponse
     {
         $calculator = new CompletenessCalculator;
         $rules = $calculator->rulesFor(Event::class);
@@ -112,6 +112,8 @@ class EventController
         }
 
         $event->publication_status = 'published';
+        $event->published_by_user_id = $request->user()->id;
+        $event->published_at = now();
         $event->save();
 
         return response()->json(['data' => $this->bundle($event->load(['holder', 'themes', 'participants.participant']), true)]);

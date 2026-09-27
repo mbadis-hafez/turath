@@ -1,0 +1,570 @@
+[
+  {
+    "key": "h_013e4a353551",
+    "name_en": "Alaa Abdullah Alsheikh",
+    "name_ar": null,
+    "type": "family",
+    "city_en": "Dhahran, KSA",
+    "city_ar": "الظهران، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_016c2e03f874",
+    "name_en": "Ahmed Tayeb Munshi",
+    "name_ar": "أحمد طيب منشي",
+    "type": "other",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_0315ada7c2f3",
+    "name_en": "Hussam Abdulaziz Hammad",
+    "name_ar": "حسام عبد العزیز حماد",
+    "type": "family",
+    "city_en": "Riyadh, KSA",
+    "city_ar": "الرياض، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_093989d2ed85",
+    "name_en": "Nasser Almousa",
+    "name_ar": "ناصر الموسى",
+    "type": "other",
+    "city_en": "Riyadh, KSA",
+    "city_ar": "الرياض، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_0f9ef8d2655b",
+    "name_en": "Ali Alsaffar",
+    "name_ar": "علي الصفار",
+    "type": "other",
+    "city_en": "Qatif, KSA",
+    "city_ar": "القطيف، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_11c73f5ef965",
+    "name_en": "TBC",
+    "name_ar": null,
+    "type": "other",
+    "city_en": "Not available",
+    "city_ar": "غير متوفر"
+  },
+  {
+    "key": "h_1229a8452615",
+    "name_en": "Turki Muhammad Aldosary",
+    "name_ar": "تركي محمد الدوسري",
+    "type": "other",
+    "city_en": "Dammam, KSA",
+    "city_ar": "الدمام، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_130b2d65d185",
+    "name_en": "The Jordan National Gallery of Fine Arts",
+    "name_ar": "المتحف الوطني الأردني للفنون الجميلة",
+    "type": "institution",
+    "city_en": "Amman, Jordan",
+    "city_ar": "عمان، الأردن"
+  },
+  {
+    "key": "h_16ee83d2c0dc",
+    "name_en": "Abduraouf Hasan Khaleel Museum",
+    "name_ar": "متحف عبدالؤوف حسن خليل",
+    "type": "institution",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_17b21530ec3a",
+    "name_en": "Ehab Sabri",
+    "name_ar": null,
+    "type": "private_collector",
+    "city_en": "Not available",
+    "city_ar": "غير متوفر"
+  },
+  {
+    "key": "h_19459bee9679",
+    "name_en": "Amina Almousa",
+    "name_ar": "امينة الموسى",
+    "type": "family",
+    "city_en": "Dammam, KSA",
+    "city_ar": "الدمام، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_2423dc747519",
+    "name_en": "Marwan Abdulaziz Kaaki",
+    "name_ar": "مروان عبدالعزيز كعكي",
+    "type": "family",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_25d3df1b9cf7",
+    "name_en": "Nabil Mohammed Alsandal (artist's son)",
+    "name_ar": null,
+    "type": "family",
+    "city_en": "Al-Hofuf, KSA",
+    "city_ar": "الهفوف، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_26be15f7db34",
+    "name_en": "Thafer Rasem",
+    "name_ar": "ظافر محمد راسم",
+    "type": "family",
+    "city_en": "Dhahran, KSA",
+    "city_ar": "الظهران، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_27576229fab4",
+    "name_en": "Saleh Alnuquedan",
+    "name_ar": null,
+    "type": "other",
+    "city_en": "Unaizah (Al-Qassim), KSA",
+    "city_ar": "عنيزة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_282978f1f9ae",
+    "name_en": "Dr. Mohammad Alkurbi Private Collection",
+    "name_ar": "مجموعة الدكتور محمد الكربي الخاصة",
+    "type": "private_collector",
+    "city_en": "Makkah, KSA",
+    "city_ar": "مكة المكرمة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_2aceb512b9b4",
+    "name_en": "Taha Sabban",
+    "name_ar": "طه  الصبان",
+    "type": "other",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_2c298c521f0f",
+    "name_en": "Artist's estate",
+    "name_ar": "ورثة الفنان",
+    "type": "family",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_3aacc026bd43",
+    "name_en": "Fahad AlRubaiq",
+    "name_ar": "فهد الربيق",
+    "type": "other",
+    "city_en": "Riyadh, KSA",
+    "city_ar": "الرياض، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_3b349c5769fb",
+    "name_en": "Faisal Tamer",
+    "name_ar": "فيصل تمر",
+    "type": "private_collector",
+    "city_en": "Not available",
+    "city_ar": "غير متوفر"
+  },
+  {
+    "key": "h_3b385853d963",
+    "name_en": "Nazih Abdullah Mousa",
+    "name_ar": "نزيه عبدالله  موسى",
+    "type": "family",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_47f0624a440a",
+    "name_en": "Fouad Mougharbel",
+    "name_ar": null,
+    "type": "other",
+    "city_en": "Madinah, KSA",
+    "city_ar": "المدينة المنورة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_4a11caa5a7b3",
+    "name_en": "Mfareh Asiri",
+    "name_ar": "مفرح عسيري",
+    "type": "other",
+    "city_en": "Abha, KSA",
+    "city_ar": "أبها، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_4b7ae64ee2c5",
+    "name_en": "Suleiman Bajabaa",
+    "name_ar": null,
+    "type": "other",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_4e98e55624d1",
+    "name_en": "From the private collection of Hamza Seirafi",
+    "name_ar": null,
+    "type": "private_collector",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_523b4e73ad99",
+    "name_en": "Abdulhameed Albaqshi",
+    "name_ar": "عبد الحميد البقشي",
+    "type": "other",
+    "city_en": "Al-Ahsa, KSA",
+    "city_ar": "الأحساء، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_52dd6812d94e",
+    "name_en": "Private collector",
+    "name_ar": "مجموعة خاصة",
+    "type": "private_collector",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_58c898d5ad61",
+    "name_en": "Faridah Ahmed Alsebt",
+    "name_ar": "فريدة أحمد السبت",
+    "type": "family",
+    "city_en": "Al-Ahsa, KSA",
+    "city_ar": "الأحساء، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_5961dc5e775e",
+    "name_en": "Faisal Samra",
+    "name_ar": "فيصل سمرة",
+    "type": "other",
+    "city_en": "Bahrain",
+    "city_ar": "البحرين"
+  },
+  {
+    "key": "h_5eadea257c6b",
+    "name_en": "Nabeel AlNaqeeb",
+    "name_ar": "نبيل النقيب",
+    "type": "private_collector",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_644b9046d1c0",
+    "name_en": "Abdullah Hammas",
+    "name_ar": "عبدالله حماس",
+    "type": "other",
+    "city_en": "Riyadh, KSA",
+    "city_ar": "الرياض، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_7425de69e5b8",
+    "name_en": "Abstract Art Gallery",
+    "name_ar": "تجريد للفنون",
+    "type": "institution",
+    "city_en": "Riyadh, KSA",
+    "city_ar": "الرياض، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_75b5b1815aff",
+    "name_en": "Ali Altokhais",
+    "name_ar": null,
+    "type": "other",
+    "city_en": "Dawadmi, KSA",
+    "city_ar": "الدوادمي، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_77d9660ace90",
+    "name_en": "Maryam Mushaikh",
+    "name_ar": "مريم مشيخ",
+    "type": "private_collector",
+    "city_en": "Madinah, KSA",
+    "city_ar": "المدينة المنورة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_792098c32d45",
+    "name_en": "Mohammad Alalyani private collection",
+    "name_ar": "مجموعة محمد العلياني الخاصة",
+    "type": "private_collector",
+    "city_en": "Riyadh, KSA",
+    "city_ar": "الرياض، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_84f8f7aa1be2",
+    "name_en": "Ibrahim Bugis",
+    "name_ar": "إبراهيم بوقس",
+    "type": "other",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_8571b883c7a7",
+    "name_en": "Faisal Abdulaziz Mohammad Kaki",
+    "name_ar": "فيصل عبدالعزيز محمد كعكي",
+    "type": "family",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_8d30c143c3a7",
+    "name_en": "Abdulrahman Alsoliman",
+    "name_ar": "عبدالرحمن السليمان",
+    "type": "other",
+    "city_en": "Dammam, KSA",
+    "city_ar": "الدمام، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_8f4a2de1593b",
+    "name_en": "Ibrahim Alnughaither",
+    "name_ar": "إبراهيم النغيثر",
+    "type": "other",
+    "city_en": "Riyadh, KSA",
+    "city_ar": "الرياض، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_91a60946725a",
+    "name_en": "Ibrahim Alfassam",
+    "name_ar": null,
+    "type": "other",
+    "city_en": "Riyadh, KSA",
+    "city_ar": "الرياض، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_91c274dfaef2",
+    "name_en": "The National Guard - Last known owner",
+    "name_ar": "الحرس الوطني - المالك الأخير المعروف",
+    "type": "other",
+    "city_en": "KSA",
+    "city_ar": "المملكة العربية السعودية"
+  },
+  {
+    "key": "h_9acfc6ff5128",
+    "name_en": "Yousef Jaha",
+    "name_ar": null,
+    "type": "other",
+    "city_en": "Makkah, KSA",
+    "city_ar": "مكة المكرمة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_a88c9d1793aa",
+    "name_en": "Ahmad Almaghlouth",
+    "name_ar": "احمد المغلوث",
+    "type": "other",
+    "city_en": "Al-Ahsa, KSA",
+    "city_ar": "الأحساء، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_aa2790ec21dc",
+    "name_en": "Mohammad Alsaqabi",
+    "name_ar": "محمد الصقعبي",
+    "type": "other",
+    "city_en": "Uyun Al-Jawa (Al-Qassim), KSA",
+    "city_ar": "عيون الجواء، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_b1ba080dda13",
+    "name_en": "Hamza Bajouda",
+    "name_ar": "حمزة باجودة",
+    "type": "other",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_b2f8489bbd55",
+    "name_en": "Not available",
+    "name_ar": "غير متوفر",
+    "type": "private_collector",
+    "city_en": "Not available",
+    "city_ar": "غير متوفر"
+  },
+  {
+    "key": "h_b54d423b80f2",
+    "name_en": "Kamal Almualem",
+    "name_ar": "كمال المعلّم",
+    "type": "other",
+    "city_en": "Dammam, KSA",
+    "city_ar": "الدمام، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_b6f0c77a88da",
+    "name_en": "Shirine Faisal Ahmad Zaidan",
+    "name_ar": "شيرين فيصل أحمد زيدان",
+    "type": "private_collector",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_b723ae90409a",
+    "name_en": "Adel Ibrahim Sheerah - Last known owner",
+    "name_ar": null,
+    "type": "private_collector",
+    "city_en": "Not available",
+    "city_ar": "غير متوفر"
+  },
+  {
+    "key": "h_b8dc9bca787f",
+    "name_en": "Dr. Nada Al-Rikf",
+    "name_ar": "الدكتورة ندى الركف",
+    "type": "private_collector",
+    "city_en": "Riyadh, KSA",
+    "city_ar": "الرياض، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_b9411495d3b8",
+    "name_en": "Mohammed Alajam",
+    "name_ar": "محمد الأعجم",
+    "type": "other",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_c03d82fe9d1d",
+    "name_en": "Abdulaziz Ahmed Zeidan Private Collection",
+    "name_ar": "مجموعة عبدالعزيز أحمد زيدان الخاصة",
+    "type": "private_collector",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_c180589be94d",
+    "name_en": "Abdullah Alshalti",
+    "name_ar": "عبد الله الشلتي",
+    "type": "other",
+    "city_en": "Abha, KSA",
+    "city_ar": "أبها، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_c1be4989d023",
+    "name_en": "Khalil Hassan Khalil",
+    "name_ar": "خليل حسن خليل",
+    "type": "other",
+    "city_en": "Jazan, KSA",
+    "city_ar": "جازان، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_c6fc8200cb08",
+    "name_en": "Fahad Sharif (to stay anonymus)",
+    "name_ar": null,
+    "type": "private_collector",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_c8d1771b6e44",
+    "name_en": "Abduraof Hasan Khaleel Museum",
+    "name_ar": "متحف عبدالؤوف حسن خليل",
+    "type": "institution",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_ca52f0eea60a",
+    "name_en": "Najah Mousa",
+    "name_ar": "نجاح موسى",
+    "type": "family",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_caa8555bbdfa",
+    "name_en": "Saud Alqahtani",
+    "name_ar": null,
+    "type": "other",
+    "city_en": "Abha, KSA",
+    "city_ar": "أبها، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_caf39c089524",
+    "name_en": "Mohammed Abdullah Al-Saawi - Last known owner",
+    "name_ar": null,
+    "type": "private_collector",
+    "city_en": "Not available",
+    "city_ar": "غير متوفر"
+  },
+  {
+    "key": "h_ce7f01c9fddf",
+    "name_en": "Dia Aziz Dia",
+    "name_ar": "ضياء عزيز ضياء",
+    "type": "other",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_d40442a0a073",
+    "name_en": "Abdallah Nassif",
+    "name_ar": "عبدالله نصيف",
+    "type": "private_collector",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_d6c8ce3e1102",
+    "name_en": "Saudi Arabian Society for Culture and the Arts - Riyadh Branch",
+    "name_ar": "الجمعية العربية السعودية للثقافة والفنون بفرع الرياض",
+    "type": "institution",
+    "city_en": "Riyadh, KSA",
+    "city_ar": "الرياض، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_d6fbeacc922e",
+    "name_en": "Hewar Art Gallery",
+    "name_ar": "حوار للفنون التشكيلية",
+    "type": "institution",
+    "city_en": "Riyadh, KSA",
+    "city_ar": "الرياض، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_e3df92345904",
+    "name_en": "Baker Sheikhoun",
+    "name_ar": "بكر شيخون",
+    "type": "other",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_eac19a19ff8a",
+    "name_en": "Artist's family",
+    "name_ar": "عائلة الفنان",
+    "type": "family",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_ecddeed585ee",
+    "name_en": "National Guard",
+    "name_ar": null,
+    "type": "other",
+    "city_en": "KSA",
+    "city_ar": "المملكة العربية السعودية"
+  },
+  {
+    "key": "h_ed759da3a306",
+    "name_en": "Not available  - sold in Sotheby's auction",
+    "name_ar": "غير متوفر - بيعت في مزاد سوثبي",
+    "type": "private_collector",
+    "city_en": "Not available",
+    "city_ar": "غير متوفر"
+  },
+  {
+    "key": "h_f1ec9124031d",
+    "name_en": "Art Jameel Collection",
+    "name_ar": "مجموعة فن جميل",
+    "type": "institution",
+    "city_en": "Dubai, UAE",
+    "city_ar": "الإمارات العربية المتحدة، دبي"
+  },
+  {
+    "key": "h_f22bb6818a93",
+    "name_en": "Ahamd Alromaizan",
+    "name_ar": "أحمد الرميزان",
+    "type": "private_collector",
+    "city_en": "KSA",
+    "city_ar": "المملكة العربية السعودية"
+  },
+  {
+    "key": "h_f5e90c15ff21",
+    "name_en": "Mohammed Almuneef",
+    "name_ar": null,
+    "type": "other",
+    "city_en": "Riyadh, KSA",
+    "city_ar": "الرياض، المملكة العربية السعودية"
+  },
+  {
+    "key": "h_ffe8e02bdde1",
+    "name_en": "Hafez Gallery",
+    "name_ar": null,
+    "type": "institution",
+    "city_en": "Jeddah, KSA",
+    "city_ar": "جدة، المملكة العربية السعودية"
+  }
+]

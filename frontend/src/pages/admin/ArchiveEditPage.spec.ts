@@ -11,13 +11,20 @@ import type { ArchiveEdit } from "@/types/archive";
 
 const api = vi.hoisted(() => ({
   getAdminArchiveItem: vi.fn(), createArchiveItem: vi.fn(), updateArchiveItem: vi.fn(), uploadArchiveFile: vi.fn(),
-  deleteArchiveFile: vi.fn(), submitArchiveReview: vi.fn(), addArchiveLink: vi.fn(), removeArchiveLink: vi.fn(),
+  deleteArchiveFile: vi.fn(), submitArchiveReview: vi.fn(), publishArchiveItem: vi.fn(), addArchiveLink: vi.fn(), removeArchiveLink: vi.fn(),
   syncArchiveItemThemes: vi.fn(), listThemes: vi.fn(),
 }));
 vi.mock("@/api/archive", () => api);
-vi.mock("@/api/artistCuration", () => ({ listAdminArtists: vi.fn(), listThemes: api.listThemes }));
+const artistCuration = vi.hoisted(() => ({ updateArtistCuration: vi.fn() }));
+vi.mock("@/api/artistCuration", () => ({ listAdminArtists: vi.fn(), listThemes: api.listThemes, updateArtistCuration: artistCuration.updateArtistCuration }));
 vi.mock("@/api/artworkCuration", () => ({ searchHolders: vi.fn(), listAdminArtworks: vi.fn() }));
 vi.mock("@/api/events", () => ({ listAdminEvents: vi.fn() }));
+const dashboardApi = vi.hoisted(() => ({ addFieldCitation: vi.fn() }));
+vi.mock("@/api/dashboard", () => dashboardApi);
+vi.mock("@/components/curation/ArtworkPickers", () => ({
+  labelOf: (t: { ar: string | null; en: string | null }) => t.ar ?? t.en ?? "",
+  searchArtistOptions: vi.fn().mockResolvedValue([{ id: 7, label: "منيرة الموصلي" }]),
+}));
 
 const editorial = vi.hoisted(() => ({ getDraft: vi.fn(), saveDraft: vi.fn(), submitDraft: vi.fn() }));
 vi.mock("@/api/editorial", () => editorial);
@@ -27,6 +34,7 @@ function bundle(patch: Partial<ArchiveEdit> = {}): ArchiveEdit {
     id: 5, legacy_ref: "ARC-1979-0412", item_type: "image", title: { ar: "افتتاح معرض", en: null }, description: { ar: null, en: null },
     place: { ar: null, en: null }, date_note: null, theme_ids: [2], content: { display: "1979 (approx.)", year_from: 1979, year_to: 1979, calendar: "gregorian", certainty: "circa" },
     people_names: [], keywords: [], source_name: null, rights_holder: { ar: null, en: null }, rights_status: "unknown", license: null,
+    digitized_at: null,
     verification_reference: null, access_level: "registered", publication_status: "draft", under_review: false, updated_at: null,
     file: { id: 1, name: "a.tif", mime_type: "image/tiff", size_bytes: 2048, width_px: 4200, height_px: 3100, is_image: false, url: "/f" },
     checklist: [
@@ -61,6 +69,9 @@ beforeEach(() => {
   api.syncArchiveItemThemes.mockReset().mockResolvedValue({});
   api.listThemes.mockReset().mockResolvedValue({ data: [{ id: 2, label: { ar: "التأسيس", en: "Founding" } }, { id: 3, label: { ar: "الطبيعة", en: "Nature" } }] });
   api.submitArchiveReview.mockReset().mockResolvedValue({ data: bundle({ under_review: true }) });
+  api.publishArchiveItem.mockReset().mockResolvedValue({ data: bundle({ publication_status: "published" }) });
+  artistCuration.updateArtistCuration.mockReset().mockResolvedValue({ data: {} });
+  dashboardApi.addFieldCitation.mockReset().mockResolvedValue({});
   editorial.getDraft.mockReset().mockResolvedValue({ data: null });
   editorial.saveDraft.mockReset().mockResolvedValue({ data: { status: "draft" } });
   editorial.submitDraft.mockReset().mockResolvedValue({ data: { status: "pending" } });
@@ -110,6 +121,97 @@ describe("ArchiveEditPage (edit)", () => {
     expect(api.updateArchiveItem).toHaveBeenCalledBefore(api.submitArchiveReview);
     expect(api.submitArchiveReview).toHaveBeenCalledWith(5);
     expect(wrapper.get("[data-testid=send-review]").text()).toBe("Under review");
+  });
+
+  it("hides the Publish button without archive.publish", async () => {
+    const wrapper = await mountAt("/en/admin/archive/5");
+
+    expect(wrapper.find("[data-testid=publish]").exists()).toBe(false);
+  });
+
+  it("publishes the item and refreshes its status", async () => {
+    const wrapper = await mountAt("/en/admin/archive/5", ["archive.manage", "archive.publish"]);
+    api.getAdminArchiveItem.mockResolvedValueOnce({ data: bundle({ publication_status: "published" }) });
+
+    await wrapper.get("[data-testid=publish]").trigger("click");
+    await flushPromises();
+
+    expect(api.publishArchiveItem).toHaveBeenCalledWith(5);
+    expect(wrapper.get("[data-testid=publish]").text()).toBe("Published");
+    expect(wrapper.get("[data-testid=publish]").attributes("disabled")).toBeDefined();
+  });
+
+  describe("artist proof links", () => {
+    async function pickLinkedArtist(wrapper: Awaited<ReturnType<typeof mountAt>>): Promise<void> {
+      await wrapper.get("[data-testid=picker-input]").setValue("مني");
+      await new Promise((r) => setTimeout(r, 260));
+      await flushPromises();
+      await wrapper.get("[data-testid=picker-options] button").trigger("click");
+    }
+
+    it("offers the proof roles only for an existing artist link, with artists.manage", async () => {
+      const wrapper = await mountAt("/en/admin/archive/5", ["archive.manage", "artists.manage"]);
+      await wrapper.get("[data-testid=link-open]").trigger("click");
+
+      const roleValues = () => wrapper.get("[data-testid=link-role]").findAll("option").map((o) => o.attributes("value"));
+      expect(roleValues()).toEqual(expect.arrayContaining(["authorization_letter", "name_verification"]));
+
+      await wrapper.get("[data-testid=link-role]").setValue("authorization_letter");
+      await wrapper.get("[data-testid=link-kind]").setValue("artwork");
+      expect(roleValues()).not.toEqual(expect.arrayContaining(["authorization_letter", "name_verification"]));
+      expect((wrapper.get("[data-testid=link-role]").element as HTMLSelectElement).value).toBe("about");
+    });
+
+    it("hides the proof roles without artists.manage", async () => {
+      const wrapper = await mountAt("/en/admin/archive/5", ["archive.manage"]);
+      await wrapper.get("[data-testid=link-open]").trigger("click");
+
+      const roleValues = wrapper.get("[data-testid=link-role]").findAll("option").map((o) => o.attributes("value"));
+      expect(roleValues).not.toEqual(expect.arrayContaining(["authorization_letter", "name_verification"]));
+    });
+
+    it("signs the artist's authorization letter with this item's file", async () => {
+      const wrapper = await mountAt("/en/admin/archive/5", ["archive.manage", "artists.manage"]);
+      await wrapper.get("[data-testid=link-open]").trigger("click");
+      await wrapper.get("[data-testid=link-role]").setValue("authorization_letter");
+      await pickLinkedArtist(wrapper);
+
+      await wrapper.get("[data-testid=link-apply]").trigger("click");
+      await flushPromises();
+
+      expect(artistCuration.updateArtistCuration).toHaveBeenCalledWith(7, { authorization_letter_status: "signed", authorization_letter_file_id: 1 });
+      expect(api.addArchiveLink).toHaveBeenCalledWith(5, { linkable_type: "artist", linkable_id: 7, role: "authorization_letter" });
+    });
+
+    it("cites the item as the artist's primary source", async () => {
+      const wrapper = await mountAt("/en/admin/archive/5", ["archive.manage", "artists.manage"]);
+      await wrapper.get("[data-testid=link-open]").trigger("click");
+      await wrapper.get("[data-testid=link-role]").setValue("name_verification");
+      await pickLinkedArtist(wrapper);
+
+      await wrapper.get("[data-testid=link-apply]").trigger("click");
+      await flushPromises();
+
+      expect(dashboardApi.addFieldCitation).toHaveBeenCalledWith("artist", 7, {
+        field_key: "name", new_source: { linked_archive_item_id: 5 }, claimed_value: "منيرة الموصلي",
+      });
+      expect(api.addArchiveLink).toHaveBeenCalledWith(5, { linkable_type: "artist", linkable_id: 7, role: "name_verification" });
+    });
+
+    it("blocks the authorization-letter link when the item has no file yet", async () => {
+      api.getAdminArchiveItem.mockResolvedValue({ data: bundle({ file: null }) });
+      const wrapper = await mountAt("/en/admin/archive/5", ["archive.manage", "artists.manage"]);
+      await wrapper.get("[data-testid=link-open]").trigger("click");
+      await wrapper.get("[data-testid=link-role]").setValue("authorization_letter");
+      await pickLinkedArtist(wrapper);
+
+      await wrapper.get("[data-testid=link-apply]").trigger("click");
+      await flushPromises();
+
+      expect(artistCuration.updateArtistCuration).not.toHaveBeenCalled();
+      expect(api.addArchiveLink).not.toHaveBeenCalled();
+      expect(wrapper.text()).toContain("Upload this item's file before using it as an authorization letter.");
+    });
   });
 
   describe("draft mode (proposals.submit)", () => {
