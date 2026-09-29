@@ -7,6 +7,7 @@ import {
   deleteArtistPortrait, publishArtist, searchStaffOptions, setArtistPortraitRights, syncArtistEntries, syncArtistSocialLinks,
   updateArtist, updateArtistAssignment, updateArtistCuration, uploadArtistPortrait, verifyArtist,
 } from "@/api/artistCuration";
+import type { ArtistProfilePayload } from "@/api/artistCuration";
 import { getRecordCompleteness } from "@/api/dashboard";
 import { submitCreationReview } from "@/api/editorial";
 import ContactsEditor from "@/components/curation/ContactsEditor.vue";
@@ -98,6 +99,14 @@ const draftLocked = computed(() =>
 );
 
 const form = reactive({
+  legacy_code: "",
+  name_ar: "",
+  name_en: "",
+  city_ar: "",
+  city_en: "",
+  bio_ar: "",
+  bio_en: "",
+  living_status: "unknown" as "unknown" | "living" | "deceased",
   identified_through_note: "",
   owner_type: "" as OwnerType | "",
   ref_supervisor_note: "",
@@ -107,6 +116,14 @@ const form = reactive({
 });
 
 function applyCuration(c: ArtistCuration): void {
+  form.legacy_code = c.legacy_code ?? "";
+  form.name_ar = c.name.ar ?? "";
+  form.name_en = c.name.en ?? "";
+  form.city_ar = c.city.ar ?? "";
+  form.city_en = c.city.en ?? "";
+  form.bio_ar = c.bio.ar ?? "";
+  form.bio_en = c.bio.en ?? "";
+  form.living_status = c.living_status;
   form.identified_through_note = c.identified_through.note ?? "";
   form.owner_type = c.contact.owner_type ?? "";
   form.ref_supervisor_note = c.contact.ref_supervisor_note ?? "";
@@ -122,6 +139,16 @@ function applyCuration(c: ArtistCuration): void {
 function applyDraftToForm(): void {
   const p = draftPayload.value as ArtistDraftPayload;
   if (p.fields) {
+    if (p.fields.name) {
+      form.name_ar = p.fields.name.ar ?? "";
+      form.name_en = p.fields.name.en ?? "";
+    }
+    if (p.fields.bio) {
+      form.bio_ar = p.fields.bio.ar ?? "";
+      form.bio_en = p.fields.bio.en ?? "";
+    }
+    if (p.fields.legacy_code !== undefined) form.legacy_code = p.fields.legacy_code ?? "";
+    if (p.fields.living_status) form.living_status = p.fields.living_status;
     if (p.fields.nationality) profile.form.nationality = { ...p.fields.nationality };
     if (p.fields.classification) profile.form.classification = { ...p.fields.classification };
     if ("birth" in p.fields) profile.form.birthDate = dateValueToInput(p.fields.birth ?? null);
@@ -243,12 +270,22 @@ function payload(): CurationUpdate {
   };
 }
 
+function fieldsPayload(): ArtistProfilePayload {
+  const blank = (v: string): string | null => (v.trim() === "" ? null : v.trim());
+  return {
+    ...profile.profilePayload({ ar: blank(form.city_ar), en: blank(form.city_en) }, true),
+    name: { ar: blank(form.name_ar), en: blank(form.name_en) },
+    bio: { ar: blank(form.bio_ar), en: blank(form.bio_en) },
+    legacy_code: blank(form.legacy_code) ?? undefined,
+    living_status: form.living_status,
+  };
+}
+
 async function save(): Promise<void> {
   saving.value = true;
   saved.value = false;
   actionError.value = null;
   try {
-    const current = curation.value;
     // While its creation is unreviewed, the creator edits the live record
     // directly — there is no established state for the section-diff draft
     // pipeline to protect yet (005 research.md R3). draftMode's normal
@@ -256,13 +293,13 @@ async function save(): Promise<void> {
     if (draftMode.value && !creationPending.value) {
       // Nothing changes live: each section is merged into the draft payload.
       const entries = profile.entriesPayload();
-      await saveSection("fields", profile.profilePayload(current?.city, true));
+      await saveSection("fields", fieldsPayload());
       await saveSection("educations", entries.educations);
       await saveSection("activities", entries.activities);
       await saveSection("social_links", profile.socialPayload());
       await saveSection("curation", payload());
     } else {
-      await updateArtist(id.value, profile.profilePayload(current?.city, true));
+      await updateArtist(id.value, fieldsPayload());
       await syncArtistEntries(id.value, profile.entriesPayload());
       await syncArtistSocialLinks(id.value, profile.socialPayload());
       set((await updateArtistCuration(id.value, payload())).data);
@@ -505,10 +542,10 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
               <span v-if="identityMissing > 0" class="text-xs text-danger" data-testid="identity-missing">{{ t("curation.detail.missingFields", { count: identityMissing }) }}</span>
             </div>
             <dl class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
-              <div><dt class="text-xs text-ink-muted">{{ t("curation.detail.artistCode") }}</dt><dd class="mt-1 rounded-md border border-line bg-surface px-3 py-2 text-ink">{{ curation.legacy_code ?? "—" }}</dd></div>
+              <div><dt class="text-xs text-ink-muted">{{ t("curation.detail.artistCode") }}</dt><dd><input v-model="form.legacy_code" type="text" dir="ltr" :class="input" /></dd></div>
               <div><dt class="text-xs text-ink-muted">{{ t("curation.detail.identifiedThrough") }}</dt><dd><input v-model="form.identified_through_note" type="text" :class="input" /></dd></div>
-              <div><dt class="text-xs text-ink-muted">{{ t("curation.detail.nameAr") }}</dt><dd class="mt-1 rounded-md border border-line bg-surface px-3 py-2 text-ink">{{ curation.name.ar ?? "—" }}</dd></div>
-              <div><dt class="text-xs text-ink-muted">{{ t("curation.detail.nameEn") }}</dt><dd class="mt-1 rounded-md border border-line bg-surface px-3 py-2 text-ink">{{ curation.name.en ?? "—" }}</dd></div>
+              <div><dt class="text-xs text-ink-muted">{{ t("curation.detail.nameAr") }}</dt><dd><input v-model="form.name_ar" type="text" dir="rtl" lang="ar" :class="input" /></dd></div>
+              <div><dt class="text-xs text-ink-muted">{{ t("curation.detail.nameEn") }}</dt><dd><input v-model="form.name_en" type="text" dir="ltr" lang="en" :class="input" /></dd></div>
               <div>
                 <dt class="flex justify-between text-xs text-ink-muted"><span>{{ t("curation.detail.nameVerified") }}</span><span v-if="!nameVerified" class="text-danger">{{ t("curation.detail.missing") }}</span></dt>
                 <dd class="mt-1 rounded-md border px-3 py-2" :class="nameVerified ? 'border-line bg-surface text-ink' : 'border-danger bg-danger-soft text-danger'" data-testid="name-verified-field">
@@ -520,10 +557,6 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
                 <dd class="mt-1 rounded-md border border-line bg-surface px-3 py-2 text-ink">{{ curation.name_as_in_sources?.join(" · ") || "—" }}</dd>
               </div>
               <div>
-                <dt class="text-xs text-ink-muted">{{ t("curation.detail.city") }}</dt>
-                <dd class="mt-1 rounded-md border border-line bg-surface px-3 py-2 text-ink"><LocalizedText v-if="curation.city.ar || curation.city.en" :text="curation.city" /><template v-else>—</template></dd>
-              </div>
-              <div>
                 <dt class="flex justify-between text-xs text-ink-muted"><span>{{ t("curation.detail.lifeDates") }}</span><span v-if="lifeDatesMissing" class="text-danger">{{ t("curation.detail.missing") }}</span></dt>
                 <dd class="mt-1 rounded-md border px-3 py-2" :class="lifeDatesMissing ? 'border-danger bg-danger-soft text-danger' : 'border-line bg-surface text-ink'" data-testid="life-dates-field">
                   {{ lifeDates ?? t("curation.detail.notRecorded") }}
@@ -531,6 +564,15 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
               </div>
             </dl>
             <div class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+              <label class="text-xs text-ink-muted">{{ t("curation.create.cityAr") }}<input v-model="form.city_ar" type="text" dir="rtl" :class="input" /></label>
+              <label class="text-xs text-ink-muted">{{ t("curation.create.cityEn") }}<input v-model="form.city_en" type="text" dir="ltr" :class="input" /></label>
+              <label class="text-xs text-ink-muted">{{ t("curation.create.living") }}
+                <select v-model="form.living_status" :class="input">
+                  <option value="unknown">{{ t("curation.create.living_unknown") }}</option>
+                  <option value="living">{{ t("curation.create.living_living") }}</option>
+                  <option value="deceased">{{ t("curation.create.living_deceased") }}</option>
+                </select>
+              </label>
               <label class="text-xs text-ink-muted">{{ t("curation.profileForm.birthDate") }}<input v-model="profile.form.birthDate" type="date" dir="ltr" :class="input" /></label>
               <label class="text-xs text-ink-muted">{{ t("curation.profileForm.deathDate") }}<input v-model="profile.form.deathDate" type="date" dir="ltr" :class="input" /></label>
               <NationalitySelect v-model:ar="profile.form.nationality.ar" v-model:en="profile.form.nationality.en" :input-class="input" />
@@ -541,12 +583,10 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
 
           <section>
             <h2 class="border-b-2 border-ink pb-2 text-sm font-semibold uppercase text-ink">{{ t("curation.detail.bio") }}</h2>
-            <div class="mt-3 rounded-md border border-line bg-surface p-4">
-              <p class="text-pretty text-sm text-ink">
-                <LocalizedText v-if="curation.bio.ar || curation.bio.en" :text="{ ar: curation.bio.ar, en: curation.bio.en }" />
-                <span v-else class="text-ink-muted">{{ t("curation.detail.noBio") }}</span>
-              </p>
-              <p v-if="curation.bio.source_type === 'derived_from_linked_materials'" class="mt-2 text-xs text-warn" data-testid="provisional-bio">{{ t("curation.detail.provisionalBio") }}</p>
+            <p v-if="curation.bio.source_type === 'derived_from_linked_materials'" class="mt-2 text-xs text-warn" data-testid="provisional-bio">{{ t("curation.detail.provisionalBio") }}</p>
+            <div class="mt-3 grid gap-4 sm:grid-cols-2">
+              <label class="text-xs text-ink-muted">{{ t("curation.create.bioAr") }}<textarea v-model="form.bio_ar" rows="4" dir="rtl" :class="input" /></label>
+              <label class="text-xs text-ink-muted">{{ t("curation.create.bioEn") }}<textarea v-model="form.bio_en" rows="4" dir="ltr" :class="input" /></label>
             </div>
             <label class="mt-3 block max-w-sm text-xs text-ink-muted">
               {{ t("curation.detail.bioSource") }}

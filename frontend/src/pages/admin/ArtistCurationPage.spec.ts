@@ -297,7 +297,14 @@ describe("ArtistCurationPage", () => {
         expect(payloads.some((p) => section in p)).toBe(true);
       }
       const last = payloads[payloads.length - 1];
-      expect(last.fields).toEqual({ nationality: { ar: null, en: null }, classification: { ar: null, en: null } });
+      expect(last.fields).toEqual({
+        name: { ar: "أحمد المغلوث", en: "Ahmad Almaghlout" },
+        bio: { ar: null, en: "Saudi artist." },
+        legacy_code: "AR036",
+        living_status: "unknown",
+        nationality: { ar: null, en: null },
+        classification: { ar: null, en: null },
+      });
       expect(last.educations).toEqual([]);
       expect(last.activities).toEqual([]);
       expect(last.social_links).toEqual([]);
