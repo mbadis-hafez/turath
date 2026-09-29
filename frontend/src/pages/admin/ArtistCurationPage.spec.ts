@@ -124,7 +124,7 @@ describe("ArtistCurationPage", () => {
   });
 
   it("disables Publish and names the first blocking reason from the API", async () => {
-    const wrapper = await mountPage();
+    const wrapper = await mountPage(["artists.manage", "artists.publish"]);
     const button = wrapper.get("[data-testid=publish-button]");
 
     expect(button.attributes("disabled")).toBeDefined();
@@ -135,7 +135,7 @@ describe("ArtistCurationPage", () => {
   it("enables Publish when nothing blocks and calls the publish endpoint", async () => {
     api.getArtistCuration.mockResolvedValue({ data: bundle({ publish_blockers: {} }) });
     api.publishArtist.mockResolvedValue({});
-    const wrapper = await mountPage();
+    const wrapper = await mountPage(["artists.manage", "artists.publish"]);
 
     const button = wrapper.get("[data-testid=publish-button]");
     expect(button.attributes("disabled")).toBeUndefined();
@@ -149,7 +149,7 @@ describe("ArtistCurationPage", () => {
     api.getArtistCuration.mockResolvedValue({
       data: bundle({ publication_status: "published", published_at: "2026-09-24T10:00:00Z", publish_blockers: {} }),
     });
-    const wrapper = await mountPage();
+    const wrapper = await mountPage(["artists.manage", "artists.publish"]);
     const button = wrapper.get("[data-testid=publish-button]");
 
     expect(button.text()).toBe("Published");
@@ -158,6 +158,12 @@ describe("ArtistCurationPage", () => {
 
   it("hides Publish from a reviewer without artists.manage", async () => {
     const wrapper = await mountPage(["review_queue.editorial_review"]);
+
+    expect(wrapper.find("[data-testid=publish-button]").exists()).toBe(false);
+  });
+
+  it("hides Publish from an editor who holds artists.manage but not artists.publish", async () => {
+    const wrapper = await mountPage(["artists.manage"]);
 
     expect(wrapper.find("[data-testid=publish-button]").exists()).toBe(false);
   });

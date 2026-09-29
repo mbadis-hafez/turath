@@ -43,6 +43,7 @@ const auth = useAuthStore();
 
 const forbidden = new ApiError("forbidden", "Forbidden", { status: 403 });
 const canManage = computed(() => auth.can("artists.manage"));
+const canPublishPermission = computed(() => auth.can("artists.publish"));
 
 const id = computed(() => Number(route.params.id));
 const { curation, loading, error, retry, set } = useArtistCuration(id);
@@ -202,7 +203,7 @@ const verifyTooltip = computed(() => {
 const publishing = ref(false);
 const publishBlockReason = computed(() => (curation.value ? firstBlockReason(curation.value.publish_blockers) : null));
 const canPublish = computed(() =>
-  curation.value !== null && curation.value.publication_status !== "published" && publishBlockReason.value === null && canManage.value,
+  curation.value !== null && curation.value.publication_status !== "published" && publishBlockReason.value === null && canPublishPermission.value,
 );
 const publishTooltip = computed(() =>
   publishBlockReason.value ? t("curation.detail.publishBlocked", { reason: publishBlockReason.value }) : t("curation.detail.publishReady"),
@@ -457,7 +458,7 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
             {{ verifying ? t("curation.detail.verifying") : curation.verified_status === "verified" ? t("curation.detail.verified") : t("curation.detail.verify") }}
           </button>
           <button
-            v-if="canManage"
+            v-if="canPublishPermission"
             type="button"
             class="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-surface disabled:cursor-not-allowed disabled:bg-neutral-soft disabled:text-ink-muted"
             data-testid="publish-button"
