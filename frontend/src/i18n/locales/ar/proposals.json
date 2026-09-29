@@ -31,6 +31,7 @@
   "newRecord": "سجل جديد",
   "creationNoDiff": "هذا سجل جديد، وليس تعديلًا على سجل موجود — لا يوجد ما يُقارَن به. راجع محتواه في صفحته الخاصة.",
   "creationViewRecord": "فتح السجل",
+  "creationRevisionsSince": "{count} تعديل(ات) على السجل منذ آخر مراجعة:",
   "empty": "فارغ",
   "true": "نعم",
   "false": "لا",

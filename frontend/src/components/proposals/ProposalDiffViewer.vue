@@ -3,12 +3,12 @@ import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 import { getProposalDiff, requestChanges as requestProposalChanges } from "@/api/editorial";
-import { approveProposal, rejectProposal } from "@/api/proposals";
+import { approveProposal, listRevisions, rejectProposal } from "@/api/proposals";
 import FieldDiffTable from "@/components/proposals/FieldDiffTable.vue";
 import ProposalSectionDiffs from "@/components/proposals/ProposalSectionDiffs.vue";
 import { useLocalePath } from "@/composables/useLocalePath";
 import { ApiError } from "@/types/api";
-import type { Proposal, ProposalConflict, RecordType } from "@/types/proposal";
+import type { Proposal, ProposalConflict, RecordType, Revision } from "@/types/proposal";
 import type { SectionDiff } from "@/types/proposalDiff";
 import { formatDateTime } from "@/utils/format";
 import type { AppLocale } from "@/i18n";
@@ -79,7 +79,51 @@ async function loadDiff(): Promise<void> {
   }
 }
 watch(() => props.proposal.id, () => void loadDiff(), { immediate: true });
-onBeforeUnmount(() => controller?.abort());
+
+/** Creation reviews never diff (nothing to diff against, 005), but a prior
+ * "changes requested" round can be followed by direct edits to the record
+ * (ArtistCurationPage.save() while creation_approved_at is still null writes
+ * straight to the record). Surfacing revisions logged after that round is the
+ * only way a reviewer sees what actually changed since they last looked. */
+const sinceRevisions = ref<Revision[]>([]);
+let revisionsController: AbortController | null = null;
+async function loadRevisionsSinceReview(): Promise<void> {
+  revisionsController?.abort();
+  sinceRevisions.value = [];
+  const { is_creation, reviewed_at, record } = props.proposal;
+  if (!is_creation || !reviewed_at || record.type === null) return;
+  const self = new AbortController();
+  revisionsController = self;
+  try {
+    const response = await listRevisions(record.type, record.id, self.signal);
+    if (revisionsController !== self) return;
+    const reviewedAt = new Date(reviewed_at).getTime();
+    sinceRevisions.value = response.data.filter((r) => new Date(r.applied_at).getTime() > reviewedAt);
+  } catch {
+    if (revisionsController !== self) return;
+    // Advisory only — the "Open the record" link still lets the reviewer check manually.
+  }
+}
+watch(() => props.proposal.id, () => void loadRevisionsSinceReview(), { immediate: true });
+/** Oldest → newest so each field's "before" is its value at the last review, and "after" its latest value. */
+const sinceRows = computed(() => {
+  const map = new Map<string, { field: string; before: unknown; after: unknown }>();
+  for (const r of [...sinceRevisions.value].reverse()) {
+    for (const [field, diff] of Object.entries(r.field_diffs)) {
+      const existing = map.get(field);
+      map.set(field, { field, before: existing ? existing.before : diff.old, after: diff.new });
+    }
+  }
+  return [...map.values()];
+});
+const sinceLabels = computed(() =>
+  sinceRevisions.value.reduce<Record<string, { ar: string | null; en: string | null }>>((acc, r) => ({ ...acc, ...r.field_labels }), {}),
+);
+
+onBeforeUnmount(() => {
+  controller?.abort();
+  revisionsController?.abort();
+});
 
 async function approve(confirmConflict = false): Promise<void> {
   busy.value = true;
@@ -169,6 +213,10 @@ const STATUS_CLASS: Record<string, string> = {
     <div v-if="proposal.is_creation" class="mt-4 rounded-md border border-line bg-neutral-soft p-3 text-sm text-ink" data-testid="creation-review-notice">
       <p>{{ t("proposals.creationNoDiff") }}</p>
       <RouterLink v-if="recordHref" :to="recordHref" target="_blank" class="mt-2 inline-block font-medium underline" data-testid="creation-review-record-link">{{ t("proposals.creationViewRecord") }}</RouterLink>
+      <div v-if="sinceRevisions.length > 0" class="mt-3 border-t border-line pt-3" data-testid="creation-revisions-since">
+        <p class="font-medium text-accent-strong">{{ t("proposals.creationRevisionsSince", { count: sinceRevisions.length }) }}</p>
+        <FieldDiffTable class="mt-2" :rows="sinceRows" :labels="sinceLabels" />
+      </div>
     </div>
     <template v-else-if="isSectioned">
       <p v-if="sections === null && !diffFailed" class="mt-4 text-xs text-ink-muted" data-testid="diff-loading">{{ t("proposals.diffLoading") }}</p>

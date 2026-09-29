@@ -6,10 +6,10 @@ import { createMemoryHistory, createRouter } from "vue-router";
 import ProposalDiffViewer from "@/components/proposals/ProposalDiffViewer.vue";
 import { mountWithPlugins } from "@/test/utils";
 import { ApiError } from "@/types/api";
-import type { Proposal } from "@/types/proposal";
+import type { Proposal, Revision } from "@/types/proposal";
 import type { SectionDiff } from "@/types/proposalDiff";
 
-const api = vi.hoisted(() => ({ approveProposal: vi.fn(), rejectProposal: vi.fn() }));
+const api = vi.hoisted(() => ({ approveProposal: vi.fn(), rejectProposal: vi.fn(), listRevisions: vi.fn() }));
 vi.mock("@/api/proposals", () => api);
 
 const editorial = vi.hoisted(() => ({ getProposalDiff: vi.fn(), requestChanges: vi.fn() }));
@@ -55,6 +55,7 @@ beforeEach(() => {
   setActivePinia(createPinia());
   api.approveProposal.mockReset().mockResolvedValue({ data: proposal({ status: "approved" }) });
   api.rejectProposal.mockReset().mockResolvedValue({ data: proposal({ status: "rejected" }) });
+  api.listRevisions.mockReset().mockResolvedValue({ data: [] });
   editorial.getProposalDiff.mockReset().mockResolvedValue({ data: { sections } });
   editorial.requestChanges.mockReset().mockResolvedValue({ data: proposal({ status: "changes_requested" }) });
 });
@@ -83,6 +84,54 @@ describe("ProposalDiffViewer", () => {
     expect(wrapper.find("[data-testid=field-diff]").exists()).toBe(false);
     expect(editorial.getProposalDiff).not.toHaveBeenCalled();
     expect(wrapper.get("[data-testid=creation-review-record-link]").text()).toBe("Open the record");
+  });
+
+  it("shows revisions logged since a prior review, for a resubmitted creation-review item", async () => {
+    const revision: Revision = {
+      id: "r1", revision_number: 2, source: "direct_edit", edit_proposal_id: null,
+      field_diffs: { name_en: { old: "Ahmad", new: "Ahmed" } },
+      field_labels: { name_en: { ar: null, en: "Name (English)" } },
+      applied_by: { id: 5, name: "Samar" }, applied_at: "2026-09-29T12:00:00Z",
+      reverted_by_revision_id: null,
+    };
+    api.listRevisions.mockResolvedValue({ data: [revision] });
+    const wrapper = await mountWithRouter({
+      proposal: proposal({
+        is_creation: true, field_diffs: {}, review_type: "editorial_review",
+        status: "pending", reviewed_at: "2026-09-29T09:00:00Z", reviewed_by: { id: 1, name: "Munir" },
+      }),
+      canReview: false,
+      currentUserId: null,
+    });
+    await flushPromises();
+
+    expect(api.listRevisions).toHaveBeenCalledWith("artists", 7, expect.any(AbortSignal));
+    const notice = wrapper.get("[data-testid=creation-revisions-since]");
+    expect(notice.text()).toContain("1");
+    expect(notice.text()).toContain("Ahmad");
+    expect(notice.text()).toContain("Ahmed");
+  });
+
+  it("skips revisions logged before the prior review", async () => {
+    const revision: Revision = {
+      id: "r1", revision_number: 2, source: "direct_edit", edit_proposal_id: null,
+      field_diffs: { name_en: { old: "Ahmad", new: "Ahmed" } },
+      field_labels: { name_en: { ar: null, en: "Name (English)" } },
+      applied_by: { id: 5, name: "Samar" }, applied_at: "2026-09-29T08:00:00Z",
+      reverted_by_revision_id: null,
+    };
+    api.listRevisions.mockResolvedValue({ data: [revision] });
+    const wrapper = await mountWithRouter({
+      proposal: proposal({
+        is_creation: true, field_diffs: {}, review_type: "editorial_review",
+        status: "pending", reviewed_at: "2026-09-29T09:00:00Z", reviewed_by: { id: 1, name: "Munir" },
+      }),
+      canReview: false,
+      currentUserId: null,
+    });
+    await flushPromises();
+
+    expect(wrapper.find("[data-testid=creation-revisions-since]").exists()).toBe(false);
   });
 
   it("shows the labelled diff and the rationale, and hides review actions from non-reviewers", () => {

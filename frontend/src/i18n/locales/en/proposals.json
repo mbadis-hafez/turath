@@ -31,6 +31,7 @@
   "newRecord": "New record",
   "creationNoDiff": "This is a new record, not a change to an existing one — there's nothing to compare against. Review its content on its own page.",
   "creationViewRecord": "Open the record",
+  "creationRevisionsSince": "{count} change(s) made to the record since it was last reviewed:",
   "empty": "empty",
   "true": "Yes",
   "false": "No",
