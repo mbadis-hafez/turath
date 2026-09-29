@@ -87,10 +87,22 @@ export function applyLocale(locale: AppLocale): void {
   }
 }
 
+function arabicPluralRule(choice: number): number {
+  if (choice === 0) return 0;
+  if (choice === 1) return 1;
+  if (choice === 2) return 2;
+  if (choice % 100 >= 3 && choice % 100 <= 10) return 3;
+  if (choice % 100 >= 11 && choice % 100 <= 99) return 4;
+  return 5;
+}
+
 export const i18n = createI18n({
   legacy: false,
   locale: DEFAULT_LOCALE,
   fallbackLocale: "en",
+  pluralRules: {
+    ar: arabicPluralRule,
+  },
   messages: {
     ar: {
       common: arCommon,

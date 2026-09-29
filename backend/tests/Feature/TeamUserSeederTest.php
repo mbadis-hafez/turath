@@ -41,35 +41,33 @@ it('creates the five team accounts with the roles they were given, already verif
     }
 });
 
-it('gives the superadmin every permission that exists and keeps the reviewer set distinct from the editor set', function () {
+it('gives the superadmin every permission that exists, and gives the reviewer everything the editor has plus the review-queue set', function () {
     seedTeam();
 
     expect(member('mbadis@hafezgallery.com')->getAllPermissions()->pluck('name')->sort()->values()->all())
         ->toBe(Permission::pluck('name')->sort()->values()->all());
 
-    // A Reviewer works the review queues; it does not create, edit or delete
-    // content directly the way an Editor does — the two sets must not overlap
-    // on any content-manage permission.
+    // Reviewer now holds the full Editor permission set too, on top of its
+    // own review-queue/conflict-resolution/archive.publish permissions.
     $reviewer = member('samar@hafezgallery.com');
     $editor = member('fidha.fatma@hafezgallery.com');
     $reviewerPerms = $reviewer->getAllPermissions()->pluck('name');
     $editorPerms = $editor->getAllPermissions()->pluck('name');
 
     foreach (['artists.manage', 'artworks.manage', 'events.manage', 'archive.manage', 'holders.manage'] as $manage) {
-        expect($reviewerPerms)->not->toContain($manage);
+        expect($reviewerPerms)->toContain($manage);
         expect($editorPerms)->toContain($manage);
     }
     expect($reviewerPerms)->toContain('review_queue.archivist_review')
         ->and($editorPerms)->not->toContain('review_queue.archivist_review');
 });
 
-it('gives admins and the editor content-manage permissions, and reserves publishing for reviewer/admin', function () {
+it('gives admins, the editor and the reviewer content-manage permissions, and reserves publishing for reviewer/admin', function () {
     seedTeam();
 
-    foreach (['mali@hafezgallery.com', 'valeria@hafezgallery.com', 'fidha.fatma@hafezgallery.com'] as $email) {
+    foreach (['mali@hafezgallery.com', 'valeria@hafezgallery.com', 'fidha.fatma@hafezgallery.com', 'samar@hafezgallery.com'] as $email) {
         expect(member($email)->can('artists.manage'))->toBeTrue();
     }
-    expect(member('samar@hafezgallery.com')->can('artists.manage'))->toBeFalse();
 
     // archive.publish is reviewer-or-admin work; the editor is withheld even
     // though it creates and manages archive material.
@@ -88,14 +86,14 @@ it('gives admins and the editor content-manage permissions, and reserves publish
         ->and(member('samar@hafezgallery.com')->can('users.manage'))->toBeFalse();
 });
 
-it('lets the reviewer work the queue, but not create content or reach editor-only admin routes', function () {
+it('lets the reviewer work the queue, and now also create content and reach editor admin routes like an editor', function () {
     seedTeam();
     $submission = ReviewQueueItem::create(['citable_type' => Artist::class, 'citable_id' => Artist::factory()->create()->id, 'review_type' => 'material_intake', 'status' => 'pending', 'note' => 'x']);
 
     $this->actingAs(member('samar@hafezgallery.com'));
     $this->getJson('/api/v1/review-queue')->assertOk()->assertJsonPath('data.0.id', $submission->id);
-    $this->postJson('/api/v1/artists', ['name' => ['ar' => 'x']])->assertForbidden();
-    $this->getJson('/api/v1/admin/archive-items')->assertForbidden();
+    $this->postJson('/api/v1/artists', ['name' => ['ar' => 'أحمد', 'en' => 'Ahmad']])->assertCreated();
+    $this->getJson('/api/v1/admin/archive-items')->assertOk();
 });
 
 it('is safe to run again: nothing is duplicated, a password someone chose survives, and a role is put back', function () {

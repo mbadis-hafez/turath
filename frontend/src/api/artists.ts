@@ -4,6 +4,8 @@ import type { ActivityEntry } from "@/types/activity";
 import type {
   Artist,
   ArtistActivityQueryParams,
+  ArtistFacets,
+  ArtistLetters,
   ArtistListItem,
   ArtistsQueryParams,
 } from "@/types/artist";
@@ -18,11 +20,19 @@ function cleanParams(
   return result;
 }
 
+export interface ArtistsListResponse extends PaginatedResponse<ArtistListItem> {
+  meta: PaginatedResponse<ArtistListItem>["meta"] & {
+    facets?: ArtistFacets;
+    letters?: ArtistLetters;
+    materials_total?: number;
+  };
+}
+
 export function listArtists(
   params: ArtistsQueryParams = {},
   signal?: AbortSignal,
-): Promise<PaginatedResponse<ArtistListItem>> {
-  return request<PaginatedResponse<ArtistListItem>>({
+): Promise<ArtistsListResponse> {
+  return request<ArtistsListResponse>({
     method: "GET",
     url: "/api/v1/artists",
     params: cleanParams({ ...params }),

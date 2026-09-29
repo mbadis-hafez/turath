@@ -22,12 +22,15 @@ export interface ArtistListItem {
   id: number;
   slug: string;
   name: Bilingual;
+  city: Bilingual;
   birth: PartialDate | null;
   death: PartialDate | null;
   living_status: LivingStatus;
   verified_status: VerifiedStatus;
   /** Null unless published with a clear-rights portrait (ArtistListResource). */
   portrait_url: string | null;
+  /** Number of published archive items linked to this artist. */
+  materials_count?: number;
 }
 
 export type NameVariantLanguage = "ar" | "en" | "und";
@@ -64,12 +67,34 @@ export type ArtistSort =
   | "name_en"
   | "-name_en"
   | "created_at"
-  | "-created_at";
+  | "-created_at"
+  | "-materials_count";
+
+export interface ArtistFacetValue<T = string> {
+  value: T;
+  count: number;
+  label?: Bilingual;
+}
+
+export interface ArtistFacets {
+  city: ArtistFacetValue<string>[];
+  theme_id: ArtistFacetValue<number>[];
+  item_type: ArtistFacetValue<string>[];
+}
+
+export interface ArtistLetters {
+  ar: string[];
+  en: string[];
+}
 
 export interface ArtistsQueryParams {
   q?: string;
   verified_status?: "verified" | "unverified" | "disputed";
   living_status?: LivingStatus;
+  city?: string;
+  theme_id?: number;
+  item_type?: string;
+  include_facets?: 1;
   sort?: ArtistSort;
   page?: number;
   per_page?: number;

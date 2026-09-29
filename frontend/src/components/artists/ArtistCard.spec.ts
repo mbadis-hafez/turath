@@ -12,6 +12,7 @@ function makeArtist(
     id: 1,
     slug: "inji-efflatoun",
     name: { ar: "إنجي أفلاطون", en: "Inji Efflatoun" },
+    city: { ar: "القاهرة", en: "Cairo" },
     birth: {
       display: null,
       year_from: 1924,

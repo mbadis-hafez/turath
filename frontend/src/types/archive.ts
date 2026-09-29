@@ -1,11 +1,24 @@
 import type { Bilingual, PartialDate } from "@/types/artist";
 
 export const ARCHIVE_ITEM_TYPES = [
-  "article", "image", "video", "audio", "catalogue", "certificate", "invitation", "poster", "document", "portfolio", "documentation_card", "other",
+  "article",
+  "image",
+  "video",
+  "audio",
+  "catalogue",
+  "certificate",
+  "invitation",
+  "poster",
+  "document",
+  "portfolio",
+  "documentation_card",
+  "other",
 ] as const;
 export type ArchiveItemType = (typeof ARCHIVE_ITEM_TYPES)[number];
-export type AccessLevel = "public" | "registered" | "researcher" | "institution_only" | "embargoed";
-export type RightsStatus = "public_domain" | "licensed" | "all_rights_reserved" | "unknown";
+export type AccessLevel =
+  "public" | "registered" | "researcher" | "institution_only" | "embargoed";
+export type RightsStatus =
+  "public_domain" | "licensed" | "all_rights_reserved" | "unknown";
 
 export interface ArchiveLink {
   role: string;
@@ -24,6 +37,8 @@ export interface ArchiveItem {
   restricted: boolean;
   rights_status?: RightsStatus;
   creator_name?: string | null;
+  /** Present only when ArchiveAccessResolver::canViewFull is true (never sent for a restricted item). */
+  description?: Bilingual;
   links?: ArchiveLink[];
   place?: Bilingual;
   artists?: { id: number; slug: string; name: Bilingual }[];
@@ -54,11 +69,13 @@ export interface ArchiveQueryParams {
   per_page?: number;
   artist_id?: number;
   status?: "all";
-  sort?: "-created_at" | "created_at" | "content_year_from" | "-content_year_from";
+  sort?:
+    "-created_at" | "created_at" | "content_year_from" | "-content_year_from";
   page?: number;
 }
 
-export type ArchiveRowStatus = "draft" | "published" | "hidden" | "incomplete" | "under_review";
+export type ArchiveRowStatus =
+  "draft" | "published" | "hidden" | "incomplete" | "under_review";
 
 export interface AdminArchiveRow {
   id: number;
@@ -117,7 +134,13 @@ export interface ArchiveEdit {
   place: Bilingual;
   date_note: string | null;
   theme_ids: number[];
-  content: { display: string | null; year_from: number | null; year_to: number | null; calendar: string | null; certainty: string | null } | null;
+  content: {
+    display: string | null;
+    year_from: number | null;
+    year_to: number | null;
+    calendar: string | null;
+    certainty: string | null;
+  } | null;
   people_names: string[];
   keywords: string[];
   source_name: string | null;
@@ -136,6 +159,18 @@ export interface ArchiveEdit {
   links: ArchiveEditLink[];
 }
 
-export const LINK_ROLES = ["about", "depicts", "mentions", "authored_by", "donor", "subject", "primary_documentation", "event_documentation"] as const;
+export const LINK_ROLES = [
+  "about",
+  "depicts",
+  "mentions",
+  "authored_by",
+  "donor",
+  "subject",
+  "primary_documentation",
+  "event_documentation",
+] as const;
 /** Artist-only roles: picking one also acts on the linked artist record (see ArchiveEditPage's addLink). */
-export const ARTIST_PROOF_LINK_ROLES = ["authorization_letter", "name_verification"] as const;
+export const ARTIST_PROOF_LINK_ROLES = [
+  "authorization_letter",
+  "name_verification",
+] as const;

@@ -1,6 +1,9 @@
 <?php
 
+use App\Models\ArchiveItem;
+use App\Models\ArchiveItemLink;
 use App\Models\Artist;
+use App\Models\Theme;
 use Database\Seeders\ArtistSeeder;
 
 it('lists published artists only and excludes drafts and trashed rows', function () {
@@ -133,4 +136,180 @@ it('lists the portrait url for a published artist with a clear-rights portrait, 
     expect($data[$withPortrait->id]['portrait_url'])->toBe("/api/v1/artists/{$withPortrait->id}/portrait")
         ->and($data[$unclearRights->id]['portrait_url'])->toBeNull()
         ->and($data[$noPortrait->id]['portrait_url'])->toBeNull();
+});
+
+it('includes materials_count only counting published linked archive items', function () {
+    $artist = Artist::factory()->published()->create();
+    $publishedItem = ArchiveItem::factory()->published()->create();
+    $draftItem = ArchiveItem::factory()->draft()->create();
+
+    ArchiveItemLink::factory()->create([
+        'archive_item_id' => $publishedItem->id,
+        'linkable_type' => Artist::class,
+        'linkable_id' => $artist->id,
+    ]);
+    ArchiveItemLink::factory()->create([
+        'archive_item_id' => $draftItem->id,
+        'linkable_type' => Artist::class,
+        'linkable_id' => $artist->id,
+    ]);
+
+    $response = $this->getJson('/api/v1/artists')->assertOk();
+
+    expect($response->json('data.0.materials_count'))->toBe(1);
+});
+
+it('sorts by most materials first then name', function () {
+    $few = Artist::factory()->published()->create(['name_ar' => 'أحمد']);
+    $many = Artist::factory()->published()->create(['name_ar' => 'محمود']);
+    $none = Artist::factory()->published()->create(['name_ar' => 'زينب']);
+
+    foreach (range(1, 3) as $i) {
+        $item = ArchiveItem::factory()->published()->create();
+        ArchiveItemLink::factory()->create([
+            'archive_item_id' => $item->id,
+            'linkable_type' => Artist::class,
+            'linkable_id' => $many->id,
+        ]);
+    }
+
+    foreach (range(1, 1) as $i) {
+        $item = ArchiveItem::factory()->published()->create();
+        ArchiveItemLink::factory()->create([
+            'archive_item_id' => $item->id,
+            'linkable_type' => Artist::class,
+            'linkable_id' => $few->id,
+        ]);
+    }
+
+    $response = $this->getJson('/api/v1/artists?sort=-materials_count')->assertOk();
+    $ids = collect($response->json('data'))->pluck('id')->all();
+
+    expect($ids)->toBe([$many->id, $few->id, $none->id]);
+});
+
+it('filters by city', function () {
+    Artist::factory()->published()->create(['birth_place_ar' => 'جدة', 'birth_place_en' => 'Jeddah']);
+    Artist::factory()->published()->create(['birth_place_ar' => 'الرياض', 'birth_place_en' => 'Riyadh']);
+
+    $this->getJson('/api/v1/artists?city=جدة')->assertOk()->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.city.ar', 'جدة');
+    $this->getJson('/api/v1/artists?city=Riyadh')->assertOk()->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.city.en', 'Riyadh');
+});
+
+it('filters by theme_id', function () {
+    $artist = Artist::factory()->published()->create();
+    $other = Artist::factory()->published()->create();
+    $theme = Theme::create(['label_ar' => 'تجريد', 'label_en' => 'Abstraction']);
+    $artist->themes()->attach($theme);
+
+    $this->getJson('/api/v1/artists?theme_id='.$theme->id)->assertOk()->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $artist->id);
+    $this->getJson('/api/v1/artists?theme_id='.($theme->id + 1))->assertUnprocessable();
+});
+
+it('filters by item_type through published archive items only', function () {
+    $artist = Artist::factory()->published()->create();
+    $other = Artist::factory()->published()->create();
+
+    $publishedImage = ArchiveItem::factory()->published()->create(['item_type' => 'image']);
+    $draftImage = ArchiveItem::factory()->draft()->create(['item_type' => 'image']);
+
+    ArchiveItemLink::factory()->create([
+        'archive_item_id' => $publishedImage->id,
+        'linkable_type' => Artist::class,
+        'linkable_id' => $artist->id,
+    ]);
+    ArchiveItemLink::factory()->create([
+        'archive_item_id' => $draftImage->id,
+        'linkable_type' => Artist::class,
+        'linkable_id' => $other->id,
+    ]);
+
+    $this->getJson('/api/v1/artists?item_type=image')->assertOk()->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $artist->id);
+    $this->getJson('/api/v1/artists?item_type=bogus')->assertUnprocessable();
+});
+
+it('returns facets with counts and excludes their own filter', function () {
+    $cityA = Artist::factory()->published()->create(['birth_place_ar' => 'جدة']);
+    $cityB = Artist::factory()->published()->create(['birth_place_ar' => 'الرياض']);
+    $theme = Theme::create(['label_ar' => 'تجريد', 'label_en' => 'Abstraction']);
+    $cityA->themes()->attach($theme);
+
+    $response = $this->getJson('/api/v1/artists?include_facets=1')->assertOk();
+    $facets = $response->json('meta.facets');
+
+    expect($facets['city'])->toHaveCount(2)
+        ->and(collect($facets['city'])->pluck('value')->all())->toContain('جدة', 'الرياض')
+        ->and($facets['theme_id'])->toHaveCount(1)
+        ->and($facets['theme_id'][0]['value'])->toBe($theme->id);
+
+    $filtered = $this->getJson('/api/v1/artists?city=جدة&include_facets=1')->assertOk();
+
+    expect($filtered->json('meta.facets.city'))->toHaveCount(2)
+        ->and($filtered->json('meta.facets.theme_id'))->toHaveCount(1);
+});
+
+it('returns letters reflecting current filters with alef normalization', function () {
+    Artist::factory()->published()->create(['name_ar' => 'أحمد']);
+    Artist::factory()->published()->create(['name_ar' => 'إبراهيم']);
+    Artist::factory()->published()->create(['name_ar' => 'آمنة']);
+    Artist::factory()->published()->create(['name_ar' => 'احمد']);
+    Artist::factory()->published()->create(['name_en' => 'Brian']);
+    Artist::factory()->published()->create(['name_en' => 'alice']);
+
+    $response = $this->getJson('/api/v1/artists?include_facets=1')->assertOk();
+    $letters = $response->json('meta.letters');
+
+    expect($letters['ar'])->toContain('أ')
+        ->and($letters['ar'])->not->toContain('إ', 'آ', 'ا')
+        ->and($letters['en'])->toContain('A', 'B')
+        ->and($letters['en'])->not->toContain('a', 'b');
+});
+
+it('returns materials_total over the filtered result', function () {
+    $artistA = Artist::factory()->published()->create();
+    $artistB = Artist::factory()->published()->create();
+
+    foreach (range(1, 3) as $i) {
+        $item = ArchiveItem::factory()->published()->create();
+        ArchiveItemLink::factory()->create([
+            'archive_item_id' => $item->id,
+            'linkable_type' => Artist::class,
+            'linkable_id' => $artistA->id,
+        ]);
+    }
+
+    foreach (range(1, 2) as $i) {
+        $item = ArchiveItem::factory()->published()->create();
+        ArchiveItemLink::factory()->create([
+            'archive_item_id' => $item->id,
+            'linkable_type' => Artist::class,
+            'linkable_id' => $artistB->id,
+        ]);
+    }
+
+    $this->getJson('/api/v1/artists?include_facets=1')->assertOk()
+        ->assertJsonPath('meta.materials_total', 5);
+});
+
+it('excludes draft artists from results, facets, letters and totals', function () {
+    $published = Artist::factory()->published()->create(['name_ar' => 'أحمد']);
+    Artist::factory()->draft()->create(['name_ar' => 'بدر']);
+
+    $item = ArchiveItem::factory()->published()->create();
+    ArchiveItemLink::factory()->create([
+        'archive_item_id' => $item->id,
+        'linkable_type' => Artist::class,
+        'linkable_id' => $published->id,
+    ]);
+
+    $response = $this->getJson('/api/v1/artists?include_facets=1')->assertOk();
+
+    expect($response->json('data'))->toHaveCount(1)
+        ->and($response->json('meta.letters.ar'))->toContain('أ')
+        ->and($response->json('meta.letters.ar'))->not->toContain('ب')
+        ->and($response->json('meta.materials_total'))->toBe(1);
 });

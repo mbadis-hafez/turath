@@ -25,10 +25,15 @@ class ArtistListResource extends JsonResource
                 'ar' => $artist->name_ar,
                 'en' => $artist->name_en,
             ],
+            'city' => [
+                'ar' => $artist->birth_place_ar,
+                'en' => $artist->birth_place_en,
+            ],
             'birth' => self::date($artist->birth),
             'death' => self::date($artist->death),
             'living_status' => $artist->living_status,
             'verified_status' => $artist->verified_status,
+            'materials_count' => $this->whenCounted('materials_count'),
             'portrait_url' => ArtistPortraitController::isPublic($artist) ? "/api/v1/artists/{$artist->id}/portrait" : null,
         ];
     }

@@ -4,6 +4,7 @@ import { defineComponent, h } from "vue";
 import { createMemoryHistory, createRouter, type Router } from "vue-router";
 import { createPinia, setActivePinia } from "pinia";
 
+import { i18n } from "@/i18n";
 import {
   ARTIST_SEARCH_DEBOUNCE_MS,
   useArtistsList,
@@ -22,6 +23,7 @@ const artist: ArtistListItem = {
   id: 1,
   slug: "inji-efflatoun",
   name: { ar: "إنجي أفلاطون", en: "Inji Efflatoun" },
+  city: { ar: "القاهرة", en: "Cairo" },
   birth: {
     display: null,
     year_from: 1924,
@@ -39,6 +41,7 @@ const artist: ArtistListItem = {
   living_status: "deceased",
   verified_status: "verified",
   portrait_url: null,
+  materials_count: 2,
 };
 
 const paginated: PaginatedResponse<ArtistListItem> = {
@@ -47,7 +50,7 @@ const paginated: PaginatedResponse<ArtistListItem> = {
   meta: {
     current_page: 1,
     last_page: 3,
-    per_page: 24,
+    per_page: 100,
     total: 3,
     from: 1,
     to: 1,
@@ -61,10 +64,15 @@ const DummyPage = defineComponent({
     return () =>
       h("pre", {
         "data-loading": String(list.loading.value),
+        "data-loading-more": String(list.loadingMore.value),
         "data-items": String(list.items.value.length),
         "data-q": list.query.value.q,
-        "data-page": String(list.query.value.page),
+        "data-sort": list.query.value.sort,
+        "data-city": list.query.value.city,
+        "data-theme": String(list.query.value.themeId),
+        "data-type": list.query.value.itemType,
         "data-error": list.error.value ? "yes" : "no",
+        "data-has-more": String(list.hasMore.value),
       });
   },
 });
@@ -94,7 +102,7 @@ async function mountList(initialPath = "/ar/artists") {
   });
   await router.push(initialPath);
   await router.isReady();
-  wrapper = mount(DummyPage, { global: { plugins: [router] } });
+  wrapper = mount(DummyPage, { global: { plugins: [router, i18n] } });
   await flushPromises();
 }
 
@@ -110,15 +118,27 @@ describe("useArtistsList", () => {
     vi.useRealTimers();
   });
 
-  it("maps URL query to API params", async () => {
-    await mountList("/ar/artists?q=inji&sort=recent&verified=1&page=2");
+  it("maps URL query to API params for Arabic locale", async () => {
+    await mountList("/ar/artists?q=inji&sort=materials&city=القاهرة&theme=5&type=image");
     expect(listArtists).toHaveBeenCalledWith(
       {
         q: "inji",
-        sort: "-created_at",
-        verified_status: "verified",
-        page: 2,
+        sort: "-materials_count",
+        city: "القاهرة",
+        theme_id: 5,
+        item_type: "image",
+        per_page: 100,
+        page: 1,
+        include_facets: 1,
       },
+      expect.any(AbortSignal),
+    );
+  });
+
+  it("uses English alphabetical sort in English locale", async () => {
+    await mountList("/en/artists");
+    expect(listArtists).toHaveBeenCalledWith(
+      expect.objectContaining({ sort: "name_en" }),
       expect.any(AbortSignal),
     );
   });
@@ -126,7 +146,12 @@ describe("useArtistsList", () => {
   it("omits default filters from the API params", async () => {
     await mountList("/ar/artists");
     expect(listArtists).toHaveBeenCalledWith(
-      { page: 1 },
+      {
+        sort: "name_ar",
+        per_page: 100,
+        page: 1,
+        include_facets: 1,
+      },
       expect.any(AbortSignal),
     );
   });
@@ -137,11 +162,11 @@ describe("useArtistsList", () => {
     expect(wrapper.attributes("data-loading")).toBe("false");
   });
 
-  it("resets the page to 1 when a filter changes", async () => {
-    await mountList("/ar/artists?page=2");
-    vm().list.setVerifiedOnly(true);
+  it("resets filters when a new filter is set", async () => {
+    await mountList("/ar/artists?city=جدة");
+    vm().list.setCity("الرياض");
     await flushPromises();
-    expect(router.currentRoute.value.query).toEqual({ verified: "1" });
+    expect(router.currentRoute.value.query).toEqual({ city: "الرياض" });
   });
 
   it("debounces search input before writing to the URL", async () => {
@@ -183,5 +208,39 @@ describe("useArtistsList", () => {
     await flushPromises();
     expect(wrapper.attributes("data-error")).toBe("no");
     expect(wrapper.attributes("data-items")).toBe("1");
+  });
+
+  it("accumulates results on load more", async () => {
+    const page1 = {
+      ...paginated,
+      data: [{ ...artist, id: 1 }],
+      meta: { ...paginated.meta, current_page: 1, last_page: 2, total: 2 },
+    };
+    const page2 = {
+      ...paginated,
+      data: [{ ...artist, id: 2 }],
+      meta: { ...paginated.meta, current_page: 2, last_page: 2, total: 2 },
+    };
+
+    vi.mocked(listArtists)
+      .mockResolvedValueOnce(page1)
+      .mockResolvedValueOnce(page2);
+
+    await mountList();
+    expect(wrapper.attributes("data-items")).toBe("1");
+    expect(wrapper.attributes("data-has-more")).toBe("true");
+
+    await vm().list.loadMore();
+    await flushPromises();
+
+    expect(wrapper.attributes("data-items")).toBe("2");
+    expect(wrapper.attributes("data-loading-more")).toBe("false");
+  });
+
+  it("clears all filters", async () => {
+    await mountList("/ar/artists?q=one&city=جدة&theme=3&type=image&sort=materials");
+    vm().list.clearFilters();
+    await flushPromises();
+    expect(router.currentRoute.value.query).toEqual({});
   });
 });

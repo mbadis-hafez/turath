@@ -27,6 +27,7 @@ function makeArtist(patch: Partial<Artist> = {}): Artist {
     id: 7,
     slug: "inji-efflatoun",
     name: { ar: "إنجي أفلاطون", en: "Inji Efflatoun" },
+    city: { ar: "القاهرة", en: "Cairo" },
     birth: {
       display: null,
       year_from: 1924,

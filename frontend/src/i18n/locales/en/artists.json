@@ -1,11 +1,32 @@
 {
   "title": "Artists",
-  "searchPlaceholder": "Search artists by name…",
-  "sortBy": "Sort by",
+  "intro": "Artists remembered in the archive through photographs, articles, and documents. Each page gathers what the sources say about the artist, and flags what has not yet been verified.",
+  "searchPlaceholder": "Search for an artist by Arabic or English name…",
+  "summary": "{artists} · {materials}",
+  "summaryArtist": "0 artists | {count} artist | {count} artists | {count} artists | {count} artists | {count} artists",
+  "summaryMaterial": "0 linked materials | {count} linked material | {count} linked materials | {count} linked materials | {count} linked materials | {count} linked materials",
+  "filter": {
+    "city": "City",
+    "theme": "Thematic axis",
+    "type": "Material type",
+    "all": "All"
+  },
   "sort": {
+    "alphabetical": "Alphabetical",
+    "materials": "Most materials",
     "name": "Name",
     "recent": "Recently added"
   },
+  "materialsCount": "0 materials | {count} material | {count} materials | {count} materials | {count} materials | {count} materials",
+  "pendingNote": "Name and dates under verification",
+  "loadMore": "Load more",
+  "loadingMore": "Loading…",
+  "cta": {
+    "title": "Can't find an artist you know?",
+    "body": "The archive is still being built. If you have material about an artist from this period, or information that corrects what is here, please send it to us.",
+    "button": "Submit material"
+  },
+  "sortBy": "Sort by",
   "verifiedOnly": "Verified only",
   "verified": "Verified",
   "unverified": "Unverified",

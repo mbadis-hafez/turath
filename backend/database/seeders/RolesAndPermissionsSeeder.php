@@ -99,11 +99,11 @@ class RolesAndPermissionsSeeder extends Seeder
             $permissions['dashboard.manage'], $permissions['proposals.submit'],
         ];
 
-        // Reviewer works the review queues and resolves conflicts — it never
-        // creates, edits or deletes content directly (see the content-permission-
-        // request workflow for the one path that unlocks that, admin-gated).
-        // archive.publish is a deliberate exception: publishing archive material
-        // is reviewer-or-admin work, not admin-exclusive like the other three.
+        // Reviewer works the review queues and resolves conflicts, on top of
+        // everything an Editor can do (Reviewer now holds the full editor
+        // permission set too, granted separately below). archive.publish is
+        // additionally granted here: publishing archive material is
+        // reviewer-or-admin work, not admin-exclusive like the other three.
         $reviewerPermissions = [
             $permissions['activity.view'], $permissions['source_conflicts.resolve'], $permissions['materials.review'],
             $permissions['review_queue.archivist_review'], $permissions['review_queue.data_audit'],
@@ -118,6 +118,7 @@ class RolesAndPermissionsSeeder extends Seeder
             $roles['editor']->givePermissionTo($editorPermissions);
         }
         if ($isNewRole['reviewer']) {
+            $roles['reviewer']->givePermissionTo($editorPermissions);
             $roles['reviewer']->givePermissionTo($reviewerPermissions);
         }
         if ($isNewRole['admin']) {
