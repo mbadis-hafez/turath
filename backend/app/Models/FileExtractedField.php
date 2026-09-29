@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ExtractedFieldStatus;
+use App\Enums\ExtractionMethod;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -27,6 +28,7 @@ class FileExtractedField extends Model
             'source_page' => 'integer',
             'status' => ExtractedFieldStatus::class,
             'reviewed_at' => 'datetime',
+            'extraction_method' => ExtractionMethod::class,
         ];
     }
 
@@ -44,5 +46,13 @@ class FileExtractedField extends Model
     public function reviewedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by_user_id');
+    }
+
+    /**
+     * @return BelongsTo<FileOcrRegion, $this>
+     */
+    public function region(): BelongsTo
+    {
+        return $this->belongsTo(FileOcrRegion::class, 'region_id');
     }
 }

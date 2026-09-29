@@ -23,6 +23,8 @@ use App\Http\Controllers\Api\V1\ArchiveItemEditController;
 use App\Http\Controllers\Api\V1\ArchiveItemFileController;
 use App\Http\Controllers\Api\V1\ArchiveItemFileOcrController;
 use App\Http\Controllers\Api\V1\ArchiveItemFileOcrFieldController;
+use App\Http\Controllers\Api\V1\ArchiveItemFileOcrFormFieldController;
+use App\Http\Controllers\Api\V1\ArchiveItemFileOcrRegionController;
 use App\Http\Controllers\Api\V1\ArchiveItemIndexController;
 use App\Http\Controllers\Api\V1\ArchiveItemLinkDestroyController;
 use App\Http\Controllers\Api\V1\ArchiveItemLinkStoreController;
@@ -290,6 +292,8 @@ Route::prefix('v1')->group(function () {
             Route::post('archive-items/{archiveItem}/file/ocr/fields/{field}/accept', [ArchiveItemFileOcrFieldController::class, 'accept'])->whereNumber(['archiveItem', 'field']);
             Route::post('archive-items/{archiveItem}/file/ocr/fields/{field}/reject', [ArchiveItemFileOcrFieldController::class, 'reject'])->whereNumber(['archiveItem', 'field']);
             Route::patch('archive-items/{archiveItem}/file/ocr/fields/{field}', [ArchiveItemFileOcrFieldController::class, 'update'])->whereNumber(['archiveItem', 'field']);
+            Route::get('archive-items/{archiveItem}/file/ocr/regions/{region}/crop', [ArchiveItemFileOcrRegionController::class, 'crop'])->whereNumber(['archiveItem', 'region']);
+            Route::post('archive-items/{archiveItem}/file/ocr/form-fields/{formField}/transcribe', [ArchiveItemFileOcrFormFieldController::class, 'transcribe'])->whereNumber(['archiveItem', 'formField']);
         });
 
         Route::middleware('can:artworks.manage')->group(function () {

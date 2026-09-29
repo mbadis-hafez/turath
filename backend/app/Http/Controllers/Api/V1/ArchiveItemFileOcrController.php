@@ -34,6 +34,42 @@ class ArchiveItemFileOcrController
             'confidence' => $f->confidence,
             'source_page' => $f->source_page,
             'status' => $f->status->value,
+            'extraction_method' => $f->extraction_method->value,
+        ])->all();
+
+        $regions = $file->ocrRegions()->orderBy('page_number')->get()->map(fn ($r) => [
+            'id' => $r->id,
+            'page_number' => $r->page_number,
+            'region_type' => $r->region_type->value,
+            'language' => $r->language,
+            'bbox' => $r->bbox,
+            'confidence' => $r->confidence,
+            'ocr_allowed' => $r->ocr_allowed,
+            'ai_correction_allowed' => $r->ai_correction_allowed,
+            'requires_human_review' => $r->requires_human_review,
+            'review_reason' => $r->review_reason,
+            'has_crop' => $r->crop_path !== null,
+        ])->all();
+
+        $formFields = $file->ocrFormFields()->get()->map(fn ($f) => [
+            'id' => $f->id,
+            'field_label' => $f->field_label,
+            'value_region_id' => $f->value_region_id,
+            'value_type' => $f->value_type,
+            'machine_value' => $f->machine_value,
+            'manual_value' => $f->manual_value,
+            'requires_manual_transcription' => $f->requires_manual_transcription,
+            'transcribed_by_user_id' => $f->transcribed_by_user_id,
+            'transcribed_at' => $f->transcribed_at?->toIso8601String(),
+        ])->all();
+
+        $dates = $file->extractedDates()->get()->map(fn ($d) => [
+            'id' => $d->id,
+            'value' => $d->value,
+            'calendar' => $d->calendar->value,
+            'date_type' => $d->date_type->value,
+            'source_page' => $d->source_page,
+            'source_method' => $d->source_method,
         ])->all();
 
         return response()->json(['data' => [
@@ -41,8 +77,12 @@ class ArchiveItemFileOcrController
             'progress_pct' => $file->ocr_progress_pct,
             'language_confidence' => $file->ocr_language_confidence,
             'failure_reason' => $file->ocr_failure_reason,
+            'document_type' => $file->document_type?->value,
             'texts' => $texts,
             'fields' => $fields,
+            'regions' => $regions,
+            'form_fields' => $formFields,
+            'dates' => $dates,
         ]]);
     }
 

@@ -5,8 +5,10 @@ use App\Enums\FileOcrStatus;
 use App\Jobs\ProcessFileOcrJob;
 use App\Models\File;
 use App\Models\FileExtractedField;
+use App\Support\Ocr\NonTextRegionDetector;
 use App\Support\Ocr\OcrEngine;
 use App\Support\Ocr\OcrEngineException;
+use App\Support\Ocr\PageLayoutAnalyzer;
 use App\Support\Ocr\PdfPageRasterizer;
 use Illuminate\Support\Facades\Storage;
 
@@ -34,9 +36,26 @@ class FakePdfPageRasterizer implements PdfPageRasterizer
     }
 }
 
+/** Region classification has its own dedicated tests (RegionClassifierTest, FormFieldDetectorTest); here it's a no-op by default so these OCR-text-focused tests aren't coupled to page geometry. */
+class FakePageLayoutAnalyzer implements PageLayoutAnalyzer
+{
+    public function analyze(string $imagePath): array
+    {
+        return [];
+    }
+}
+
+class FakeNonTextRegionDetector implements NonTextRegionDetector
+{
+    public function detect(string $imagePath, array $occupiedBboxes): array
+    {
+        return [];
+    }
+}
+
 function runOcrJob(File $file, OcrEngine $engine, PdfPageRasterizer $rasterizer = new FakePdfPageRasterizer([])): void
 {
-    (new ProcessFileOcrJob($file->id))->handle($engine, $rasterizer);
+    (new ProcessFileOcrJob($file->id))->handle($engine, $rasterizer, new FakePageLayoutAnalyzer, new FakeNonTextRegionDetector);
 }
 
 it('OCRs an image in both languages, saves text per language, and completes', function () {

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Concerns\LogsChanges;
+use App\Enums\DocumentType;
 use App\Enums\FileOcrStatus;
 use Database\Factories\FileFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,6 +34,7 @@ class File extends Model
             'ocr_progress_pct' => 'integer',
             'ocr_completed_at' => 'datetime',
             'ocr_language_confidence' => 'array',
+            'document_type' => DocumentType::class,
         ];
     }
 
@@ -66,6 +68,30 @@ class File extends Model
     public function extractedFields(): HasMany
     {
         return $this->hasMany(FileExtractedField::class);
+    }
+
+    /**
+     * @return HasMany<FileOcrRegion, $this>
+     */
+    public function ocrRegions(): HasMany
+    {
+        return $this->hasMany(FileOcrRegion::class);
+    }
+
+    /**
+     * @return HasMany<FileOcrFormField, $this>
+     */
+    public function ocrFormFields(): HasMany
+    {
+        return $this->hasMany(FileOcrFormField::class);
+    }
+
+    /**
+     * @return HasMany<FileExtractedDate, $this>
+     */
+    public function extractedDates(): HasMany
+    {
+        return $this->hasMany(FileExtractedDate::class);
     }
 
     /** OCR only makes sense for images and PDFs — not video, audio, or opaque office formats. */

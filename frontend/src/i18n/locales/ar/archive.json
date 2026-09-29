@@ -259,7 +259,17 @@
       "englishExtracted": "اكتمل الاستخراج الإنجليزي",
       "fieldsIdentified": "تحديد {count} كيانات"
     },
-    "viewFields": "عرض الحقول المستخرجة"
+    "viewFields": "عرض الحقول المستخرجة",
+    "formFields": {
+      "title": "حقول النموذج",
+      "explainer": "لا تُقرأ القيم المكتوبة بخط اليد تلقائيًا أبدًا — راجع صورة المصدر واكتب ما تراه.",
+      "transcribed": "تم النسخ",
+      "printedValue": "نص مطبوع",
+      "needsTranscription": "يحتاج نسخًا يدويًا",
+      "noSourceRegion": "لم يتم رصد منطقة مصدر لهذا الحقل — أدخل القيمة من المستند.",
+      "transcribePlaceholder": "اكتب ما تراه في المصدر…",
+      "transcribeSubmit": "حفظ"
+    }
   },
   "tabs": {
     "metadata": "البيانات الوصفية",

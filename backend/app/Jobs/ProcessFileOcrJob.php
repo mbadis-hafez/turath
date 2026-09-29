@@ -2,14 +2,27 @@
 
 namespace App\Jobs;
 
+use App\Enums\DateCalendar;
+use App\Enums\ExtractedDateType;
 use App\Enums\ExtractedFieldStatus;
+use App\Enums\ExtractionMethod;
 use App\Enums\FileOcrStatus;
 use App\Models\File;
+use App\Models\FileExtractedDate;
 use App\Models\FileExtractedField;
 use App\Models\FileExtractedText;
+use App\Models\FileOcrFormField;
+use App\Models\FileOcrRegion;
+use App\Support\Ocr\DateExtractor;
+use App\Support\Ocr\DocumentTypeClassifier;
 use App\Support\Ocr\FieldExtractionHeuristic;
+use App\Support\Ocr\FormFieldDetector;
+use App\Support\Ocr\NonTextRegionDetector;
 use App\Support\Ocr\OcrEngine;
+use App\Support\Ocr\PageLayoutAnalyzer;
 use App\Support\Ocr\PdfPageRasterizer;
+use App\Support\Ocr\RegionClassifier;
+use App\Support\Ocr\RegionCropper;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -21,11 +34,14 @@ use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
- * OCR's an archive item's file (image or PDF) in Arabic and English, then runs
- * a first-pass field-extraction heuristic over the result. Per
+ * OCR's an archive item's file (image or PDF) in Arabic and English, classifies
+ * every detected region on every page (printed text / handwriting / logo /
+ * signature / etc — see RegionClassifier) before trusting any of its text,
+ * pairs form labels with their values, extracts structured dates, guesses a
+ * document type, then runs a first-pass field-extraction heuristic. Per
  * docs/privacy-rules.md:10, none of this ever touches the live record — it
- * only ever produces reviewable suggestions (file_extracted_fields), which a
- * human accepts or rejects through the OCR review endpoints.
+ * only ever produces reviewable suggestions, which a human accepts, rejects,
+ * or (for handwriting) manually transcribes through the OCR review endpoints.
  */
 class ProcessFileOcrJob implements ShouldQueue
 {
@@ -36,12 +52,29 @@ class ProcessFileOcrJob implements ShouldQueue
 
     public function __construct(private readonly int $fileId) {}
 
-    public function handle(OcrEngine $engine, PdfPageRasterizer $rasterizer): void
-    {
+    public function handle(
+        OcrEngine $engine,
+        PdfPageRasterizer $rasterizer,
+        ?PageLayoutAnalyzer $layoutAnalyzer = null,
+        ?NonTextRegionDetector $nonTextDetector = null,
+        ?RegionClassifier $regionClassifier = null,
+        ?FormFieldDetector $formFieldDetector = null,
+        ?RegionCropper $cropper = null,
+        ?DateExtractor $dateExtractor = null,
+        ?DocumentTypeClassifier $documentTypeClassifier = null,
+    ): void {
         $file = File::find($this->fileId);
         if ($file === null || ! $file->isOcrCandidate()) {
             return;
         }
+
+        $layoutAnalyzer ??= app(PageLayoutAnalyzer::class);
+        $nonTextDetector ??= app(NonTextRegionDetector::class);
+        $regionClassifier ??= new RegionClassifier;
+        $formFieldDetector ??= new FormFieldDetector;
+        $cropper ??= new RegionCropper;
+        $dateExtractor ??= new DateExtractor;
+        $documentTypeClassifier ??= new DocumentTypeClassifier;
 
         $file->update(['ocr_status' => FileOcrStatus::Processing, 'ocr_progress_pct' => 0, 'ocr_failure_reason' => null]);
 
@@ -68,6 +101,8 @@ class ProcessFileOcrJob implements ShouldQueue
                 }
             }
 
+            $this->classifyRegions($file, $pagePaths, $layoutAnalyzer, $nonTextDetector, $regionClassifier, $formFieldDetector, $cropper);
+            $this->saveDates($file, $dateExtractor->extract($pagesByLanguage));
             $this->saveCandidateFields($file, (new FieldExtractionHeuristic)->extract($pagesByLanguage));
 
             $file->update([
@@ -78,6 +113,7 @@ class ProcessFileOcrJob implements ShouldQueue
                     'ar' => $this->averageConfidence($pagesByLanguage['ar']),
                     'en' => $this->averageConfidence($pagesByLanguage['en']),
                 ],
+                'document_type' => $documentTypeClassifier->classify($pagesByLanguage)->value,
             ]);
         } catch (Throwable $e) {
             Log::error('Archive file OCR failed', ['file_id' => $file->id, 'error' => $e->getMessage()]);
@@ -102,6 +138,108 @@ class ProcessFileOcrJob implements ShouldQueue
         }
 
         return [$absolutePath];
+    }
+
+    /**
+     * Classifies every region on every page, crops the ones a reviewer must look at directly, and
+     * pairs form labels with their nearest value region. Reprocessing must not clobber a form
+     * field a reviewer already manually transcribed — those rows are left alone.
+     *
+     * @param  array<int, string>  $pagePaths
+     */
+    private function classifyRegions(
+        File $file,
+        array $pagePaths,
+        PageLayoutAnalyzer $layoutAnalyzer,
+        NonTextRegionDetector $nonTextDetector,
+        RegionClassifier $regionClassifier,
+        FormFieldDetector $formFieldDetector,
+        RegionCropper $cropper,
+    ): void {
+        $resolvedLabels = $file->ocrFormFields()->whereNotNull('transcribed_at')->pluck('field_label')->all();
+        $file->ocrRegions()->delete();
+        $file->ocrFormFields()->whereNull('transcribed_at')->delete();
+
+        foreach ($pagePaths as $index => $path) {
+            $pageNumber = $index + 1;
+            $pageSize = $this->imageSize($path);
+
+            $textBlocks = $layoutAnalyzer->analyze($path);
+            $nonTextRegions = $nonTextDetector->detect($path, array_column($textBlocks, 'bbox'));
+            $classified = $regionClassifier->classify($textBlocks, $nonTextRegions, $pageSize);
+
+            $persisted = [];
+            foreach ($classified as $region) {
+                /** @var FileOcrRegion $row */
+                $row = FileOcrRegion::create([
+                    'file_id' => $file->id,
+                    'page_number' => $pageNumber,
+                    'region_type' => $region['region_type']->value,
+                    'language' => $region['language'],
+                    'bbox' => $region['bbox'],
+                    'confidence' => $region['confidence'],
+                    'source_text' => $region['source_text'],
+                    'ocr_allowed' => $region['ocr_allowed'],
+                    'ai_correction_allowed' => $region['ai_correction_allowed'],
+                    'requires_human_review' => $region['requires_human_review'],
+                    'review_reason' => $region['review_reason'],
+                ]);
+
+                if ($row->requires_human_review) {
+                    $png = $cropper->crop($path, $region['bbox']);
+                    if ($png !== null) {
+                        $cropPath = "archive/ocr-crops/file-{$file->id}/page-{$pageNumber}/region-{$row->id}.png";
+                        Storage::disk($file->disk)->put($cropPath, $png);
+                        $row->update(['crop_path' => $cropPath]);
+                    }
+                }
+
+                $persisted[] = ['id' => $row->id, 'region_type' => $region['region_type'], 'bbox' => $region['bbox'], 'source_text' => $region['source_text']];
+            }
+
+            foreach ($formFieldDetector->pair($persisted) as $pair) {
+                if (in_array($pair['field_label'], $resolvedLabels, true)) {
+                    continue;
+                }
+                FileOcrFormField::create([
+                    'file_id' => $file->id,
+                    'field_label' => $pair['field_label'],
+                    'label_region_id' => $pair['label_region_id'],
+                    'value_region_id' => $pair['value_region_id'],
+                    'value_type' => $pair['value_type'],
+                    'machine_value' => $pair['machine_value'],
+                    'requires_manual_transcription' => $pair['requires_manual_transcription'],
+                ]);
+            }
+        }
+    }
+
+    /**
+     * @return array{width: int, height: int}
+     */
+    private function imageSize(string $path): array
+    {
+        $size = @getimagesize($path);
+
+        return $size === false ? ['width' => 0, 'height' => 0] : ['width' => $size[0], 'height' => $size[1]];
+    }
+
+    /**
+     * @param  array<int, array{value: string, calendar: DateCalendar, date_type: ExtractedDateType, source_page: ?int}>  $dates
+     */
+    private function saveDates(File $file, array $dates): void
+    {
+        $file->extractedDates()->delete();
+        foreach ($dates as $date) {
+            FileExtractedDate::create([
+                'file_id' => $file->id,
+                'value' => $date['value'],
+                'calendar' => $date['calendar']->value,
+                'date_type' => $date['date_type']->value,
+                'source_page' => $date['source_page'],
+                'source_method' => 'ocr',
+            ]);
+        }
     }
 
     /**
@@ -139,6 +277,7 @@ class ProcessFileOcrJob implements ShouldQueue
                 'confidence' => $candidate['confidence'],
                 'source_page' => $candidate['source_page'],
                 'status' => ExtractedFieldStatus::Pending->value,
+                'extraction_method' => ExtractionMethod::OcrDerived->value,
             ]);
         }
     }

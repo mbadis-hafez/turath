@@ -1,6 +1,6 @@
 import { computed, onBeforeUnmount, ref, watch, type Ref } from "vue";
 
-import { acceptExtractedField, acceptHighConfidenceFields, editExtractedField, getArchiveItemFileOcr, rejectExtractedField, runArchiveItemFileOcr } from "@/api/archive";
+import { acceptExtractedField, acceptHighConfidenceFields, editExtractedField, getArchiveItemFileOcr, rejectExtractedField, runArchiveItemFileOcr, transcribeOcrFormField } from "@/api/archive";
 import type { FileOcrBundle } from "@/types/ocr";
 
 const POLL_MS = 3000;
@@ -63,6 +63,7 @@ export function useFileOcr(archiveItemId: Ref<number>) {
   const edit = (fieldId: number, value: string) => runAction(() => editExtractedField(archiveItemId.value, fieldId, value));
   const acceptHighConfidence = (threshold?: number) => runAction(() => acceptHighConfidenceFields(archiveItemId.value, threshold));
   const runOcr = () => runAction(() => runArchiveItemFileOcr(archiveItemId.value));
+  const transcribeFormField = (formFieldId: number, value: string) => runAction(() => transcribeOcrFormField(archiveItemId.value, formFieldId, value));
 
   watch(archiveItemId, () => void load(), { immediate: true });
   onBeforeUnmount(() => {
@@ -70,5 +71,5 @@ export function useFileOcr(archiveItemId: Ref<number>) {
     if (timer !== null) clearTimeout(timer);
   });
 
-  return { bundle, loading, error, actionError, isProcessing, pendingCount, averageConfidence, accept, reject, edit, acceptHighConfidence, runOcr };
+  return { bundle, loading, error, actionError, isProcessing, pendingCount, averageConfidence, accept, reject, edit, acceptHighConfidence, runOcr, transcribeFormField };
 }

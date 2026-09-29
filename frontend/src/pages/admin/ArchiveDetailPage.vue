@@ -13,6 +13,7 @@ import Tabs, { type TabItem } from "@/components/common/Tabs.vue";
 import ArchiveDeleteDialog from "@/components/curation/ArchiveDeleteDialog.vue";
 import ArchiveTypeIcon from "@/components/curation/ArchiveTypeIcon.vue";
 import OcrFieldsReviewTable from "@/components/curation/OcrFieldsReviewTable.vue";
+import OcrFormFieldsReviewTable from "@/components/curation/OcrFormFieldsReviewTable.vue";
 import OcrStatusCard from "@/components/curation/OcrStatusCard.vue";
 import OcrTextPanel from "@/components/curation/OcrTextPanel.vue";
 // pdf.js is a heavy dependency (~300KB) that most archive items never need — load it
@@ -39,7 +40,10 @@ const forbidden = new ApiError("forbidden", "Forbidden", { status: 403 });
 const canManage = computed(() => auth.can("archive.manage"));
 const id = computed(() => Number(route.params.id));
 
-const { bundle: ocrBundle, actionError: ocrActionError, pendingCount: ocrPendingCount, averageConfidence: ocrAverageConfidence, accept: acceptField, reject: rejectField, edit: editField, acceptHighConfidence, runOcr } = useFileOcr(id);
+const {
+  bundle: ocrBundle, actionError: ocrActionError, pendingCount: ocrPendingCount, averageConfidence: ocrAverageConfidence,
+  accept: acceptField, reject: rejectField, edit: editField, acceptHighConfidence, runOcr, transcribeFormField,
+} = useFileOcr(id);
 
 const item = ref<ArchiveEdit | null>(null);
 const loading = ref(false);
@@ -130,6 +134,8 @@ async function copyLink(): Promise<void> {
 }
 
 const hasOcr = computed(() => ocrBundle.value !== null && ocrBundle.value.status !== null);
+// Defensive against an older cached bundle shape that predates form_fields — same reasoning as hasOcrText below.
+const ocrFormFields = computed(() => ocrBundle.value?.form_fields ?? []);
 const hasOcrText = computed(() => ocrBundle.value !== null && (ocrBundle.value.texts.ar.length > 0 || ocrBundle.value.texts.en.length > 0));
 const canRunOcr = computed(() => ocrBundle.value !== null && ocrBundle.value.status === null && (filePreview.value?.isPdf || filePreview.value?.isImage) === true);
 const ocrPageCount = computed(() => {
@@ -385,6 +391,13 @@ watch(activeTab, (tab) => {
                   @accept-high-confidence="acceptHighConfidence()"
                 />
               </div>
+              <OcrFormFieldsReviewTable
+                v-if="ocrFormFields.length > 0"
+                :archive-item-id="item.id"
+                :form-fields="ocrFormFields"
+                :can-review="canManage"
+                @transcribe="transcribeFormField"
+              />
             </div>
           </template>
 

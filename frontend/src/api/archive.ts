@@ -3,7 +3,7 @@ import type { PaginatedResponse, PaginationMeta } from "@/types/api";
 import type {
   AdminArchiveQuery, AdminArchiveRow, ArchiveEdit, ArchiveFacets, ArchiveEditFile, ArchiveItem, ArchiveQueryParams, BulkResult,
 } from "@/types/archive";
-import type { ExtractedField, FileOcrBundle } from "@/types/ocr";
+import type { ExtractedField, FileOcrBundle, OcrFormField } from "@/types/ocr";
 
 export function listArchiveItems(
   params: ArchiveQueryParams = {},
@@ -110,6 +110,15 @@ export function rejectExtractedField(archiveItemId: number, fieldId: number): Pr
 
 export function editExtractedField(archiveItemId: number, fieldId: number, value: string): Promise<{ data: ExtractedField }> {
   return request({ method: "PATCH", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/fields/${fieldId}`, data: { extracted_value: value } });
+}
+
+/** A cropped source image for one OCR region — used directly as an <img> src; cookie auth carries over since it's same-origin. */
+export function ocrRegionCropUrl(archiveItemId: number, regionId: number): string {
+  return `${import.meta.env.VITE_API_BASE_URL ?? ""}/api/v1/archive-items/${archiveItemId}/file/ocr/regions/${regionId}/crop`;
+}
+
+export function transcribeOcrFormField(archiveItemId: number, formFieldId: number, value: string): Promise<{ data: OcrFormField }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/form-fields/${formFieldId}/transcribe`, data: { value } });
 }
 
 export function acceptHighConfidenceFields(archiveItemId: number, threshold?: number): Promise<{ data: { accepted: string[] } }> {

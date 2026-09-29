@@ -259,7 +259,17 @@
       "englishExtracted": "English extraction complete",
       "fieldsIdentified": "{count} fields identified"
     },
-    "viewFields": "View extracted fields"
+    "viewFields": "View extracted fields",
+    "formFields": {
+      "title": "Form fields",
+      "explainer": "Handwritten values are never read automatically — check the source image and type what it says.",
+      "transcribed": "Transcribed",
+      "printedValue": "Printed",
+      "needsTranscription": "Needs manual transcription",
+      "noSourceRegion": "No source region was detected for this field — enter the value from the document.",
+      "transcribePlaceholder": "Type what the source shows…",
+      "transcribeSubmit": "Save"
+    }
   },
   "tabs": {
     "metadata": "Metadata",

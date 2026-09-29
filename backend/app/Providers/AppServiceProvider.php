@@ -2,10 +2,16 @@
 
 namespace App\Providers;
 
+use App\Support\Ocr\GdNonTextRegionDetector;
+use App\Support\Ocr\HandwritingOcrProvider;
+use App\Support\Ocr\NonTextRegionDetector;
+use App\Support\Ocr\NullHandwritingOcrProvider;
 use App\Support\Ocr\OcrEngine;
+use App\Support\Ocr\PageLayoutAnalyzer;
 use App\Support\Ocr\PdfPageRasterizer;
 use App\Support\Ocr\PopplerPdfPageRasterizer;
 use App\Support\Ocr\TesseractOcrEngine;
+use App\Support\Ocr\TesseractPageLayoutAnalyzer;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
@@ -22,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(OcrEngine::class, TesseractOcrEngine::class);
         $this->app->bind(PdfPageRasterizer::class, PopplerPdfPageRasterizer::class);
+        $this->app->bind(PageLayoutAnalyzer::class, TesseractPageLayoutAnalyzer::class);
+        $this->app->bind(NonTextRegionDetector::class, GdNonTextRegionDetector::class);
+        // No self-hosted handwriting model is wired up yet; see KrakenHandwritingOcrProvider's docblock.
+        $this->app->bind(HandwritingOcrProvider::class, NullHandwritingOcrProvider::class);
     }
 
     /**
