@@ -52,7 +52,7 @@ class SectionValidator
         $request->setContainer(app());
         $request->setRedirector(app('redirect'));
 
-        $route = new Route(['PATCH'], "/{$routeParameter}", ['uses' => fn () => null]);
+        $route = new Route(['PATCH'], '/{'.$routeParameter.'}', ['uses' => fn () => null]);
         $route->bind($request);
         $request->setRouteResolver(fn () => $route);
 

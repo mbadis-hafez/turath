@@ -100,6 +100,17 @@ it('validates every section payload like the endpoint bodies do', function () {
     expect(EditProposal::count())->toBe(0);
 });
 
+it('lets a draft resend the artist\'s own unchanged legacy_code without a false uniqueness failure', function () {
+    $editor = editorUser();
+    $artist = draftableArtist(['legacy_code' => 'AR036']);
+
+    upsertDraft('artists', $artist->id, $editor, artistDraftPayload([
+        'fields' => ['name' => ['en' => 'Ahmad Almaghlout'], 'legacy_code' => 'AR036'],
+    ]))
+        ->assertOk()
+        ->assertJsonPath('data.payload.fields.legacy_code', 'AR036');
+});
+
 it('keeps one open draft per record: another editor gets a 409, the owner can replace theirs', function () {
     $owner = editorUser();
     $other = editorUser();
