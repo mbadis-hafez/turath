@@ -24,6 +24,7 @@ function makeArtwork(): Artwork {
     medium: { ar: null, en: null },
     creation: null,
     dimensions: { height_cm: null, width_cm: null, depth_cm: null, raw: null },
+    image_url: null,
     frame_dimensions: null,
     weight_kg: null,
     signed: "unknown",

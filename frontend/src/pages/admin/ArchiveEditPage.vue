@@ -241,8 +241,21 @@ async function saveDraft(): Promise<void> {
     let failed = false;
     try {
       if (themeIds.value.length) await syncArchiveItemThemes(newId, themeIds.value);
-      if (pendingFile.value) await uploadArchiveFile(newId, pendingFile.value);
-      for (const l of pendingLinks.value) await addArchiveLink(newId, { linkable_type: l.kind, linkable_id: l.entity_id, role: l.role });
+      const uploaded = pendingFile.value ? (await uploadArchiveFile(newId, pendingFile.value)).data : null;
+      for (const l of pendingLinks.value) {
+        await addArchiveLink(newId, { linkable_type: l.kind, linkable_id: l.entity_id, role: l.role });
+        // Proof roles picked on the create form act on the artist only now that
+        // the item (and its file) actually exist.
+        if (l.kind === "artist" && l.role === "authorization_letter" && uploaded) {
+          await updateArtistCuration(l.entity_id, { authorization_letter_status: "signed", authorization_letter_file_id: uploaded.id });
+        } else if (l.kind === "artist" && l.role === "name_verification") {
+          await addFieldCitation("artist", l.entity_id, {
+            field_key: "name",
+            new_source: { linked_archive_item_id: newId },
+            claimed_value: l.label.ar ?? l.label.en ?? "",
+          });
+        }
+      }
     } catch {
       failed = true;
     }
@@ -331,9 +344,9 @@ const linkEntity = ref<PickerOption | null>(null);
 
 // These two roles don't just tag the relationship — picking one also acts on the
 // linked artist record (signs their authorization letter, or cites this item as
-// their primary source). Only meaningful once the item exists and has a file/id
-// to point at, and only for someone who can actually edit that artist.
-const artistProofRolesAvailable = computed(() => !isNew.value && linkKind.value === "artist" && auth.can("artists.manage"));
+// their primary source). On an existing item the action runs immediately; on the
+// create form it runs right after the item (and its file) are first saved.
+const artistProofRolesAvailable = computed(() => linkKind.value === "artist" && auth.can("artists.manage"));
 const roleOptions = computed<string[]>(() => (artistProofRolesAvailable.value ? [...LINK_ROLES, ...ARTIST_PROOF_LINK_ROLES] : [...LINK_ROLES]));
 const isProofRole = (role: string): boolean => (ARTIST_PROOF_LINK_ROLES as readonly string[]).includes(role);
 
@@ -378,7 +391,16 @@ async function applyArtistProof(role: string, artistId: number, artistName: stri
 async function addLink(): Promise<void> {
   if (!linkEntity.value) return;
   const role = linkRole.value;
-  if (isProofRole(role) && !(await applyArtistProof(role, linkEntity.value.id, linkEntity.value.label))) return;
+  if (isProofRole(role)) {
+    if (isNew.value) {
+      // Applied after the item is first saved (see saveDraft); an authorization
+      // letter needs the file, which must be staged before saving.
+      if (role === "authorization_letter" && !pendingFile.value) {
+        error.value = t("archive.edit.linkNeedsFile");
+        return;
+      }
+    } else if (!(await applyArtistProof(role, linkEntity.value.id, linkEntity.value.label))) return;
+  }
 
   const link: ArchiveEditLink = { role, kind: linkKind.value, entity_id: linkEntity.value.id, label: { ar: linkEntity.value.label, en: linkEntity.value.label } };
   if (isNew.value) {

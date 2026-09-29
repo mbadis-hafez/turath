@@ -13,8 +13,14 @@ vi.mock("@/api/home", () => api);
 const overview: HomeOverview = {
   stats: { materials: 12, artists: 3, artworks: 20, sources: 4 },
   updated_at: null,
-  popular_searches: [{ term: { ar: "أحمد المغلوث", en: "Ahmad Almaghlout" } }, { term: { ar: "يوسف جاها", en: null } }],
-  themes: [], archive_feature: null, recent_archive_items: [], artists: [],
+  popular_searches: [
+    { term: { ar: "أحمد المغلوث", en: "Ahmad Almaghlout" } },
+    { term: { ar: "يوسف جاها", en: null } },
+  ],
+  themes: [],
+  archive_feature: null,
+  recent_archive_items: [],
+  artists: [],
   places: [{ name: { ar: "الرياض", en: "Riyadh" }, materials_count: 9 }],
 };
 
@@ -41,7 +47,11 @@ beforeEach(() => {
       { path: "/:locale/artists", name: "artists.index", component: stub },
       { path: "/:locale/artists/:slug", name: "artists.show", component: stub },
       { path: "/:locale/submit", name: "submit", component: stub },
-      { path: "/:locale/about/methodology", name: "methodology", component: stub },
+      {
+        path: "/:locale/about/methodology",
+        name: "methodology",
+        component: stub,
+      },
       { path: "/:locale/login", name: "login", component: stub },
     ],
   });
@@ -72,7 +82,9 @@ describe("HomePage search", () => {
 
   it("runs a popular search in the visitor's language across everything", async () => {
     const wrapper = await mountHome("en");
-    const chips = wrapper.findAll("button").filter((b) => b.text() === "Ahmad Almaghlout");
+    const chips = wrapper
+      .findAll("button")
+      .filter((b) => b.text() === "Ahmad Almaghlout");
     expect(chips).toHaveLength(1);
 
     await chips[0].trigger("click");
@@ -85,7 +97,10 @@ describe("HomePage search", () => {
   it("falls back to the other language for a popular search that has only one", async () => {
     const wrapper = await mountHome("en");
 
-    await wrapper.findAll("button").find((b) => b.text() === "يوسف جاها")!.trigger("click");
+    await wrapper
+      .findAll("button")
+      .find((b) => b.text() === "يوسف جاها")!
+      .trigger("click");
     await flushPromises();
 
     expect(router.currentRoute.value.query.q).toBe("يوسف جاها");
@@ -97,14 +112,107 @@ describe("HomePage links", () => {
     const wrapper = await mountHome("en");
     const link = wrapper.findAll("a").find((a) => a.text().includes("Riyadh"))!;
 
-    expect(decodeURIComponent(link.attributes("href")!)).toBe("/en/archive?place=Riyadh");
+    expect(decodeURIComponent(link.attributes("href")!)).toBe(
+      "/en/archive?place=Riyadh",
+    );
   });
 
   it("sends the contribute buttons to the registration form and the methodology page", async () => {
     const wrapper = await mountHome("en");
-    const hrefOf = (text: string) => wrapper.findAll("a").find((a) => a.text() === text)?.attributes("href");
+    const hrefOf = (text: string) =>
+      wrapper
+        .findAll("a")
+        .find((a) => a.text() === text)
+        ?.attributes("href");
 
     expect(hrefOf("Submit material")).toBe("/en/submit");
     expect(hrefOf("How we document sources")).toBe("/en/about/methodology");
+  });
+});
+
+describe("HomePage images", () => {
+  it("shows the artist portrait, the archive feature thumbnail and the recent-item thumbnail when the API provides them", async () => {
+    api.getHomeOverview.mockResolvedValue({
+      data: {
+        ...overview,
+        archive_feature: {
+          id: 1,
+          item_type: "photograph",
+          title: { ar: null, en: "A photograph" },
+          content: null,
+          creator_name: null,
+          description: { ar: null, en: "desc" },
+          restricted: false,
+          thumbnail_url: "/api/v1/archive-items/1/files/1/download",
+        },
+        recent_archive_items: [
+          {
+            id: 2,
+            item_type: "photograph",
+            title: { ar: null, en: "Another photograph" },
+            content: null,
+            creator_name: null,
+            description: null,
+            restricted: false,
+            thumbnail_url: "/api/v1/archive-items/2/files/2/download",
+          },
+        ],
+        artists: [
+          {
+            id: 9,
+            slug: "inji-efflatoun",
+            name: { ar: "إنجي", en: "Inji" },
+            materials_count: 3,
+            portrait_url: "/api/v1/artists/9/portrait",
+          },
+        ],
+      },
+    });
+    const wrapper = await mountHome("en");
+
+    expect(
+      wrapper.get("[data-testid=archive-feature-thumbnail]").attributes("src"),
+    ).toBe("/api/v1/archive-items/1/files/1/download");
+    expect(
+      wrapper.get("[data-testid=recent-item-thumbnail]").attributes("src"),
+    ).toBe("/api/v1/archive-items/2/files/2/download");
+    expect(
+      wrapper.get("[data-testid=home-artist-portrait]").attributes("src"),
+    ).toBe("/api/v1/artists/9/portrait");
+  });
+
+  it("shows no image element when the API sends no thumbnail or portrait", async () => {
+    api.getHomeOverview.mockResolvedValue({
+      data: {
+        ...overview,
+        archive_feature: {
+          id: 1,
+          item_type: "photograph",
+          title: { ar: null, en: "A photograph" },
+          content: null,
+          creator_name: null,
+          description: null,
+          restricted: false,
+          thumbnail_url: null,
+        },
+        artists: [
+          {
+            id: 9,
+            slug: "inji-efflatoun",
+            name: { ar: "إنجي", en: "Inji" },
+            materials_count: 3,
+            portrait_url: null,
+          },
+        ],
+      },
+    });
+    const wrapper = await mountHome("en");
+
+    expect(
+      wrapper.find("[data-testid=archive-feature-thumbnail]").exists(),
+    ).toBe(false);
+    expect(wrapper.find("[data-testid=home-artist-portrait]").exists()).toBe(
+      false,
+    );
   });
 });

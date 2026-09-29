@@ -212,6 +212,66 @@ describe("ArchiveEditPage (edit)", () => {
       expect(api.addArchiveLink).not.toHaveBeenCalled();
       expect(wrapper.text()).toContain("Upload this item's file before using it as an authorization letter.");
     });
+
+    it("offers proof roles on the create form and applies them after the item is saved", async () => {
+      api.uploadArchiveFile.mockResolvedValue({ data: { id: 42 } });
+      const wrapper = await mountAt("/en/admin/archive/new", ["archive.manage", "artists.manage"]);
+      await wrapper.get("[data-testid=title-ar]").setValue("خطاب تفويض");
+      const input = wrapper.get("[data-testid=file-input]");
+      Object.defineProperty(input.element, "files", { value: [new File(["x"], "letter.jpg", { type: "image/jpeg" })] });
+      await input.trigger("change");
+
+      await wrapper.get("[data-testid=link-open]").trigger("click");
+      const roleValues = wrapper.get("[data-testid=link-role]").findAll("option").map((o) => o.attributes("value"));
+      expect(roleValues).toEqual(expect.arrayContaining(["authorization_letter", "name_verification"]));
+
+      await wrapper.get("[data-testid=link-role]").setValue("authorization_letter");
+      await pickLinkedArtist(wrapper);
+      await wrapper.get("[data-testid=link-apply]").trigger("click");
+
+      // Queued only — nothing acts on the artist until the item exists.
+      expect(artistCuration.updateArtistCuration).not.toHaveBeenCalled();
+
+      api.getAdminArchiveItem.mockResolvedValue({ data: bundle() });
+      await wrapper.get("[data-testid=save-draft]").trigger("click");
+      await flushPromises();
+
+      expect(api.addArchiveLink).toHaveBeenCalledWith(5, { linkable_type: "artist", linkable_id: 7, role: "authorization_letter" });
+      expect(artistCuration.updateArtistCuration).toHaveBeenCalledWith(7, { authorization_letter_status: "signed", authorization_letter_file_id: 42 });
+      expect(api.createArchiveItem).toHaveBeenCalledBefore(artistCuration.updateArtistCuration);
+    });
+
+    it("cites a name-verification link as primary source after the item is saved", async () => {
+      const wrapper = await mountAt("/en/admin/archive/new", ["archive.manage", "artists.manage"]);
+      await wrapper.get("[data-testid=title-ar]").setValue("بطاقة تعريف");
+
+      await wrapper.get("[data-testid=link-open]").trigger("click");
+      await wrapper.get("[data-testid=link-role]").setValue("name_verification");
+      await pickLinkedArtist(wrapper);
+      await wrapper.get("[data-testid=link-apply]").trigger("click");
+      expect(dashboardApi.addFieldCitation).not.toHaveBeenCalled();
+
+      api.getAdminArchiveItem.mockResolvedValue({ data: bundle() });
+      await wrapper.get("[data-testid=save-draft]").trigger("click");
+      await flushPromises();
+
+      expect(dashboardApi.addFieldCitation).toHaveBeenCalledWith("artist", 7, {
+        field_key: "name", new_source: { linked_archive_item_id: 5 }, claimed_value: "منيرة الموصلي",
+      });
+    });
+
+    it("blocks the authorization-letter link on the create form until a file is staged", async () => {
+      const wrapper = await mountAt("/en/admin/archive/new", ["archive.manage", "artists.manage"]);
+      await wrapper.get("[data-testid=link-open]").trigger("click");
+      await wrapper.get("[data-testid=link-role]").setValue("authorization_letter");
+      await pickLinkedArtist(wrapper);
+
+      await wrapper.get("[data-testid=link-apply]").trigger("click");
+      await flushPromises();
+
+      expect(wrapper.text()).toContain("Upload this item's file before using it as an authorization letter.");
+      expect(wrapper.get("[data-testid=links]").text()).not.toContain("authorization");
+    });
   });
 
   describe("draft mode (proposals.submit)", () => {

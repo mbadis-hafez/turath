@@ -328,9 +328,8 @@ describe("ArtistCurationPage", () => {
       expect(wrapper.get("[data-testid=draft-banner]").attributes("data-state")).toBe("draft");
       const ownerSelect = wrapper.get("[data-testid=contact-section] select").element as HTMLSelectElement;
       expect(ownerSelect.value).toBe("gallery");
-      const inputs = wrapper.findAll("input[type=text]");
-      const nationalityEn = inputs.find((i) => (i.element as HTMLInputElement).value === "Saudi");
-      expect(nationalityEn).toBeDefined();
+      const nationalityChip = wrapper.get("[data-testid=nationality-picked]");
+      expect(nationalityChip.text()).toContain("Saudi");
     });
 
     it("shows the pending state and disables saving while a review is open", async () => {

@@ -181,7 +181,7 @@ class EditorDashboard
             $skipIds = $this->skipIdsFor($entityType, $skip);
             $query = DB::table($table)
                 ->join('record_completeness as rc', function ($join) use ($modelClass, $table) {
-                    $join->on("rc.citable_id", '=', "{$table}.id")
+                    $join->on('rc.citable_id', '=', "{$table}.id")
                         ->where('rc.citable_type', '=', $modelClass);
                 });
             $this->scopeMine($query, $entityType, $userId);
@@ -323,7 +323,7 @@ class EditorDashboard
             $table = self::TABLES[$entityType];
             $query = DB::table($table)
                 ->join('record_completeness as rc', function ($join) use ($modelClass, $table) {
-                    $join->on("rc.citable_id", '=', "{$table}.id")
+                    $join->on('rc.citable_id', '=', "{$table}.id")
                         ->where('rc.citable_type', '=', $modelClass);
                 });
             $this->scopeMine($query, $entityType, $userId);
@@ -339,7 +339,7 @@ class EditorDashboard
 
             $lowQuery = DB::table($table)
                 ->join('record_completeness as rc', function ($join) use ($modelClass, $table) {
-                    $join->on("rc.citable_id", '=', "{$table}.id")
+                    $join->on('rc.citable_id', '=', "{$table}.id")
                         ->where('rc.citable_type', '=', $modelClass);
                 });
             $this->scopeMine($lowQuery, $entityType, $userId);
@@ -377,7 +377,7 @@ class EditorDashboard
         $table = 'archive_items';
         $modelClass = ArchiveItem::class;
 
-        $base = function () use ($table, $modelClass, $userId): Builder {
+        $base = function () use ($table, $userId): Builder {
             $query = DB::table($table);
             $this->joinCompleteness($query, 'archive_item', $table);
             $query->where("{$table}.created_by_user_id", $userId);
@@ -497,7 +497,7 @@ class EditorDashboard
      * Hydrate activity rows (subject refs only) with titles, slugs and
      * completeness. Rows whose subject no longer exists are dropped.
      *
-     * @param  Collection<int, object>  $rows
+     * @param  Collection<int, \stdClass>  $rows
      * @return array<int, array<string, mixed>>
      */
     private function presentActivitySubjects(Collection $rows, bool $withUpdated): array
@@ -561,9 +561,7 @@ class EditorDashboard
         return DB::table('edit_proposals')
             ->where('proposed_by_user_id', $userId)
             ->groupBy('status')
-            ->selectRaw('status, COUNT(*) AS c')
-            ->get()
-            ->pluck('c', 'status');
+            ->pluck(DB::raw('COUNT(*)'), 'status');
     }
 
     private function countDraftRecords(int $userId): int
@@ -658,7 +656,7 @@ class EditorDashboard
     private function joinCompleteness(Builder $query, string $entityType, string $table): void
     {
         $query->leftJoin('record_completeness as rc', function ($join) use ($entityType, $table) {
-            $join->on("rc.citable_id", '=', "{$table}.id")
+            $join->on('rc.citable_id', '=', "{$table}.id")
                 ->where('rc.citable_type', '=', self::ENTITY_TYPES[$entityType]);
         });
     }

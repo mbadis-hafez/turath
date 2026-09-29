@@ -31,6 +31,7 @@ class DemoArtistSeeder extends Seeder
                     'bio_ar' => fake()->paragraphs(2, true),
                     'publication_status' => is_array($state) ? $state[0] : $state,
                     'verified_status' => is_array($state) ? $state[1] : 'unverified',
+                    'creation_approved_at' => now(),
                 ],
             );
         }
@@ -39,11 +40,13 @@ class DemoArtistSeeder extends Seeder
         Artist::updateOrCreate(['name_en' => 'Demo English Only'], [
             'name_ar' => null,
             'publication_status' => 'published',
+            'creation_approved_at' => now(),
         ]);
 
         Artist::updateOrCreate(['name_ar' => 'فنان عربي فقط'], [
             'name_en' => null,
             'publication_status' => 'published',
+            'creation_approved_at' => now(),
         ]);
     }
 }

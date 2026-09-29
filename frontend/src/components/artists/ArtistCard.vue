@@ -26,7 +26,8 @@ const to = computed(() =>
 const secondary = computed(() => {
   const primary = pick(props.artist.name);
   if (!primary) return null;
-  const other = primary.lang === "ar" ? props.artist.name.en : props.artist.name.ar;
+  const other =
+    primary.lang === "ar" ? props.artist.name.en : props.artist.name.ar;
   if (!other?.trim() || other === primary.text) return null;
   return {
     text: other,
@@ -48,25 +49,43 @@ const hasLifeDates = computed(
     class="block rounded-lg border border-line bg-surface p-4 transition-shadow hover:border-accent hover:shadow-md"
   >
     <div class="flex items-start justify-between gap-2">
-      <div class="min-w-0">
-        <h3 class="text-lg font-semibold text-ink">
-          <LocalizedText :text="artist.name" />
-        </h3>
-        <p
-          v-if="secondary"
-          class="mt-0.5 text-sm text-ink-muted"
-          :lang="secondary.lang"
-          :dir="secondary.dir"
+      <div class="flex min-w-0 items-start gap-3">
+        <div
+          v-if="artist.portrait_url"
+          class="size-12 shrink-0 overflow-hidden rounded-full bg-neutral-soft"
         >
-          {{ secondary.text }}
-        </p>
-        <p v-if="hasLifeDates" class="mt-2 text-sm text-ink-muted">
-          <LifeDates v-if="artist.birth" :date="artist.birth" />
-          <span v-if="artist.death && (artist.death.display || artist.death.year_from !== null)">
-            <span aria-hidden="true">–</span>
-            <LifeDates :date="artist.death" />
-          </span>
-        </p>
+          <img
+            :src="artist.portrait_url"
+            :alt="pick(artist.name)?.text ?? ''"
+            class="size-full object-cover"
+            data-testid="artist-portrait"
+          />
+        </div>
+        <div class="min-w-0">
+          <h3 class="text-lg font-semibold text-ink">
+            <LocalizedText :text="artist.name" />
+          </h3>
+          <p
+            v-if="secondary"
+            class="mt-0.5 text-sm text-ink-muted"
+            :lang="secondary.lang"
+            :dir="secondary.dir"
+          >
+            {{ secondary.text }}
+          </p>
+          <p v-if="hasLifeDates" class="mt-2 text-sm text-ink-muted">
+            <LifeDates v-if="artist.birth" :date="artist.birth" />
+            <span
+              v-if="
+                artist.death &&
+                (artist.death.display || artist.death.year_from !== null)
+              "
+            >
+              <span aria-hidden="true">–</span>
+              <LifeDates :date="artist.death" />
+            </span>
+          </p>
+        </div>
       </div>
       <VerifiedBadge :status="artist.verified_status" class="shrink-0" />
     </div>

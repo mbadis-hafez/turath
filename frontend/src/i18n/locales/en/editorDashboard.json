@@ -1,0 +1,114 @@
+{
+  "greeting": {
+    "morning": "Good morning, {name}",
+    "afternoon": "Good afternoon, {name}",
+    "evening": "Good evening, {name}"
+  },
+  "subtitle": "Here's what needs your attention today.",
+  "myWork": {
+    "title": "My Work",
+    "drafts": "Drafts",
+    "in_progress": "In Progress",
+    "ready_for_review": "Ready for Review",
+    "changes_requested": "Changes Requested"
+  },
+  "attention": {
+    "title": "Needs My Attention",
+    "empty": "Nothing needs your attention right now.",
+    "kinds": {
+      "changes_requested": "Changes requested",
+      "incomplete": "Incomplete",
+      "creation_pending": "Awaiting creation review"
+    },
+    "actions": {
+      "fix": "Fix requested changes",
+      "complete": "Complete record",
+      "continue": "Continue editing"
+    }
+  },
+  "complete": "{pct}% complete",
+  "untitled": "Untitled record",
+  "entities": {
+    "artist": "Artist",
+    "artwork": "Artwork",
+    "event": "Event",
+    "archive_item": "Archive material"
+  },
+  "quickActions": {
+    "title": "Quick Actions",
+    "newArtist": "New Artist",
+    "newArtwork": "New Artwork",
+    "newEvent": "New Event",
+    "uploadArchive": "Upload Archive Material"
+  },
+  "changesRequested": {
+    "title": "Changes Requested",
+    "count": "No records need changes | {count} record needs changes | {count} records need changes",
+    "view": "View record",
+    "reviewAll": "Review all"
+  },
+  "pipeline": {
+    "title": "My Content Pipeline",
+    "stages": {
+      "draft": "Draft",
+      "in_progress": "In Progress",
+      "ready_for_review": "Ready for Review",
+      "under_review": "Under Review",
+      "changes_requested": "Changes Requested",
+      "approved": "Approved",
+      "published": "Published"
+    },
+    "infoNote": "Approved and published counts are informational — approval and publishing are handled by reviewers and administrators."
+  },
+  "content": {
+    "title": "Content",
+    "entities": {
+      "artists": "Artists",
+      "artworks": "Artworks",
+      "events": "Events",
+      "archive_items": "Archive Materials"
+    },
+    "incomplete": "{count} incomplete"
+  },
+  "completeness": {
+    "title": "Completeness",
+    "empty": "No records to measure yet.",
+    "note": "Completeness measures whether required information is present — it is separate from verification and from publication.",
+    "buckets": {
+      "complete": "100% complete",
+      "high": "80–99%",
+      "medium": "50–79%",
+      "low": "Below 50%"
+    },
+    "lowest": "Lowest completeness"
+  },
+  "archive": {
+    "title": "Archive Materials",
+    "viewAll": "View all archive materials",
+    "empty": "No archive materials in your workspace yet.",
+    "status": {
+      "draft": "Draft",
+      "incomplete": "Incomplete",
+      "under_review": "Under review",
+      "published": "Published"
+    }
+  },
+  "continueWorking": {
+    "title": "Continue Working",
+    "empty": "You don't have any drafts in progress yet.",
+    "lastEdited": "Last edited {when}",
+    "continue": "Continue",
+    "viewAll": "View all drafts"
+  },
+  "activity": {
+    "title": "Recently Updated",
+    "empty": "Your recent activity will appear here.",
+    "events": {
+      "created": "Created",
+      "updated": "Updated",
+      "deleted": "Deleted"
+    },
+    "viewAll": "View full activity"
+  },
+  "completenessReport": "View full completeness report"
+}

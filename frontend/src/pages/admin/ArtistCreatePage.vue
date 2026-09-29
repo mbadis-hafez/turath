@@ -10,6 +10,7 @@ import {
 import ContactsEditor from "@/components/curation/ContactsEditor.vue";
 import EntityPicker, { type PickerOption } from "@/components/curation/EntityPicker.vue";
 import EntryListEditor from "@/components/curation/EntryListEditor.vue";
+import NationalitySelect from "@/components/curation/NationalitySelect.vue";
 import PortraitPicker from "@/components/curation/PortraitPicker.vue";
 import ProfileCompletenessPanel from "@/components/curation/ProfileCompletenessPanel.vue";
 import SocialLinksEditor from "@/components/curation/SocialLinksEditor.vue";
@@ -235,8 +236,7 @@ const input = "mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 te
                 </label>
                 <label class="text-xs text-ink-muted">{{ t("curation.profileForm.birthDate") }}<input v-model="profile.form.birthDate" type="date" dir="ltr" :class="input" /></label>
                 <label class="text-xs text-ink-muted">{{ t("curation.profileForm.deathDate") }}<input v-model="profile.form.deathDate" type="date" dir="ltr" :class="input" /></label>
-                <label class="text-xs text-ink-muted">{{ t("curation.profileForm.nationalityAr") }}<input v-model="profile.form.nationality.ar" type="text" dir="rtl" :class="input" /></label>
-                <label class="text-xs text-ink-muted">{{ t("curation.profileForm.nationalityEn") }}<input v-model="profile.form.nationality.en" type="text" dir="ltr" :class="input" /></label>
+                <NationalitySelect v-model:ar="profile.form.nationality.ar" v-model:en="profile.form.nationality.en" :input-class="input" />
                 <label class="text-xs text-ink-muted">{{ t("curation.profileForm.classificationAr") }}<input v-model="profile.form.classification.ar" type="text" dir="rtl" :class="input" /></label>
                 <label class="text-xs text-ink-muted">{{ t("curation.profileForm.classificationEn") }}<input v-model="profile.form.classification.en" type="text" dir="ltr" :class="input" /></label>
               </div>

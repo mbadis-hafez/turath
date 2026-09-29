@@ -69,3 +69,26 @@ it('paginates with a default and capped per_page', function () {
     $response->assertOk()->assertJsonCount(2, 'data')
         ->assertJsonPath('meta.per_page', 2);
 });
+
+it('lists the image url for a published artwork with a clear-rights final image, and null otherwise', function () {
+    $withImage = Artwork::factory()->published()->create();
+    $withImage->images()->create([
+        'path' => 'artworks/a.jpg', 'mime_type' => 'image/jpeg', 'size_bytes' => 1000, 'sha256' => str_repeat('a', 64),
+        'rights_status' => 'licensed', 'is_final' => true,
+    ]);
+
+    $unclearRights = Artwork::factory()->published()->create();
+    $unclearRights->images()->create([
+        'path' => 'artworks/b.jpg', 'mime_type' => 'image/jpeg', 'size_bytes' => 1000, 'sha256' => str_repeat('b', 64),
+        'rights_status' => 'unknown', 'is_final' => true,
+    ]);
+
+    $noImage = Artwork::factory()->published()->create();
+
+    $data = collect($this->getJson('/api/v1/artworks')->assertOk()->json('data'))->keyBy('id');
+
+    $image = $withImage->images()->sole();
+    expect($data[$withImage->id]['image_url'])->toBe("/api/v1/artworks/{$withImage->id}/images/{$image->id}/file")
+        ->and($data[$unclearRights->id]['image_url'])->toBeNull()
+        ->and($data[$noImage->id]['image_url'])->toBeNull();
+});

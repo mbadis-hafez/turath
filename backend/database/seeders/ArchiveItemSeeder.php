@@ -75,6 +75,7 @@ class ArchiveItemSeeder extends Seeder
                     'title_en' => $data['title_en'],
                     'access_level' => AccessLevel::InstitutionOnly->value,
                     'publication_status' => PublicationStatus::Draft->value,
+                    'creation_approved_at' => now(),
                 ],
             );
 

@@ -17,8 +17,17 @@
       "cityOwner": "City · owner type",
       "materials": "Linked materials",
       "themes": "Themes",
-      "gaps": "Gaps"
+      "gaps": "Gaps",
+      "actions": "Actions"
     },
+    "actions": {
+      "view": "View",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "deleteTitle": "Delete this artist?",
+    "deleteBody": "\"{name}\" will be removed from the registry. An administrator can restore it later.",
+    "deleteError": "Couldn't delete the artist. Please try again.",
     "gaps": "{count} gaps",
     "noGaps": "Complete",
     "materials": "{count} materials",
@@ -177,6 +186,10 @@
     "nationality": "Nationality",
     "nationalityAr": "Nationality (Arabic)",
     "nationalityEn": "Nationality (English)",
+    "nationalityPlaceholder": "Search nationality…",
+    "nationalityNoMatch": "No match — use the custom entry below",
+    "nationalityOther": "Other (custom entry)",
+    "nationalityBackToList": "Choose from list",
     "classification": "Classification",
     "classificationAr": "Classification (Arabic)",
     "classificationEn": "Classification (English)",

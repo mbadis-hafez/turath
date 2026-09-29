@@ -38,6 +38,7 @@ const artist: ArtistListItem = {
   },
   living_status: "deceased",
   verified_status: "verified",
+  portrait_url: null,
 };
 
 const paginated: PaginatedResponse<ArtistListItem> = {

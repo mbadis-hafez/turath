@@ -107,6 +107,7 @@ use App\Http\Controllers\Api\V1\RecordCompletenessController;
 use App\Http\Controllers\Api\V1\ReviewerDashboardController;
 use App\Http\Controllers\Api\V1\ReviewQueueAcknowledgeController;
 use App\Http\Controllers\Api\V1\ReviewQueueIndexController;
+use App\Http\Controllers\Api\V1\ReviewQueueOutcomeController;
 use App\Http\Controllers\Api\V1\RevisionController;
 use App\Http\Controllers\Api\V1\SourceConflictResolveController;
 use App\Http\Controllers\Api\V1\StaffOptionsController;
@@ -235,6 +236,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('review-queue', ReviewQueueIndexController::class);
         Route::post('review-queue/{reviewQueueItem}/acknowledge', ReviewQueueAcknowledgeController::class);
+        Route::post('review-queue/{reviewQueueItem}/outcome', ReviewQueueOutcomeController::class);
 
         Route::middleware('can:artists.manage')->group(function () {
             Route::put('artists/{artist}/entries', ArtistEntriesSyncController::class)->whereNumber('artist');

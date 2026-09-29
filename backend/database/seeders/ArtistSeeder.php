@@ -96,6 +96,8 @@ class ArtistSeeder extends Seeder
             'name_en' => $data['en'],
             'publication_status' => PublicationStatus::Published->value,
             'verified_status' => VerifiedStatus::Unverified->value,
+            // Fixture artists are historical records, not new creations awaiting review.
+            'creation_approved_at' => now(),
         ];
 
         if ($data['code'] !== null) {

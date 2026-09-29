@@ -29,6 +29,15 @@ class ReviewQueueItemResource extends JsonResource
             'title' => $this->title($item),
             'note' => $item->note,
             'status' => $item->status,
+            // Proposal-backed entries are reviewed through the proposal routes;
+            // standalone ones record an outcome on the queue item itself.
+            'edit_proposal_id' => $item->edit_proposal_id,
+            'is_proposal_backed' => $item->edit_proposal_id !== null,
+            'review_note' => $item->review_note,
+            'acted_by' => $item->relationLoaded('actedBy') && $item->actedBy
+                ? ['id' => $item->actedBy->id, 'name' => $item->actedBy->name]
+                : null,
+            'acted_at' => $item->acted_at?->toIso8601String(),
             'submitted_by' => $item->relationLoaded('submittedBy') && $item->submittedBy
                 ? ['id' => $item->submittedBy->id, 'name' => $item->submittedBy->name]
                 : null,

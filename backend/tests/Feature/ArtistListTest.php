@@ -14,7 +14,7 @@ it('lists published artists only and excludes drafts and trashed rows', function
         ->assertJsonPath('data.0.name.en', 'Published One')
         ->assertJsonStructure([
             'data' => [
-                '*' => ['id', 'slug', 'name', 'birth', 'death', 'living_status', 'verified_status'],
+                '*' => ['id', 'slug', 'name', 'birth', 'death', 'living_status', 'verified_status', 'portrait_url'],
             ],
             'links', 'meta',
         ])
@@ -121,4 +121,16 @@ it('treats a punctuation-only query as empty', function () {
     Artist::factory()->published()->create();
 
     $this->getJson('/api/v1/artists?q='.urlencode('%_'))->assertOk()->assertJsonCount(1, 'data');
+});
+
+it('lists the portrait url for a published artist with a clear-rights portrait, and null otherwise', function () {
+    $withPortrait = Artist::factory()->published()->create(['portrait_path' => 'portraits/a.jpg', 'portrait_rights_status' => 'licensed']);
+    $unclearRights = Artist::factory()->published()->create(['portrait_path' => 'portraits/b.jpg', 'portrait_rights_status' => 'unknown']);
+    $noPortrait = Artist::factory()->published()->create(['portrait_path' => null]);
+
+    $data = collect($this->getJson('/api/v1/artists')->assertOk()->json('data'))->keyBy('id');
+
+    expect($data[$withPortrait->id]['portrait_url'])->toBe("/api/v1/artists/{$withPortrait->id}/portrait")
+        ->and($data[$unclearRights->id]['portrait_url'])->toBeNull()
+        ->and($data[$noPortrait->id]['portrait_url'])->toBeNull();
 });

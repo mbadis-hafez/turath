@@ -89,6 +89,9 @@ class LegacyArtworkInventorySeeder extends Seeder
                     'name_en' => $data['name_en'],
                     'publication_status' => PublicationStatus::Draft->value,
                     'verified_status' => VerifiedStatus::Unverified->value,
+                    // Imported legacy inventory is pre-existing content, not a
+                    // new editorial creation — it must not sit in creation review.
+                    'creation_approved_at' => now(),
                 ],
             );
         }
@@ -181,6 +184,7 @@ class LegacyArtworkInventorySeeder extends Seeder
                 'holder_inventory_no' => $data['holder_inventory_no'],
                 'condition_report_status' => $data['condition_report_status'],
                 'publication_status' => PublicationStatus::Draft->value,
+                'creation_approved_at' => now(),
             ],
         );
     }

@@ -32,6 +32,7 @@ function makeArtwork(patch: Partial<ArtworkListItem> = {}): ArtworkListItem {
       depth_cm: null,
       raw: null,
     },
+    image_url: null,
     ...patch,
   };
 }
@@ -127,5 +128,22 @@ describe("ArtworkCard", () => {
       props: { artwork: makeArtwork({ artist: null }) },
     });
     expect(wrapper.text()).not.toContain("Inji Efflatoun");
+  });
+
+  it("shows the image when one is public, and the category placeholder icon when there isn't", () => {
+    const withImage = mountWithPlugins(ArtworkCard, {
+      locale: "en",
+      router,
+      props: { artwork: makeArtwork({ image_url: "/api/v1/artworks/42/images/1/file" }) },
+    });
+    expect(withImage.get("[data-testid=artwork-image]").attributes("src")).toBe("/api/v1/artworks/42/images/1/file");
+
+    const withoutImage = mountWithPlugins(ArtworkCard, {
+      locale: "en",
+      router,
+      props: { artwork: makeArtwork({ image_url: null }) },
+    });
+    expect(withoutImage.find("[data-testid=artwork-image]").exists()).toBe(false);
+    expect(withoutImage.find("svg").exists()).toBe(true);
   });
 });

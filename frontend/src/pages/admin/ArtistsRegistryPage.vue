@@ -2,7 +2,8 @@
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
-import { listThemes } from "@/api/artistCuration";
+import { listThemes, deleteArtist } from "@/api/artistCuration";
+import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
 import EmptyState from "@/components/common/EmptyState.vue";
 import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
@@ -33,6 +34,35 @@ const {
 const OWNER_TYPES: OwnerType[] = ["artist", "heir_or_estate", "gallery", "institution", "other"];
 const themes = ref<Theme[]>([]);
 const merging = ref(false);
+
+/** Mirrors PublishedContentGuard: editors act directly on unpublished records; published ones are admin-tier only. */
+const isAdminTier = computed(() => auth.hasRole("admin") || auth.hasRole("superadmin"));
+const canDelete = (a: { publication_status: string }) => isAdminTier.value || a.publication_status !== "published";
+
+const deletingRow = ref<{ id: number; name: string } | null>(null);
+const deleteDialogOpen = ref(false);
+const deleting = ref(false);
+const deleteError = ref<string | null>(null);
+
+async function confirmDelete(): Promise<void> {
+  if (!deletingRow.value) return;
+  const id = deletingRow.value.id;
+  deleting.value = true;
+  deleteError.value = null;
+  // AlertDialogAction closes the dialog (and fires cancel) before confirm —
+  // keep it open so an error stays visible; success closes it below.
+  deleteDialogOpen.value = true;
+  try {
+    await deleteArtist(id);
+    deleteDialogOpen.value = false;
+    deletingRow.value = null;
+    await retry();
+  } catch (err) {
+    deleteError.value = err instanceof ApiError && err.message ? err.message : t("curation.registry.deleteError");
+  } finally {
+    deleting.value = false;
+  }
+}
 
 const STATUS_CLASS = {
   unverified: "bg-danger-soft text-danger",
@@ -128,6 +158,7 @@ const toggle = (on: boolean) =>
                   <th class="px-3 py-2 text-start font-medium">{{ t("curation.registry.columns.materials") }}</th>
                   <th class="px-3 py-2 text-start font-medium">{{ t("curation.registry.columns.themes") }}</th>
                   <th class="px-3 py-2 text-start font-medium">{{ t("curation.registry.columns.gaps") }}</th>
+                  <th class="px-3 py-2 text-start font-medium">{{ t("curation.registry.columns.actions") }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -158,6 +189,25 @@ const toggle = (on: boolean) =>
                       {{ a.gap_count > 0 ? t("curation.registry.gaps", { count: a.gap_count }) : t("curation.registry.noGaps") }}
                     </span>
                   </td>
+                  <td class="px-3 py-3">
+                    <div class="flex items-center gap-2 text-xs font-medium" data-testid="artist-actions">
+                      <RouterLink :to="localePath('artists.show', { slug: a.slug })" class="text-ink hover:text-accent" data-testid="artist-view">
+                        {{ t("curation.registry.actions.view") }}
+                      </RouterLink>
+                      <RouterLink :to="localePath('admin.artists.show', { id: a.id })" class="text-accent hover:underline" data-testid="artist-edit">
+                        {{ t("curation.registry.actions.edit") }}
+                      </RouterLink>
+                      <button
+                        v-if="canDelete(a)"
+                        type="button"
+                        class="text-danger hover:underline"
+                        data-testid="artist-delete"
+                        @click="deletingRow = { id: a.id, name: pick(a.name)?.text ?? a.slug }; deleteDialogOpen = true"
+                      >
+                        {{ t("curation.registry.actions.delete") }}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -167,6 +217,18 @@ const toggle = (on: boolean) =>
       </div>
 
       <MergeToolModal v-if="merging" @close="merging = false" @merged="onMerged" />
+
+      <ConfirmDialog
+        :open="deleteDialogOpen"
+        :title="t('curation.registry.deleteTitle')"
+        :description="t('curation.registry.deleteBody', { name: deletingRow?.name ?? '' })"
+        :confirm-label="t('curation.registry.actions.delete')"
+        :cancel-label="t('draft.discardCancel')"
+        :busy="deleting"
+        :error="deleteError"
+        @confirm="confirmDelete"
+        @cancel="deleteDialogOpen = false"
+      />
     </template>
   </section>
 </template>

@@ -30,15 +30,19 @@ const error = ref<unknown>(null);
 let controller: AbortController | null = null;
 
 const stats = computed(() =>
-  overview.value === null ? [] : Object.entries(overview.value.stats).map(([key, value]) => ({
-    label: t(`home.stats.${key}`),
-    value: formatNumber(value, appLocale.value),
-  })),
+  overview.value === null
+    ? []
+    : Object.entries(overview.value.stats).map(([key, value]) => ({
+        label: t(`home.stats.${key}`),
+        value: formatNumber(value, appLocale.value),
+      })),
 );
 
 const updateLabel = computed(() =>
   overview.value?.updated_at
-    ? t("home.lastUpdatedAt", { date: formatDateTime(overview.value.updated_at, appLocale.value) })
+    ? t("home.lastUpdatedAt", {
+        date: formatDateTime(overview.value.updated_at, appLocale.value),
+      })
     : "",
 );
 
@@ -70,7 +74,11 @@ async function load(): Promise<void> {
 /** The box says "artist, artwork, article, photograph", so it searches all of them, not just the archive. */
 function search(term = query.value): void {
   const cleaned = term.trim();
-  void pushLocalePath(cleaned === "" ? "archive.records" : "search", {}, cleaned === "" ? {} : { q: cleaned });
+  void pushLocalePath(
+    cleaned === "" ? "archive.records" : "search",
+    {},
+    cleaned === "" ? {} : { q: cleaned },
+  );
 }
 
 function applySuggestion(suggestion: Bilingual): void {
@@ -123,7 +131,9 @@ onBeforeUnmount(() => controller?.abort());
             </div>
           </dl>
           <div v-else-if="loading" class="py-8 text-center"><Spinner /></div>
-          <p class="mt-3.5 text-[11px] leading-relaxed text-ink-faint font-latin">
+          <p
+            class="mt-3.5 text-[11px] leading-relaxed text-ink-faint font-latin"
+          >
             {{ updateLabel }}
           </p>
         </aside>
@@ -208,27 +218,45 @@ onBeforeUnmount(() => controller?.abort());
       />
       <div v-if="archiveFeature" class="flex flex-wrap items-start gap-11">
         <article class="min-w-[320px] flex-[1.4]">
-          <div class="aspect-[16/10] bg-neutral-soft" aria-hidden="true"></div>
+          <div class="aspect-[16/10] overflow-hidden bg-neutral-soft">
+            <img
+              v-if="archiveFeature.thumbnail_url"
+              :src="archiveFeature.thumbnail_url"
+              :alt="text(archiveFeature.title) || ''"
+              class="size-full object-cover"
+              data-testid="archive-feature-thumbnail"
+            />
+          </div>
           <div
             class="mt-4 flex flex-wrap items-center gap-2 text-[10.5px] font-latin"
           >
-            <span
-              class="bg-ink px-2 py-0.75 font-bold text-paper uppercase"
-              >{{ t(`archive.type.${archiveFeature.item_type}`) }}</span
-            >
-            <span class="text-ink-faint tabular-nums">{{ archiveFeature.content?.display ?? "—" }}</span>
+            <span class="bg-ink px-2 py-0.75 font-bold text-paper uppercase">{{
+              t(`archive.type.${archiveFeature.item_type}`)
+            }}</span>
+            <span class="text-ink-faint tabular-nums">{{
+              archiveFeature.content?.display ?? "—"
+            }}</span>
           </div>
           <h3
             class="mt-3 max-w-[26ch] text-3xl leading-[1.45] font-bold text-balance text-ink font-display"
           >
-            {{ text(archiveFeature.title) || t('archive.restricted') }}
+            {{ text(archiveFeature.title) || t("archive.restricted") }}
           </h3>
           <p
             class="mt-3 max-w-[58ch] text-[15.5px] leading-[1.95] text-pretty text-ink-muted"
           >
-            {{ archiveFeature.description ? text(archiveFeature.description) : t('archive.restrictedHelp') }}
+            {{
+              archiveFeature.description
+                ? text(archiveFeature.description)
+                : t("archive.restrictedHelp")
+            }}
           </p>
-          <p v-if="archiveFeature.creator_name" class="mt-3 text-[11.5px] text-ink-faint font-latin">{{ archiveFeature.creator_name }}</p>
+          <p
+            v-if="archiveFeature.creator_name"
+            class="mt-3 text-[11.5px] text-ink-faint font-latin"
+          >
+            {{ archiveFeature.creator_name }}
+          </p>
         </article>
 
         <div class="min-w-[300px] flex-1">
@@ -261,20 +289,25 @@ onBeforeUnmount(() => controller?.abort());
           class="group"
         >
           <div
-            class="aspect-[3/4] bg-neutral-soft transition-colors group-hover:bg-sand"
-            aria-hidden="true"
-          ></div>
+            class="aspect-[3/4] overflow-hidden bg-neutral-soft transition-colors group-hover:bg-sand"
+          >
+            <img
+              v-if="artist.portrait_url"
+              :src="artist.portrait_url"
+              :alt="text(artist.name)"
+              class="size-full object-cover"
+              data-testid="home-artist-portrait"
+            />
+          </div>
           <p
             class="mt-2.75 text-[19px] leading-[1.4] font-bold text-ink font-display"
           >
-          {{ text(artist.name) }}
+            {{ text(artist.name) }}
           </p>
           <p class="mt-1 text-[11px] leading-relaxed text-ink-faint font-latin">
             {{ artist.name.en }}
           </p>
-          <p
-            class="mt-1.5 text-[11px] text-ink-muted tabular-nums font-latin"
-          >
+          <p class="mt-1.5 text-[11px] text-ink-muted tabular-nums font-latin">
             {{ itemsLabel(artist.materials_count) }}
           </p>
         </RouterLink>
@@ -303,7 +336,10 @@ onBeforeUnmount(() => controller?.abort());
               >{{ itemsLabel(place.materials_count) }}</span
             >
           </RouterLink>
-          <EmptyState v-if="overview && overview.places.length === 0" :title="t('home.emptyPlaces')" />
+          <EmptyState
+            v-if="overview && overview.places.length === 0"
+            :title="t('home.emptyPlaces')"
+          />
         </div>
 
         <div class="min-w-[300px] flex-1 border border-ink p-8">
@@ -333,5 +369,7 @@ onBeforeUnmount(() => controller?.abort());
       </div>
     </section>
   </div>
-  <div v-if="error" class="mx-auto mt-10 max-w-[90rem] px-6 sm:px-12"><ErrorState :error="error" @retry="load" /></div>
+  <div v-if="error" class="mx-auto mt-10 max-w-[90rem] px-6 sm:px-12">
+    <ErrorState :error="error" @retry="load" />
+  </div>
 </template>

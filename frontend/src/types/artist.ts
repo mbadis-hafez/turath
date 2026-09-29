@@ -1,7 +1,4 @@
-import type {
-  ActivityEntry,
-  ActivityEvent,
-} from "@/types/activity";
+import type { ActivityEntry, ActivityEvent } from "@/types/activity";
 import type { PaginatedResponse } from "@/types/api";
 import type { PublicEventRef } from "@/types/event";
 
@@ -29,16 +26,13 @@ export interface ArtistListItem {
   death: PartialDate | null;
   living_status: LivingStatus;
   verified_status: VerifiedStatus;
+  /** Null unless published with a clear-rights portrait (ArtistListResource). */
+  portrait_url: string | null;
 }
 
 export type NameVariantLanguage = "ar" | "en" | "und";
 export type NameVariantType =
-  | "transliteration"
-  | "alias"
-  | "birth_name"
-  | "pen_name"
-  | "typo"
-  | "other";
+  "transliteration" | "alias" | "birth_name" | "pen_name" | "typo" | "other";
 
 export interface NameVariant {
   id: number;
@@ -50,7 +44,6 @@ export interface NameVariant {
 
 export interface Artist extends ArtistListItem {
   legacy_code: string | null;
-  portrait_url?: string | null;
   events?: PublicEventRef[];
   themes?: { id: number; label: Bilingual }[];
   nationality?: Bilingual;

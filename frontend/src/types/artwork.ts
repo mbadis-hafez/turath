@@ -14,10 +14,7 @@ export type ArtworkCategory =
   | "other";
 
 export type AttributionCertainty =
-  | "confirmed"
-  | "attributed"
-  | "disputed"
-  | "unattributed";
+  "confirmed" | "attributed" | "disputed" | "unattributed";
 
 export interface ArtistStub {
   id: number;
@@ -43,6 +40,8 @@ export interface ArtworkListItem {
   medium: Bilingual;
   creation: PartialDate | null;
   dimensions: Dimensions;
+  /** Null unless published with a clear-rights primary image (ArtworkListResource::publicImageUrl). */
+  image_url: string | null;
 }
 
 export interface Artwork extends ArtworkListItem {

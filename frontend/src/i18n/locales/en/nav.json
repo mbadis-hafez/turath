@@ -19,6 +19,7 @@
   "openMenu": "Open the menu",
   "closeMenu": "Close the menu",
   "workspace": "Workspace",
+  "account": "Account",
   "groups": {
     "review": "Review",
     "catalog": "Catalog",

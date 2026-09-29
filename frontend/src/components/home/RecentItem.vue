@@ -10,31 +10,40 @@ const props = defineProps<{ item: HomeArchiveItem; locale: AppLocale }>();
 const { t } = useI18n();
 
 const text = (value: { ar: string | null; en: string | null }) =>
-  props.locale === "ar" ? (value.ar ?? value.en ?? "") : (value.en ?? value.ar ?? "");
+  props.locale === "ar"
+    ? (value.ar ?? value.en ?? "")
+    : (value.en ?? value.ar ?? "");
 
-const kindLabel = computed(() =>
-  t(`archive.type.${props.item.item_type}`),
-);
+const kindLabel = computed(() => t(`archive.type.${props.item.item_type}`));
 
 const date = computed(() => props.item.content?.display ?? "—");
 const title = computed(() => text(props.item.title) || t("archive.restricted"));
-const credit = computed(() => props.item.creator_name ?? (props.item.restricted ? t("archive.restrictedHelp") : ""));
+const credit = computed(
+  () =>
+    props.item.creator_name ??
+    (props.item.restricted ? t("archive.restrictedHelp") : ""),
+);
 </script>
 
 <template>
-  <RouterLink :to="{ name: 'archive.records', params: { locale } }" class="flex gap-4 border-b border-line py-4.5">
-    <div
-      class="size-[78px] shrink-0 bg-neutral-soft"
-      aria-hidden="true"
-    ></div>
+  <RouterLink
+    :to="{ name: 'archive.records', params: { locale } }"
+    class="flex gap-4 border-b border-line py-4.5"
+  >
+    <div class="size-[78px] shrink-0 overflow-hidden bg-neutral-soft">
+      <img
+        v-if="item.thumbnail_url"
+        :src="item.thumbnail_url"
+        :alt="title"
+        class="size-full object-cover"
+        data-testid="recent-item-thumbnail"
+      />
+    </div>
     <div class="min-w-0">
-      <div
-        class="flex flex-wrap items-center gap-2 text-[10.5px] font-latin"
-      >
-        <span
-          class="bg-sand px-2 py-0.75 font-bold text-sand-ink uppercase"
-          >{{ kindLabel }}</span
-        >
+      <div class="flex flex-wrap items-center gap-2 text-[10.5px] font-latin">
+        <span class="bg-sand px-2 py-0.75 font-bold text-sand-ink uppercase">{{
+          kindLabel
+        }}</span>
         <span class="text-ink-faint tabular-nums">{{ date }}</span>
       </div>
       <h3

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Controllers\Api\V1\ArtworkImageController;
 use App\Models\Artwork;
 use App\ValueObjects\PartialDate;
 use Illuminate\Http\Request;
@@ -46,7 +47,18 @@ class ArtworkListResource extends JsonResource
                 'depth_cm' => $artwork->depth_cm,
                 'raw' => $artwork->dimensions_raw,
             ],
+            'image_url' => self::publicImageUrl($artwork),
         ];
+    }
+
+    protected static function publicImageUrl(Artwork $artwork): ?string
+    {
+        if ($artwork->publication_status !== 'published') {
+            return null;
+        }
+        $image = ArtworkImageController::primary($artwork);
+
+        return $image !== null && $image->isClearForPublic() ? ArtworkImageController::urlFor($image) : null;
     }
 
     /**

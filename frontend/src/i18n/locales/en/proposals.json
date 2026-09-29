@@ -7,6 +7,22 @@
   "reviewType": "Review type",
   "allReviewTypes": "All review types",
   "onlyMine": "Only mine",
+  "standalone": {
+    "title": "Record reviews",
+    "submittedBy": "Submitted by {name}",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectNote": "Reason for rejection (required)",
+    "confirmReject": "Confirm rejection",
+    "actionError": "Couldn't record the outcome. Please try again.",
+    "recordTypes": {
+      "artists": "Artist",
+      "artworks": "Artwork",
+      "events": "Event",
+      "archive-items": "Archive item",
+      "material_submission": "Material submission"
+    }
+  },
   "empty2": "Nothing here",
   "emptyHelpReviewer": "No proposals match these filters.",
   "emptyHelpContributor": "You haven't suggested any edits yet.",

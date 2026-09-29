@@ -13,6 +13,7 @@ import arAuth from "./locales/ar/auth.json";
 import arCommon from "./locales/ar/common.json";
 import arCuration from "./locales/ar/curation.json";
 import arDashboard from "./locales/ar/dashboard.json";
+import arEditorDashboard from "./locales/ar/editorDashboard.json";
 import arReviewerDashboard from "./locales/ar/reviewerDashboard.json";
 import arDates from "./locales/ar/dates.json";
 import arDraft from "./locales/ar/draft.json";
@@ -36,6 +37,7 @@ import enAuth from "./locales/en/auth.json";
 import enCommon from "./locales/en/common.json";
 import enCuration from "./locales/en/curation.json";
 import enDashboard from "./locales/en/dashboard.json";
+import enEditorDashboard from "./locales/en/editorDashboard.json";
 import enReviewerDashboard from "./locales/en/reviewerDashboard.json";
 import enDates from "./locales/en/dates.json";
 import enDraft from "./locales/en/draft.json";
@@ -111,6 +113,7 @@ export const i18n = createI18n({
       users: arUsers,
       imports: arImports,
       dashboard: arDashboard,
+      editorDashboard: arEditorDashboard,
       reviewerDashboard: arReviewerDashboard,
       curation: arCuration,
       roles: arRoles,
@@ -136,6 +139,7 @@ export const i18n = createI18n({
       users: enUsers,
       imports: enImports,
       dashboard: enDashboard,
+      editorDashboard: enEditorDashboard,
       reviewerDashboard: enReviewerDashboard,
       curation: enCuration,
       roles: enRoles,

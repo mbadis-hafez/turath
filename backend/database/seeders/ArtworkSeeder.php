@@ -107,6 +107,7 @@ class ArtworkSeeder extends Seeder
                     'creation_certainty' => isset($data['year']) ? 'exact' : 'unknown',
                     'holder_id' => $this->resolveHolderId($data['holder'] ?? null),
                     'publication_status' => PublicationStatus::Published->value,
+                    'creation_approved_at' => now(),
                 ],
             );
         }

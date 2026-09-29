@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Controllers\Api\V1\ArtistPortraitController;
 use App\Models\Artist;
 use App\ValueObjects\PartialDate;
 use Illuminate\Http\Request;
@@ -28,6 +29,7 @@ class ArtistListResource extends JsonResource
             'death' => self::date($artist->death),
             'living_status' => $artist->living_status,
             'verified_status' => $artist->verified_status,
+            'portrait_url' => ArtistPortraitController::isPublic($artist) ? "/api/v1/artists/{$artist->id}/portrait" : null,
         ];
     }
 

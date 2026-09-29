@@ -54,6 +54,7 @@ class AdminArtistIndexController
                 'slug' => $a->slug,
                 'legacy_code' => $a->legacy_code,
                 'name' => ['ar' => $a->name_ar, 'en' => $a->name_en],
+                'publication_status' => $a->publication_status,
                 'verified_status' => $a->verified_status,
                 'creation_approved_at' => $a->creation_approved_at?->toIso8601String(),
                 'city' => ['ar' => $a->birth_place_ar, 'en' => $a->birth_place_en],

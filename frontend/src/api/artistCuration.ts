@@ -123,4 +123,9 @@ export function deleteArtistPortrait(id: number): Promise<{ data: PortraitInfo }
   return request({ method: "DELETE", url: `/api/v1/artists/${id}/portrait` });
 }
 
+/** Soft-deletes the artist; policy: artists.manage on unpublished records (admins also on published). */
+export function deleteArtist(id: number): Promise<void> {
+  return request({ method: "DELETE", url: `/api/v1/artists/${id}` });
+}
+
 export type { ArtistContact };

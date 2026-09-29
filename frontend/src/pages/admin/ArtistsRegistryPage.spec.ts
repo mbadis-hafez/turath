@@ -8,12 +8,13 @@ import { useAuthStore } from "@/stores/auth";
 import { mountWithPlugins } from "@/test/utils";
 import type { AdminArtistRow } from "@/types/artistCuration";
 
-const api = vi.hoisted(() => ({ listAdminArtists: vi.fn(), listThemes: vi.fn() }));
+const api = vi.hoisted(() => ({ listAdminArtists: vi.fn(), listThemes: vi.fn(), deleteArtist: vi.fn() }));
 vi.mock("@/api/artistCuration", () => api);
 
 function row(patch: Partial<AdminArtistRow> = {}): AdminArtistRow {
   return {
     id: 1, slug: "ahmad", legacy_code: "AR001", name: { ar: "أحمد", en: "Ahmad" },
+    publication_status: "draft",
     verified_status: "unverified", creation_approved_at: "2026-09-20T10:00:00Z",
     city: { ar: null, en: null }, owner_type: null, linked_material_count: 0, gap_count: 0,
     severity: "minor", themes: [],
@@ -45,6 +46,7 @@ beforeEach(() => {
       { path: "/:locale/admin/artists", name: "admin.artists", component: ArtistsRegistryPage },
       { path: "/:locale/admin/artists/new", name: "admin.artists.new", component: { template: "<div />" } },
       { path: "/:locale/admin/artists/:id", name: "admin.artists.show", component: { template: "<div />" } },
+      { path: "/:locale/artists/:slug", name: "artists.show", component: { template: "<div />" } },
     ],
   });
 });
@@ -64,5 +66,31 @@ describe("ArtistsRegistryPage", () => {
     const wrapper = await mountPage();
 
     expect(wrapper.find("[data-testid=creation-pending-badge]").exists()).toBe(false);
+  });
+
+  it("shows view/edit/delete actions and deletes after confirmation", async () => {
+    const wrapper = await mountPage();
+
+    expect(wrapper.get("[data-testid=artist-view]").attributes("href")).toContain("/artists/ahmad");
+    expect(wrapper.get("[data-testid=artist-delete]").text()).toBe("Delete");
+
+    await wrapper.get("[data-testid=artist-delete]").trigger("click");
+    await flushPromises();
+    (document.querySelector("[data-testid=confirm-dialog-confirm]") as HTMLElement).click();
+    await flushPromises();
+
+    expect(api.deleteArtist).toHaveBeenCalledWith(1);
+    expect(api.listAdminArtists).toHaveBeenCalledTimes(2);
+  });
+
+  it("hides delete on a published artist for a non-admin", async () => {
+    api.listAdminArtists.mockResolvedValue({
+      data: [row({ publication_status: "published" })],
+      meta: { current_page: 1, last_page: 1, per_page: 24, total: 1 },
+    });
+    const wrapper = await mountPage();
+
+    expect(wrapper.find("[data-testid=artist-view]").exists()).toBe(true);
+    expect(wrapper.find("[data-testid=artist-delete]").exists()).toBe(false);
   });
 });

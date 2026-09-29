@@ -4,7 +4,6 @@ namespace App\Http\Resources;
 
 use App\Enums\NameVariantType;
 use App\Http\Controllers\Api\V1\ArtistEntriesSyncController;
-use App\Http\Controllers\Api\V1\ArtistPortraitController;
 use App\Http\Controllers\Api\V1\ArtistSocialLinksSyncController;
 use App\Models\Artist;
 use App\Support\Events\EventPresenter;
@@ -47,7 +46,6 @@ class ArtistResource extends ArtistListResource
             'classification' => ['ar' => $artist->classification_ar, 'en' => $artist->classification_en],
             ...ArtistEntriesSyncController::present($artist),
             'social_links' => ArtistSocialLinksSyncController::present($artist, publicOnly: true),
-            'portrait_url' => ArtistPortraitController::isPublic($artist) ? "/api/v1/artists/{$artist->id}/portrait" : null,
             'verified_at' => $artist->verified_at?->toIso8601String(),
             'publication_status' => $artist->publication_status,
             'created_at' => $artist->created_at?->toIso8601String(),

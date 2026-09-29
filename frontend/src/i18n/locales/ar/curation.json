@@ -17,8 +17,17 @@
       "cityOwner": "المدينة · نوع المالك",
       "materials": "مواد مرتبطة",
       "themes": "محاور موضوعية",
-      "gaps": "النواقص"
+      "gaps": "النواقص",
+      "actions": "إجراءات"
     },
+    "actions": {
+      "view": "عرض",
+      "edit": "تحرير",
+      "delete": "حذف"
+    },
+    "deleteTitle": "حذف هذا الفنان؟",
+    "deleteBody": "سيُحذف «{name}» من السجل. ويمكن للمدير استعادته لاحقًا.",
+    "deleteError": "تعذر حذف الفنان. حاول مرة أخرى.",
     "gaps": "{count} نواقص",
     "noGaps": "مكتمل",
     "materials": "{count} مواد",
@@ -177,6 +186,10 @@
     "nationality": "الجنسية",
     "nationalityAr": "الجنسية (عربي)",
     "nationalityEn": "الجنسية (إنجليزي)",
+    "nationalityPlaceholder": "ابحث عن الجنسية…",
+    "nationalityNoMatch": "لا يوجد تطابق — استخدم الإدخال اليدوي أدناه",
+    "nationalityOther": "أخرى (إدخال يدوي)",
+    "nationalityBackToList": "اختر من القائمة",
     "classification": "التصنيف",
     "classificationAr": "التصنيف (عربي)",
     "classificationEn": "التصنيف (إنجليزي)",

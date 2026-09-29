@@ -45,6 +45,7 @@ function makeArtist(patch: Partial<Artist> = {}): Artist {
     },
     living_status: "deceased",
     verified_status: "verified",
+    portrait_url: null,
     legacy_code: null,
     bio: {
       ar: "فنانة مصرية رائدة في الفن التشكيلي.",

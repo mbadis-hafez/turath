@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Models\ArchiveItem;
 use App\Models\Artist;
 use App\Models\Artwork;
+use App\Models\File;
 use App\Models\Source;
 use App\Models\Theme;
 use App\Support\ArchiveAccessResolver;
@@ -17,11 +18,9 @@ class HomeController
 {
     public function __invoke(Request $request): JsonResponse
     {
-        $published = fn (Builder $query): Builder => $query->where('publication_status', 'published');
-
-        $archiveItems = $published(ArchiveItem::query());
-        $artists = $published(Artist::query());
-        $artworks = $published(Artwork::query());
+        $archiveItems = ArchiveItem::query()->where('publication_status', 'published');
+        $artists = Artist::query()->where('publication_status', 'published');
+        $artworks = Artwork::query()->where('publication_status', 'published');
 
         $recent = (clone $archiveItems)
             ->latest('updated_at')
@@ -48,6 +47,7 @@ class HomeController
     }
 
     /**
+     * @param  Builder<Artist>  $artists
      * @return array<int, array{term: array{ar: string|null, en: string|null}}>
      */
     private function popularSearches(Builder $artists): array
@@ -83,7 +83,8 @@ class HomeController
     }
 
     /**
-     * @return array<int, array{id: int, slug: string, name: array{ar: string|null, en: string|null}, materials_count: int}>
+     * @param  Builder<Artist>  $artists
+     * @return array<int, array{id: int, slug: string, name: array{ar: string|null, en: string|null}, materials_count: int, portrait_url: string|null}>
      */
     private function artists(Builder $artists): array
     {
@@ -97,12 +98,13 @@ class HomeController
             ->orderByDesc('materials_count')
             ->orderByDesc('updated_at')
             ->limit(6)
-            ->get(['id', 'slug', 'name_ar', 'name_en'])
+            ->get(['id', 'slug', 'name_ar', 'name_en', 'portrait_path', 'portrait_rights_status'])
             ->map(fn (Artist $artist) => [
                 'id' => $artist->id,
                 'slug' => $artist->slug,
                 'name' => $this->localized($artist->name_ar, $artist->name_en),
                 'materials_count' => (int) $artist->getAttribute('materials_count'),
+                'portrait_url' => ArtistPortraitController::isPublic($artist) ? "/api/v1/artists/{$artist->id}/portrait" : null,
             ])
             ->all();
     }
@@ -129,7 +131,7 @@ class HomeController
     }
 
     /**
-     * @return array{id: int, item_type: string, title: array{ar: string|null, en: string|null}, content: array{display: string|null, year_from: int|null, year_to: int|null}|null, creator_name: string|null, description: array{ar: string|null, en: string|null}|null, restricted: bool}
+     * @return array{id: int, item_type: string, title: array{ar: string|null, en: string|null}, content: array{display: string|null, year_from: int|null, year_to: int|null}|null, creator_name: string|null, description: array{ar: string|null, en: string|null}|null, restricted: bool, thumbnail_url: string|null}
      */
     private function archiveSummary(ArchiveItem $item, Request $request): array
     {
@@ -147,9 +149,26 @@ class HomeController
             'creator_name' => $full ? $item->creator_name : null,
             'description' => $full ? $this->localized($item->description_ar, $item->description_en) : null,
             'restricted' => ! $full,
+            'thumbnail_url' => $full ? $this->thumbnailUrl($item) : null,
         ];
     }
 
+    private function thumbnailUrl(ArchiveItem $item): ?string
+    {
+        $file = File::where('archive_item_id', $item->id)->where('role', 'original')->latest('id')->first();
+
+        if ($file === null || ! str_starts_with($file->mime_type, 'image/')) {
+            return null;
+        }
+
+        return "/api/v1/archive-items/{$item->id}/files/{$file->id}/download";
+    }
+
+    /**
+     * @param  Builder<ArchiveItem>  $archiveItems
+     * @param  Builder<Artist>  $artists
+     * @param  Builder<Artwork>  $artworks
+     */
     private function latestUpdatedAt(Builder $archiveItems, Builder $artists, Builder $artworks): ?string
     {
         $timestamps = [

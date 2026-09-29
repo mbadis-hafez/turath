@@ -4,10 +4,15 @@ export interface HomeArchiveItem {
   id: number;
   item_type: string;
   title: Bilingual;
-  content: { display: string | null; year_from: number | null; year_to: number | null } | null;
+  content: {
+    display: string | null;
+    year_from: number | null;
+    year_to: number | null;
+  } | null;
   creator_name: string | null;
   description: Bilingual | null;
   restricted: boolean;
+  thumbnail_url: string | null;
 }
 
 export interface HomeTheme {
@@ -21,6 +26,7 @@ export interface HomeArtist {
   slug: string;
   name: Bilingual;
   materials_count: number;
+  portrait_url: string | null;
 }
 
 export interface HomePlace {
@@ -29,7 +35,12 @@ export interface HomePlace {
 }
 
 export interface HomeOverview {
-  stats: { materials: number; artists: number; artworks: number; sources: number };
+  stats: {
+    materials: number;
+    artists: number;
+    artworks: number;
+    sources: number;
+  };
   updated_at: string | null;
   popular_searches: { term: Bilingual }[];
   themes: HomeTheme[];

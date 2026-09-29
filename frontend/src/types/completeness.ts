@@ -148,5 +148,13 @@ export interface ReviewQueueItem {
   review_type: ReviewType;
   title: { ar: string | null; en: string | null } | null;
   note: string | null;
+  status: "pending" | "acknowledged" | "approved" | "rejected";
+  /** Non-null when the entry is backed by an edit proposal (reviewed via the proposal routes). */
+  edit_proposal_id: string | null;
+  is_proposal_backed: boolean;
+  review_note: string | null;
+  acted_by: { id: number; name: string } | null;
+  acted_at: string | null;
+  submitted_by: { id: number; name: string } | null;
   submitted_at: string;
 }

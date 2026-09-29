@@ -7,6 +7,22 @@
   "reviewType": "نوع المراجعة",
   "allReviewTypes": "كل أنواع المراجعة",
   "onlyMine": "اقتراحاتي فقط",
+  "standalone": {
+    "title": "مراجعات السجلات",
+    "submittedBy": "قُدّم بواسطة {name}",
+    "approve": "اعتماد",
+    "reject": "رفض",
+    "rejectNote": "سبب الرفض (مطلوب)",
+    "confirmReject": "تأكيد الرفض",
+    "actionError": "تعذر تسجيل النتيجة. حاول مرة أخرى.",
+    "recordTypes": {
+      "artists": "فنان",
+      "artworks": "عمل فني",
+      "events": "فعالية",
+      "archive-items": "مادة أرشيفية",
+      "material_submission": "مادة مقدَّمة"
+    }
+  },
   "empty2": "لا يوجد شيء هنا",
   "emptyHelpReviewer": "لا اقتراحات مطابقة لعوامل التصفية.",
   "emptyHelpContributor": "لم تقترح أي تعديل بعد.",

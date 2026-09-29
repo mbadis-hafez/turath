@@ -153,6 +153,7 @@ class DummyArtistsSeeder extends Seeder
             'death_place_en' => $deathCity['en'] ?? null,
             'verified_status' => $en->randomElement(['unverified', 'unverified', 'unverified', 'verified', 'disputed']),
             'publication_status' => $en->randomElement(['draft', 'draft', 'draft', 'draft', 'published', 'published', 'hidden']),
+            'creation_approved_at' => now(),
             'identified_through_note' => $en->boolean(80) ? 'Introduced by '.$en->company().' archive' : null,
             'identified_through_date' => $en->boolean(60) ? $en->dateTimeBetween('-3 years', 'now')->format('Y-m-d') : null,
             'owner_type' => $en->randomElement(self::OWNER_TYPES),

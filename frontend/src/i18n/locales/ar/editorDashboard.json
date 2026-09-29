@@ -1,0 +1,114 @@
+{
+  "greeting": {
+    "morning": "صباح الخير يا {name}",
+    "afternoon": "مساء الخير يا {name}",
+    "evening": "مساء الخير يا {name}"
+  },
+  "subtitle": "إليك ما يحتاج إلى انتباهك اليوم.",
+  "myWork": {
+    "title": "عملي",
+    "drafts": "مسودات",
+    "in_progress": "قيد العمل",
+    "ready_for_review": "جاهزة للمراجعة",
+    "changes_requested": "تعديلات مطلوبة"
+  },
+  "attention": {
+    "title": "يحتاج إلى انتباهي",
+    "empty": "لا يوجد شيء يحتاج إلى انتباهك حاليًا.",
+    "kinds": {
+      "changes_requested": "تعديلات مطلوبة",
+      "incomplete": "غير مكتمل",
+      "creation_pending": "بانتظار اعتماد الإنشاء"
+    },
+    "actions": {
+      "fix": "إصلاح التعديلات المطلوبة",
+      "complete": "استكمال السجل",
+      "continue": "متابعة التحرير"
+    }
+  },
+  "complete": "مكتمل بنسبة {pct}٪",
+  "untitled": "سجل بلا عنوان",
+  "entities": {
+    "artist": "فنان",
+    "artwork": "عمل فني",
+    "event": "فعالية",
+    "archive_item": "مادة أرشيفية"
+  },
+  "quickActions": {
+    "title": "إجراءات سريعة",
+    "newArtist": "فنان جديد",
+    "newArtwork": "عمل فني جديد",
+    "newEvent": "فعالية جديدة",
+    "uploadArchive": "رفع مادة أرشيفية"
+  },
+  "changesRequested": {
+    "title": "تعديلات مطلوبة",
+    "count": "لا توجد سجلات تحتاج إلى تعديلات | سجل واحد يحتاج إلى تعديلات | سجلان يحتاجان إلى تعديلات | {count} سجلات تحتاج إلى تعديلات | {count} سجلًا يحتاج إلى تعديلات | {count} سجل يحتاج إلى تعديلات",
+    "view": "عرض السجل",
+    "reviewAll": "مراجعة الكل"
+  },
+  "pipeline": {
+    "title": "مسار المحتوى الخاص بي",
+    "stages": {
+      "draft": "مسودة",
+      "in_progress": "قيد العمل",
+      "ready_for_review": "جاهز للمراجعة",
+      "under_review": "قيد المراجعة",
+      "changes_requested": "تعديلات مطلوبة",
+      "approved": "معتمد",
+      "published": "منشور"
+    },
+    "infoNote": "أعداد المعتمد والمنشور للاطلاع فقط — الاعتماد والنشر يتم عبر المراجعين والمديرين."
+  },
+  "content": {
+    "title": "المحتوى",
+    "entities": {
+      "artists": "الفنانون",
+      "artworks": "الأعمال الفنية",
+      "events": "الفعاليات",
+      "archive_items": "المواد الأرشيفية"
+    },
+    "incomplete": "{count} غير مكتمل"
+  },
+  "completeness": {
+    "title": "الاكتمال",
+    "empty": "لا توجد سجلات لقياسها بعد.",
+    "note": "الاكتمال يقيس توفر المعلومات المطلوبة — وهو منفصل عن التحقق وعن النشر.",
+    "buckets": {
+      "complete": "مكتمل 100٪",
+      "high": "80–99٪",
+      "medium": "50–79٪",
+      "low": "أقل من 50٪"
+    },
+    "lowest": "الأقل اكتمالًا"
+  },
+  "archive": {
+    "title": "المواد الأرشيفية",
+    "viewAll": "عرض جميع المواد الأرشيفية",
+    "empty": "لا توجد مواد أرشيفية في مساحة عملك بعد.",
+    "status": {
+      "draft": "مسودة",
+      "incomplete": "غير مكتمل",
+      "under_review": "قيد المراجعة",
+      "published": "منشور"
+    }
+  },
+  "continueWorking": {
+    "title": "متابعة العمل",
+    "empty": "لا توجد لديك مسودات قيد العمل بعد.",
+    "lastEdited": "آخر تعديل {when}",
+    "continue": "متابعة",
+    "viewAll": "عرض جميع المسودات"
+  },
+  "activity": {
+    "title": "آخر التحديثات",
+    "empty": "ستظهر أنشطتك الأخيرة هنا.",
+    "events": {
+      "created": "أُنشئ",
+      "updated": "حُدّث",
+      "deleted": "حُذف"
+    },
+    "viewAll": "عرض النشاط الكامل"
+  },
+  "completenessReport": "عرض تقرير الاكتمال الكامل"
+}

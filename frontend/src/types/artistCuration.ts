@@ -1,6 +1,7 @@
 import type { CompletenessSeverity } from "@/types/completeness";
 
 export type VerifiedStatus = "unverified" | "verified" | "disputed";
+export type PublicationStatus = "draft" | "published" | "hidden";
 export type OwnerType = "artist" | "heir_or_estate" | "gallery" | "institution" | "other";
 export type AuthLetterStatus = "not_started" | "pending" | "signed" | "not_applicable";
 export type PreAgreementStatus = "not_started" | "pending" | "yes" | "no" | "not_applicable";
@@ -75,6 +76,7 @@ export interface AdminArtistRow {
   slug: string;
   legacy_code: string | null;
   name: Localized;
+  publication_status: PublicationStatus;
   verified_status: VerifiedStatus;
   /** null until a reviewer approves this artist's creation-review item (005). */
   creation_approved_at: string | null;

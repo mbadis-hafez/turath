@@ -120,18 +120,23 @@ const menuOpen = ref(false);
 const toolsOpen = ref(false);
 const toolsRoot = ref<HTMLElement | null>(null);
 const toolsCurrent = computed(() => toolLinks.value.some(isCurrent));
+const userOpen = ref(false);
+const userRoot = ref<HTMLElement | null>(null);
 
 watch(() => route.fullPath, () => {
   menuOpen.value = false;
   toolsOpen.value = false;
+  userOpen.value = false;
 });
 function closeOnEscape(e: KeyboardEvent): void {
   if (e.key !== "Escape") return;
   menuOpen.value = false;
   toolsOpen.value = false;
+  userOpen.value = false;
 }
 function closeOnOutsideClick(e: MouseEvent): void {
   if (toolsOpen.value && toolsRoot.value && !toolsRoot.value.contains(e.target as Node)) toolsOpen.value = false;
+  if (userOpen.value && userRoot.value && !userRoot.value.contains(e.target as Node)) userOpen.value = false;
 }
 onMounted(() => {
   window.addEventListener("keydown", closeOnEscape);
@@ -239,14 +244,41 @@ async function logout(): Promise<void> {
           >
             {{ $t("nav.login") }}
           </RouterLink>
-          <button
-            v-else
-            type="button"
-            class="border border-ink px-5 py-1.5 text-sm font-semibold text-ink transition-colors hover:bg-ink hover:text-paper"
-            @click="logout"
-          >
-            {{ $t("nav.logout") }}
-          </button>
+          <div v-else ref="userRoot" class="relative">
+            <button
+              type="button"
+              class="flex items-center gap-1.5 border border-ink px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-ink hover:text-paper"
+              :aria-expanded="userOpen"
+              aria-controls="user-menu"
+              :aria-label="$t('nav.account')"
+              data-testid="user-toggle"
+              @click="userOpen = !userOpen"
+            >
+              <span class="max-w-32 truncate">{{ auth.user?.name }}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-3.5 transition-transform" :class="userOpen ? 'rotate-180' : ''"><path d="m6 9 6 6 6-6" /></svg>
+            </button>
+            <ul v-if="userOpen" id="user-menu" class="absolute end-0 top-full z-40 mt-2 w-56 border-2 border-ink bg-paper py-2 shadow-sm" data-testid="user-menu">
+              <li class="mb-1 border-b border-line px-5 pt-1.5 pb-2">
+                <p class="truncate text-sm font-semibold text-ink">{{ auth.user?.name }}</p>
+                <p class="truncate text-xs text-ink-muted">{{ auth.user?.email }}</p>
+              </li>
+              <li>
+                <RouterLink :to="dashboardLink" class="block px-5 py-2.5 text-sm text-ink hover:text-accent" data-testid="user-menu-dashboard">
+                  {{ $t("nav.dashboard") }}
+                </RouterLink>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  class="block w-full px-5 py-2.5 text-start text-sm text-ink hover:text-accent"
+                  data-testid="user-menu-logout"
+                  @click="logout"
+                >
+                  {{ $t("nav.logout") }}
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
       <nav v-if="menuOpen" id="mobile-menu" aria-label="Main" class="border-t border-line px-6 py-4 md:hidden" data-testid="mobile-menu">

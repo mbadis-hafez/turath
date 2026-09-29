@@ -131,6 +131,12 @@ const routes: RouteRecordRaw[] = [
     meta: { titleKey: "dashboard.title", requiresAuth: true },
   },
   {
+    path: "/:locale/dashboard/completeness",
+    name: "dashboard.completeness",
+    component: () => import("@/pages/CompletenessDashboardPage.vue"),
+    meta: { titleKey: "dashboard.title", requiresAuth: true },
+  },
+  {
     path: "/:locale/dashboard/reviewer",
     name: "dashboard.reviewer",
     component: () => import("@/pages/ReviewerDashboardPage.vue"),

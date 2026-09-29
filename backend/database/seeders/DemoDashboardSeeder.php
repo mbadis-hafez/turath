@@ -39,6 +39,7 @@ class DemoDashboardSeeder extends Seeder
         $sabban = Artist::firstOrCreate(['legacy_code' => 'AR201'], [
             'name_ar' => 'طه الصبان', 'name_en' => 'Taha Al-Sabban', 'living_status' => 'deceased',
             'death_year_from' => 1990, 'death_year_to' => 1990, 'publication_status' => 'draft',
+            'creation_approved_at' => now(),
         ]);
         $this->own($sabban);
 
@@ -63,6 +64,7 @@ class DemoDashboardSeeder extends Seeder
         $untitled = Artwork::firstOrCreate(['legacy_ref' => 'DEMO_ARW_001'], [
             'created_by_user_id' => $owner->id, 'is_untitled' => false, 'title_ar' => 'بلا عنوان، من سلسلة الصحراء', 'title_en' => 'Untitled, Desert series',
             'category' => 'painting', 'attribution_certainty' => 'unattributed', 'holder_id' => null,
+            'creation_approved_at' => now(),
         ]);
         $this->finish($untitled);
 
@@ -70,6 +72,7 @@ class DemoDashboardSeeder extends Seeder
             'created_by_user_id' => $owner->id, 'title_ar' => 'النخيل عند المغيب', 'title_en' => 'Palms at Sunset', 'category' => 'painting',
             'attribution_certainty' => $radwi ? 'confirmed' : 'unattributed', 'artist_id' => $radwi?->id, 'holder_id' => $holder?->id,
             'medium_ar' => 'زيت على قماش', 'medium_en' => 'Oil on canvas', 'height_cm' => 60, 'width_cm' => 90,
+            'creation_approved_at' => now(),
         ]);
         $this->queue($palms, 'archivist_review', 'بانتظار مراجعة أمين الأرشيف', 3);
         $this->finish($palms);
@@ -77,6 +80,7 @@ class DemoDashboardSeeder extends Seeder
         $opening = ArchiveItem::firstOrCreate(['legacy_ref' => 'DEMO_ARC_001'], [
             'created_by_user_id' => $owner->id, 'item_type' => 'image', 'title_ar' => 'افتتاح معرض الفنانات السعوديات، دار الفنون، جدة',
             'title_en' => "Opening of the Saudi women artists' exhibition, Dar Al-Funun, Jeddah",
+            'creation_approved_at' => now(),
         ]);
         $this->finish($opening);
 
@@ -84,6 +88,7 @@ class DemoDashboardSeeder extends Seeder
             'created_by_user_id' => $owner->id, 'item_type' => 'article', 'title_ar' => 'الفن التشكيلي السعودي يفتتح موسمه في صالة الرياض',
             'title_en' => 'Saudi art opens its season in a Riyadh hall', 'rights_holder_en' => 'Al Riyadh Newspaper', 'rights_status' => 'licensed',
             'digitized_at' => '2024-12-22',
+            'creation_approved_at' => now(),
         ]);
         $this->cite($season, 'rights_holder', ['name' => 'Al Riyadh Newspaper']);
         $this->cite($season, 'rights_status', ['status' => 'licensed']);

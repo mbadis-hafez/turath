@@ -28,6 +28,7 @@ function makeArtist(
     },
     living_status: "deceased",
     verified_status: "verified",
+    portrait_url: null,
     ...patch,
   };
 }
@@ -149,5 +150,21 @@ describe("ArtistCard", () => {
     const links = wrapper.findAll("a");
     expect(links).toHaveLength(1);
     expect(links[0].attributes("href")).toBe("/ar/artists/inji-efflatoun");
+  });
+
+  it("shows the portrait when one is public, and nothing when there isn't", () => {
+    const withPortrait = mountWithPlugins(ArtistCard, {
+      locale: "ar",
+      router,
+      props: { artist: makeArtist({ portrait_url: "/api/v1/artists/1/portrait" }) },
+    });
+    expect(withPortrait.get("[data-testid=artist-portrait]").attributes("src")).toBe("/api/v1/artists/1/portrait");
+
+    const withoutPortrait = mountWithPlugins(ArtistCard, {
+      locale: "ar",
+      router,
+      props: { artist: makeArtist({ portrait_url: null }) },
+    });
+    expect(withoutPortrait.find("[data-testid=artist-portrait]").exists()).toBe(false);
   });
 });

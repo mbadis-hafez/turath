@@ -9,6 +9,8 @@ import { mountWithPlugins } from "@/test/utils";
 
 const api = vi.hoisted(() => ({ listProposals: vi.fn() }));
 vi.mock("@/api/proposals", () => ({ listProposals: api.listProposals }));
+const queueApi = vi.hoisted(() => ({ listReviewQueue: vi.fn(), recordReviewOutcome: vi.fn() }));
+vi.mock("@/api/dashboard", () => queueApi);
 
 function signIn(permissions: string[]) {
   const pinia = createPinia();
@@ -52,6 +54,8 @@ const proposal = {
 describe("ProposalsPage", () => {
   beforeEach(() => {
     api.listProposals.mockReset().mockResolvedValue(emptyResponse);
+    queueApi.listReviewQueue.mockReset().mockResolvedValue({ data: [] });
+    queueApi.recordReviewOutcome.mockReset().mockResolvedValue({ data: {} });
   });
 
   it("points an empty-state contributor to an artist or artwork page to submit their first suggestion", async () => {
@@ -86,5 +90,65 @@ describe("ProposalsPage", () => {
       expect.objectContaining({ status: "changes_requested", review_type: "archivist_review" }),
       expect.anything(),
     );
+  });
+
+  const queueItem = {
+    id: "q1",
+    citable_type: "archive-items",
+    citable_id: 12,
+    review_type: "archivist_review",
+    title: { ar: null, en: "Authorization Letter" },
+    note: null,
+    status: "pending",
+    edit_proposal_id: null,
+    is_proposal_backed: false,
+    review_note: null,
+    acted_by: null,
+    acted_at: null,
+    submitted_by: { id: 4, name: "Fidha Fatma" },
+    submitted_at: "2026-09-27T10:00:00Z",
+  };
+
+  it("lists standalone review-queue entries for reviewers and approves them in place", async () => {
+    queueApi.listReviewQueue.mockResolvedValue({ data: [queueItem] });
+    const wrapper = await mountPage(["review_queue.archivist_review"]);
+
+    const section = wrapper.get("[data-testid=standalone-queue]");
+    expect(section.text()).toContain("Authorization Letter");
+    expect(section.text()).toContain("Fidha Fatma");
+
+    await wrapper.get("[data-testid=standalone-approve]").trigger("click");
+    await flushPromises();
+
+    expect(queueApi.recordReviewOutcome).toHaveBeenCalledWith("q1", { outcome: "approved" });
+  });
+
+  it("requires a note before rejecting a standalone entry", async () => {
+    queueApi.listReviewQueue.mockResolvedValue({ data: [queueItem] });
+    const wrapper = await mountPage(["review_queue.archivist_review"]);
+
+    await wrapper.get("[data-testid=standalone-reject]").trigger("click");
+    expect((wrapper.get("[data-testid=reject-confirm]").element as HTMLButtonElement).disabled).toBe(true);
+
+    await wrapper.get("[data-testid=reject-note]").setValue("Scan is illegible");
+    await wrapper.get("[data-testid=reject-confirm]").trigger("click");
+    await flushPromises();
+
+    expect(queueApi.recordReviewOutcome).toHaveBeenCalledWith("q1", { outcome: "rejected", review_note: "Scan is illegible" });
+  });
+
+  it("does not fetch the standalone queue for contributors or for non-pending filters", async () => {
+    await mountPage(["proposals.submit"]);
+    expect(queueApi.listReviewQueue).not.toHaveBeenCalled();
+
+    await mountPage(["review_queue.archivist_review"], "?status=approved");
+    expect(queueApi.listReviewQueue).not.toHaveBeenCalled();
+  });
+
+  it("excludes proposal-backed queue entries (already listed as proposals)", async () => {
+    queueApi.listReviewQueue.mockResolvedValue({ data: [{ ...queueItem, is_proposal_backed: true, edit_proposal_id: "p1" }] });
+    const wrapper = await mountPage(["review_queue.archivist_review"]);
+
+    expect(wrapper.find("[data-testid=standalone-queue]").exists()).toBe(false);
   });
 });

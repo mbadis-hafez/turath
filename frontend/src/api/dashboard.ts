@@ -103,9 +103,18 @@ export function resolveSourceConflict(
 }
 
 export function listReviewQueue(
+  params: { status?: string; review_type?: string } = {},
   signal?: AbortSignal,
 ): Promise<{ data: ReviewQueueItem[] }> {
-  return request({ method: "GET", url: "/api/v1/review-queue", signal });
+  return request({ method: "GET", url: "/api/v1/review-queue", params, signal });
+}
+
+/** Approve/reject a standalone (non-proposal) queue entry (FR-004/005). */
+export function recordReviewOutcome(
+  id: string,
+  payload: { outcome: "approved" | "rejected"; review_note?: string },
+): Promise<{ data: ReviewQueueItem }> {
+  return request({ method: "POST", url: `/api/v1/review-queue/${id}/outcome`, data: payload });
 }
 
 export function acknowledgeReviewItem(id: string): Promise<unknown> {
