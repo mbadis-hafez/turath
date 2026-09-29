@@ -8,6 +8,7 @@ use App\Models\ArchiveItem;
 use App\Models\Artist;
 use App\Models\Artwork;
 use App\Models\EditProposal;
+use App\Models\Event;
 use App\Models\MaterialSubmission;
 use App\Models\ReviewQueueItem;
 use App\Models\SourceConflict;
@@ -409,7 +410,7 @@ class ReviewerDashboard
     {
         return match (true) {
             $record instanceof Artist => ['ar' => $record->name_ar, 'en' => $record->name_en],
-            $record instanceof Artwork, $record instanceof ArchiveItem => ['ar' => $record->title_ar, 'en' => $record->title_en],
+            $record instanceof Artwork, $record instanceof ArchiveItem, $record instanceof Event => ['ar' => $record->title_ar, 'en' => $record->title_en],
             default => null,
         };
     }

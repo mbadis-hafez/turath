@@ -2,6 +2,7 @@
 
 use App\Models\Artist;
 use App\Models\EditProposal;
+use App\Models\Event;
 use App\Models\ReviewQueueItem;
 
 it('surfaces pending review-queue items scoped to the reviewer\'s permissions', function () {
@@ -23,6 +24,24 @@ it('surfaces pending review-queue items scoped to the reviewer\'s permissions', 
         ->assertJsonPath('data.needs_review.0.citable_id', $artist->id)
         ->assertJsonPath('data.needs_review.0.completeness_pct', 100)
         ->assertJsonCount(1, 'data.priority_queue');
+});
+
+it('surfaces the event\'s own title, not "untitled", on a needs-review item', function () {
+    $reviewer = reviewerUser();
+
+    $event = Event::create(['event_type' => 'exhibition', 'title_ar' => 'معرض الرياض', 'title_en' => 'Riyadh Exhibition']);
+    ReviewQueueItem::factory()->create([
+        'citable_type' => Event::class,
+        'citable_id' => $event->id,
+        'review_type' => 'archivist_review',
+        'status' => 'pending',
+        'submitted_at' => now()->subMinutes(1),
+    ]);
+
+    $this->actingAs($reviewer)->getJson('/api/v1/dashboard/reviewer')->assertOk()
+        ->assertJsonPath('data.needs_review.0.citable_type', 'events')
+        ->assertJsonPath('data.needs_review.0.title.ar', 'معرض الرياض')
+        ->assertJsonPath('data.needs_review.0.title.en', 'Riyadh Exhibition');
 });
 
 it('returns an all-zero payload for a reviewer with nothing pending, not an error', function () {

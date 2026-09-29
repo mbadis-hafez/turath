@@ -92,6 +92,7 @@
     "artists": "Artist",
     "artworks": "Artwork",
     "archive-items": "Archive material",
+    "events": "Event",
     "material_submission": "Material submission"
   },
   "reviewType": {
