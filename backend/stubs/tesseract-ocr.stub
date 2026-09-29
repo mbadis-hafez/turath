@@ -1,0 +1,15 @@
+<?php
+
+namespace thiagoalessio\TesseractOCR;
+
+/**
+ * thiagoalessio/tesseract_ocr resolves most of its fluent config methods
+ * (lang(), format(), psm(), oem(), ...) through __call() at runtime, which
+ * PHPStan can't see. This stub documents the ones this app actually calls.
+ *
+ * @method $this lang(string $language)
+ * @method $this format(string $format)
+ */
+class TesseractOCR
+{
+}

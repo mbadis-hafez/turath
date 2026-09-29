@@ -55,7 +55,13 @@
       "title": "العنوان والنوع",
       "date": "التاريخ",
       "source": "المصدر / الحقوق",
-      "status": "الحالة"
+      "status": "الحالة",
+      "actions": "إجراءات"
+    },
+    "actions": {
+      "view": "عرض",
+      "edit": "تحرير",
+      "delete": "حذف"
     },
     "rowStatuses": {
       "draft": "مسودة",
@@ -178,6 +184,100 @@
     },
     "themes": "المحاور",
     "themesHelp": "تظهر المحاور كعامل تصفية في صفحة الأرشيف العامة."
+  },
+  "deleteModal": {
+    "title": "حذف مادة الأرشيف",
+    "explanation": "سيتم حذف الملف المرفوع وبيانات التعريف وسجل التحرير الخاص بـ «{title}» نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
+    "linkedRecords": "السجلات المرتبطة ستفقد هذا المرجع:",
+    "typeToConfirm": "اكتب {ref} للتأكيد",
+    "confirmLabel": "حذف نهائي",
+    "cancelLabel": "إلغاء",
+    "hideDraftLabel": "أرشفة كمسودة مخفية بدلًا من ذلك"
+  },
+  "detail": {
+    "title": "مادة الأرشيف",
+    "unpublishedTitle": "غير منشورة",
+    "unpublishedHelp": "تبقى هذه المادة مخفية عن الموقع العام حتى يتم نشرها.",
+    "underReviewNote": "هي حاليًا قيد المراجعة.",
+    "missingFields": "الناقص:",
+    "descriptionTitle": "الوصف",
+    "noDescription": "لا يوجد وصف.",
+    "metadataTitle": "بيانات التعريف",
+    "relatedTitle": "السجلات المرتبطة",
+    "relatedEmpty": "لا توجد سجلات مرتبطة.",
+    "basicInfoTitle": "معلومات أساسية",
+    "relatedToTitle": "مرتبطة بـ",
+    "size": "الحجم",
+    "share": "مشاركة",
+    "linkCopied": "تم نسخ الرابط",
+    "sideBySide": "جنباً إلى جنب",
+    "documentTab": "المستند",
+    "extractedTextTab": "النص المستخرج"
+  },
+  "ocr": {
+    "title": "الاستخراج الآلي للنص",
+    "processingTitle": "المعالجة الآلية",
+    "badge": "OCR · AI",
+    "status": {
+      "pending": "في الانتظار",
+      "processing": "قيد المعالجة",
+      "completed": "مكتمل",
+      "failed": "فشل"
+    },
+    "progress": "اكتمال {pct}٪",
+    "failedGeneric": "فشل استخراج النص من هذا الملف.",
+    "averageConfidence": "متوسط الثقة",
+    "needsReview": "{count} حقول بحاجة إلى مراجعة",
+    "allReviewed": "تمت مراجعة جميع الحقول المستخرجة.",
+    "fieldsTitle": "الحقول المستخرجة",
+    "acceptHighConfidence": "قبول الحقول عالية الثقة ({count})",
+    "fieldStatus": {
+      "pending": "بانتظار المراجعة",
+      "edited": "مُعدَّل",
+      "accepted": "مقبول",
+      "rejected": "مرفوض"
+    },
+    "accept": "قبول",
+    "edit": "تعديل",
+    "reject": "رفض",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "language": { "ar": "العربية", "en": "الإنجليزية" },
+    "searchPlaceholder": "ابحث في النص المستخرج…",
+    "matchCount": "{count} نتيجة",
+    "copy": "نسخ",
+    "legendMatch": "نتيجة البحث",
+    "legendLowConfidence": "ثقة أقل من ٧٠٪ — راجع الأصل",
+    "extractedFrom": "{fields} حقول استُخرجت من {pages} صفحات",
+    "pagesBadge": "OCR · {count} صفحات",
+    "notProcessed": "لم تتم معالجة هذا الملف للاستخراج الآلي للنص بعد.",
+    "runOcr": "تشغيل الاستخراج الآلي",
+    "rerunOcr": "إعادة تشغيل الاستخراج الآلي",
+    "checklist": {
+      "recognized": "اكتمل التعرف الضوئي",
+      "arabicExtracted": "اكتمل الاستخراج العربي",
+      "englishExtracted": "اكتمل الاستخراج الإنجليزي",
+      "fieldsIdentified": "تحديد {count} كيانات"
+    },
+    "viewFields": "عرض الحقول المستخرجة"
+  },
+  "tabs": {
+    "metadata": "البيانات الوصفية",
+    "relations": "العلاقات",
+    "aiExtraction": "الاستخراج الآلي",
+    "activity": "النشاط"
+  },
+  "viewer": {
+    "pageOf": "صفحة {current} من {total}",
+    "prevPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية",
+    "zoomIn": "تكبير",
+    "zoomOut": "تصغير",
+    "loadingPdf": "جارٍ تحميل المستند…",
+    "pdfLoadError": "تعذّر تحميل ملف PDF هذا. يمكنك تنزيل الملف الأصلي.",
+    "noPreviewTitle": "لا تتوفر معاينة لهذا الملف",
+    "noPreviewHelp": "لا يمكن معاينة هذا النوع من الملفات في المتصفح. نزّل الملف الأصلي لعرضه.",
+    "download": "تنزيل الملف الأصلي"
   },
   "artistFilter": "تُعرض المواد المرتبطة بفنان واحد.",
   "clearArtist": "عرض الكل",

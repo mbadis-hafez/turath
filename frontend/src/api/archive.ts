@@ -3,6 +3,7 @@ import type { PaginatedResponse, PaginationMeta } from "@/types/api";
 import type {
   AdminArchiveQuery, AdminArchiveRow, ArchiveEdit, ArchiveFacets, ArchiveEditFile, ArchiveItem, ArchiveQueryParams, BulkResult,
 } from "@/types/archive";
+import type { ExtractedField, FileOcrBundle } from "@/types/ocr";
 
 export function listArchiveItems(
   params: ArchiveQueryParams = {},
@@ -89,4 +90,28 @@ export function listArtistArchiveItems(
 
 export function syncArchiveItemThemes(id: number, themeIds: number[]): Promise<unknown> {
   return request({ method: "PATCH", url: `/api/v1/archive-items/${id}/themes`, data: { theme_ids: themeIds } });
+}
+
+export function getArchiveItemFileOcr(archiveItemId: number, signal?: AbortSignal): Promise<{ data: FileOcrBundle | null }> {
+  return request({ method: "GET", url: `/api/v1/archive-items/${archiveItemId}/file/ocr`, signal });
+}
+
+export function runArchiveItemFileOcr(archiveItemId: number): Promise<{ data: { status: string } }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/run` });
+}
+
+export function acceptExtractedField(archiveItemId: number, fieldId: number): Promise<{ data: ExtractedField }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/fields/${fieldId}/accept` });
+}
+
+export function rejectExtractedField(archiveItemId: number, fieldId: number): Promise<{ data: ExtractedField }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/fields/${fieldId}/reject` });
+}
+
+export function editExtractedField(archiveItemId: number, fieldId: number, value: string): Promise<{ data: ExtractedField }> {
+  return request({ method: "PATCH", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/fields/${fieldId}`, data: { extracted_value: value } });
+}
+
+export function acceptHighConfidenceFields(archiveItemId: number, threshold?: number): Promise<{ data: { accepted: string[] } }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/fields/accept-high-confidence`, data: threshold === undefined ? {} : { threshold } });
 }

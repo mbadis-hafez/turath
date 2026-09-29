@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Support\Ocr\OcrEngine;
+use App\Support\Ocr\PdfPageRasterizer;
+use App\Support\Ocr\PopplerPdfPageRasterizer;
+use App\Support\Ocr\TesseractOcrEngine;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
@@ -16,7 +20,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(OcrEngine::class, TesseractOcrEngine::class);
+        $this->app->bind(PdfPageRasterizer::class, PopplerPdfPageRasterizer::class);
     }
 
     /**

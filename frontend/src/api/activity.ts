@@ -19,3 +19,12 @@ export function fetchActivity(
     signal,
   });
 }
+
+/** A single record's own activity (and its files/links, per config/activity.php's `children`), for an embedded timeline. */
+export function fetchSubjectActivity(
+  resource: string,
+  id: number,
+  signal?: AbortSignal,
+): Promise<PaginatedResponse<ActivityEntry>> {
+  return request<PaginatedResponse<ActivityEntry>>({ method: "GET", url: `/api/v1/${resource}/${id}/activity`, signal });
+}

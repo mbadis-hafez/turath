@@ -8,6 +8,7 @@ import ErrorState from "@/components/common/ErrorState.vue";
 import LocalizedText from "@/components/common/LocalizedText.vue";
 import Pagination from "@/components/common/Pagination.vue";
 import Spinner from "@/components/common/Spinner.vue";
+import ArchiveDeleteDialog from "@/components/curation/ArchiveDeleteDialog.vue";
 import ArchiveTypeIcon from "@/components/curation/ArchiveTypeIcon.vue";
 import { searchArtistOptions } from "@/components/curation/ArtworkPickers";
 import EntityPicker, { type PickerOption } from "@/components/curation/EntityPicker.vue";
@@ -58,6 +59,24 @@ const bulkError = ref<string | null>(null);
 const assigning = ref(false);
 const assignArtist = ref<PickerOption | null>(null);
 const confirmingDelete = ref(false);
+
+const itemToDelete = ref<AdminArchiveRow | null>(null);
+function confirmDeleteItem(item: AdminArchiveRow): void {
+  itemToDelete.value = item;
+}
+function onDeleted(): void {
+  itemToDelete.value = null;
+  void retry();
+}
+async function onHideDraft(): Promise<void> {
+  const item = itemToDelete.value;
+  itemToDelete.value = null;
+  if (!item) return;
+  await bulkArchive({ ids: [item.id], action: "set_status", status: "hidden" });
+  await retry();
+}
+
+const iconBtn = "rounded-md border border-line p-1.5 text-ink-muted hover:bg-neutral-soft hover:text-ink focus:border-accent focus:outline-none";
 
 async function runBulk(payload: Omit<Parameters<typeof bulkArchive>[0], "ids">): Promise<void> {
   bulkBusy.value = true;
@@ -185,6 +204,7 @@ watch(query, (q) => {
                   <th class="px-3 py-3 text-start font-medium">{{ t("archive.admin.columns.date") }}</th>
                   <th class="px-3 py-3 text-start font-medium">{{ t("archive.admin.columns.source") }}</th>
                   <th class="px-3 py-3 text-start font-medium">{{ t("archive.admin.columns.status") }}</th>
+                  <th class="px-3 py-3 text-start font-medium">{{ t("archive.admin.columns.actions") }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -207,6 +227,28 @@ watch(query, (q) => {
                   <td class="px-3 py-4">
                     <span class="rounded-sm px-1.5 py-0.5 text-xs font-medium" :class="STATUS_CLASS[rowStatus(i)]" data-testid="row-status">{{ t(`archive.admin.rowStatuses.${rowStatus(i)}`) }}</span>
                   </td>
+                  <td class="px-3 py-4">
+                    <div class="flex items-center gap-2">
+                      <RouterLink :to="localePath('admin.archive.show', { id: i.id })" :class="iconBtn" :aria-label="t('archive.admin.actions.view')" data-testid="row-view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4">
+                          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      </RouterLink>
+                      <RouterLink :to="localePath('admin.archive.edit', { id: i.id })" :class="iconBtn" :aria-label="t('archive.admin.actions.edit')" data-testid="row-edit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4">
+                          <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                        </svg>
+                      </RouterLink>
+                      <button type="button" :class="[iconBtn, 'hover:text-danger']" :aria-label="t('archive.admin.actions.delete')" data-testid="row-delete" @click="confirmDeleteItem(i)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4">
+                          <path d="M3 6h18" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -215,6 +257,14 @@ watch(query, (q) => {
             <Pagination :meta="meta" @change="setPage" />
             <p v-if="meta" class="text-xs text-ink-muted">{{ t("archive.admin.perPage", { count: meta.per_page }) }}</p>
           </div>
+          <ArchiveDeleteDialog
+            v-if="itemToDelete"
+            :open="true"
+            :item="itemToDelete"
+            @deleted="onDeleted"
+            @cancel="itemToDelete = null"
+            @hide-draft="onHideDraft"
+          />
         </template>
       </div>
     </template>

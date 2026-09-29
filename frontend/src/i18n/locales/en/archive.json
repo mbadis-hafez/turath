@@ -55,7 +55,13 @@
       "title": "Title and type",
       "date": "Date",
       "source": "Source / rights",
-      "status": "Status"
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "actions": {
+      "view": "View",
+      "edit": "Edit",
+      "delete": "Delete"
     },
     "rowStatuses": {
       "draft": "Draft",
@@ -178,6 +184,100 @@
     },
     "themes": "Themes",
     "themesHelp": "Themes appear as a filter on the public archive page."
+  },
+  "deleteModal": {
+    "title": "Delete archive item",
+    "explanation": "The uploaded file, all metadata, and the edit history for “{title}” will be permanently removed. This cannot be undone.",
+    "linkedRecords": "Linked records will lose this reference:",
+    "typeToConfirm": "Type {ref} to confirm",
+    "confirmLabel": "Delete permanently",
+    "cancelLabel": "Cancel",
+    "hideDraftLabel": "Archive as hidden draft instead"
+  },
+  "detail": {
+    "title": "Archive item",
+    "unpublishedTitle": "Not published",
+    "unpublishedHelp": "This item stays hidden from the public site until it's published.",
+    "underReviewNote": "It's currently under review.",
+    "missingFields": "Missing:",
+    "descriptionTitle": "Description",
+    "noDescription": "No description provided.",
+    "metadataTitle": "Metadata",
+    "relatedTitle": "Related records",
+    "relatedEmpty": "No related records.",
+    "basicInfoTitle": "Basic info",
+    "relatedToTitle": "Related to",
+    "size": "Size",
+    "share": "Share",
+    "linkCopied": "Link copied",
+    "sideBySide": "Side by side",
+    "documentTab": "Document",
+    "extractedTextTab": "Extracted text"
+  },
+  "ocr": {
+    "title": "Automated text extraction",
+    "processingTitle": "Automated processing",
+    "badge": "OCR · AI",
+    "status": {
+      "pending": "Queued",
+      "processing": "Processing",
+      "completed": "Complete",
+      "failed": "Failed"
+    },
+    "progress": "{pct}% complete",
+    "failedGeneric": "Text extraction failed for this file.",
+    "averageConfidence": "Average confidence",
+    "needsReview": "{count} fields need review",
+    "allReviewed": "All extracted fields have been reviewed.",
+    "fieldsTitle": "Extracted fields",
+    "acceptHighConfidence": "Accept high-confidence fields ({count})",
+    "fieldStatus": {
+      "pending": "Pending",
+      "edited": "Edited",
+      "accepted": "Accepted",
+      "rejected": "Rejected"
+    },
+    "accept": "Accept",
+    "edit": "Edit",
+    "reject": "Reject",
+    "save": "Save",
+    "cancel": "Cancel",
+    "language": { "ar": "Arabic", "en": "English" },
+    "searchPlaceholder": "Search the extracted text…",
+    "matchCount": "{count} matches",
+    "copy": "Copy",
+    "legendMatch": "Search match",
+    "legendLowConfidence": "Below 70% confidence — check the original",
+    "extractedFrom": "{fields} fields extracted from {pages} pages",
+    "pagesBadge": "OCR · {count} pages",
+    "notProcessed": "This file hasn't been processed for text extraction yet.",
+    "runOcr": "Run text extraction",
+    "rerunOcr": "Re-run text extraction",
+    "checklist": {
+      "recognized": "OCR recognition complete",
+      "arabicExtracted": "Arabic extraction complete",
+      "englishExtracted": "English extraction complete",
+      "fieldsIdentified": "{count} fields identified"
+    },
+    "viewFields": "View extracted fields"
+  },
+  "tabs": {
+    "metadata": "Metadata",
+    "relations": "Relations",
+    "aiExtraction": "AI Extraction",
+    "activity": "Activity"
+  },
+  "viewer": {
+    "pageOf": "Page {current} of {total}",
+    "prevPage": "Previous page",
+    "nextPage": "Next page",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "loadingPdf": "Loading document…",
+    "pdfLoadError": "Couldn't load this PDF. You can still download the original file.",
+    "noPreviewTitle": "No preview available for this file",
+    "noPreviewHelp": "This file type can't be previewed in the browser. Download the original to view it.",
+    "download": "Download original"
   },
   "artistFilter": "Showing material linked to one artist.",
   "clearArtist": "Show everything",

@@ -44,6 +44,7 @@ beforeEach(() => {
       { path: "/:locale/admin/imports", name: "admin.imports", component: { template: "<div />" } },
       { path: "/:locale/admin/archive/new", name: "admin.archive.new", component: { template: "<div />" } },
       { path: "/:locale/admin/archive/:id", name: "admin.archive.edit", component: { template: "<div />" } },
+      { path: "/:locale/admin/archive/:id/view", name: "admin.archive.show", component: { template: "<div />" } },
     ],
   });
 });

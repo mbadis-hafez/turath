@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use App\Concerns\LogsChanges;
+use App\Enums\FileOcrStatus;
 use Database\Factories\FileFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class File extends Model
@@ -27,6 +29,10 @@ class File extends Model
             'width_px' => 'integer',
             'height_px' => 'integer',
             'duration_seconds' => 'integer',
+            'ocr_status' => FileOcrStatus::class,
+            'ocr_progress_pct' => 'integer',
+            'ocr_completed_at' => 'datetime',
+            'ocr_language_confidence' => 'array',
         ];
     }
 
@@ -44,6 +50,28 @@ class File extends Model
     public function uploadedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by_user_id');
+    }
+
+    /**
+     * @return HasMany<FileExtractedText, $this>
+     */
+    public function extractedTexts(): HasMany
+    {
+        return $this->hasMany(FileExtractedText::class);
+    }
+
+    /**
+     * @return HasMany<FileExtractedField, $this>
+     */
+    public function extractedFields(): HasMany
+    {
+        return $this->hasMany(FileExtractedField::class);
+    }
+
+    /** OCR only makes sense for images and PDFs — not video, audio, or opaque office formats. */
+    public function isOcrCandidate(): bool
+    {
+        return $this->mime_type === 'application/pdf' || str_starts_with($this->mime_type, 'image/');
     }
 
     public function activitySubjectLabel(): string

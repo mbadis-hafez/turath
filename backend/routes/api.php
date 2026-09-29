@@ -21,6 +21,8 @@ use App\Http\Controllers\Api\V1\ArchiveItemBulkController;
 use App\Http\Controllers\Api\V1\ArchiveItemDestroyController;
 use App\Http\Controllers\Api\V1\ArchiveItemEditController;
 use App\Http\Controllers\Api\V1\ArchiveItemFileController;
+use App\Http\Controllers\Api\V1\ArchiveItemFileOcrController;
+use App\Http\Controllers\Api\V1\ArchiveItemFileOcrFieldController;
 use App\Http\Controllers\Api\V1\ArchiveItemIndexController;
 use App\Http\Controllers\Api\V1\ArchiveItemLinkDestroyController;
 use App\Http\Controllers\Api\V1\ArchiveItemLinkStoreController;
@@ -282,6 +284,12 @@ Route::prefix('v1')->group(function () {
             Route::post('archive-items/{archiveItem}/submit-review', [ArchiveItemEditController::class, 'submitReview'])->whereNumber('archiveItem');
             Route::post('archive-items/{archiveItem}/file', [ArchiveItemFileController::class, 'store'])->whereNumber('archiveItem');
             Route::delete('archive-items/{archiveItem}/file', [ArchiveItemFileController::class, 'destroy'])->whereNumber('archiveItem');
+            Route::get('archive-items/{archiveItem}/file/ocr', [ArchiveItemFileOcrController::class, 'show'])->whereNumber('archiveItem');
+            Route::post('archive-items/{archiveItem}/file/ocr/run', [ArchiveItemFileOcrController::class, 'run'])->whereNumber('archiveItem');
+            Route::post('archive-items/{archiveItem}/file/ocr/fields/accept-high-confidence', [ArchiveItemFileOcrFieldController::class, 'acceptHighConfidence'])->whereNumber('archiveItem');
+            Route::post('archive-items/{archiveItem}/file/ocr/fields/{field}/accept', [ArchiveItemFileOcrFieldController::class, 'accept'])->whereNumber(['archiveItem', 'field']);
+            Route::post('archive-items/{archiveItem}/file/ocr/fields/{field}/reject', [ArchiveItemFileOcrFieldController::class, 'reject'])->whereNumber(['archiveItem', 'field']);
+            Route::patch('archive-items/{archiveItem}/file/ocr/fields/{field}', [ArchiveItemFileOcrFieldController::class, 'update'])->whereNumber(['archiveItem', 'field']);
         });
 
         Route::middleware('can:artworks.manage')->group(function () {

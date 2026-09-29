@@ -106,6 +106,8 @@ export interface BulkResult {
   failed: { id: number; message: string }[];
 }
 
+export type FileOcrStatus = "pending" | "processing" | "completed" | "failed";
+
 export interface ArchiveEditFile {
   id: number;
   name: string | null;
@@ -115,6 +117,8 @@ export interface ArchiveEditFile {
   height_px: number | null;
   is_image: boolean;
   url: string;
+  ocr_status: FileOcrStatus | null;
+  ocr_progress_pct: number | null;
 }
 
 export interface ArchiveEditLink {

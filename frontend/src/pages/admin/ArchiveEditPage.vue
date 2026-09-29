@@ -167,9 +167,14 @@ const pct = computed(() => Math.round((checklist.value.filter((c) => c.met).leng
 const complete = computed(() => pct.value === 100);
 
 const filePreview = computed(() => {
-  if (isNew.value) return pendingFile.value ? { name: pendingFile.value.name, size: pendingFile.value.size, url: pendingPreview.value, isImage: pendingFile.value.type.startsWith("image/"), dims: null } : null;
+  if (isNew.value)
+    return pendingFile.value
+      ? { name: pendingFile.value.name, size: pendingFile.value.size, url: pendingPreview.value, isImage: pendingFile.value.type.startsWith("image/"), isPdf: pendingFile.value.type === "application/pdf", dims: null }
+      : null;
   const f = item.value?.file;
-  return f ? { name: f.name ?? "", size: f.size_bytes, url: f.url, isImage: f.is_image, dims: f.width_px ? `${f.width_px} × ${f.height_px}` : null } : null;
+  return f
+    ? { name: f.name ?? "", size: f.size_bytes, url: f.url, isImage: f.is_image, isPdf: f.mime_type === "application/pdf", dims: f.width_px ? `${f.width_px} × ${f.height_px}` : null }
+    : null;
 });
 const formatSize = (b: number) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 
@@ -502,6 +507,7 @@ const err = (key: string) => fieldErrors.value[key]?.[0];
             <h2 class="text-xs font-semibold text-ink-muted">{{ t("archive.edit.uploadedFile") }}</h2>
             <div class="mt-3 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md bg-neutral-soft text-ink-muted">
               <img v-if="filePreview?.isImage && filePreview.url" :src="filePreview.url" :alt="filePreview.name" class="size-full object-contain" data-testid="file-preview" />
+              <iframe v-else-if="filePreview?.isPdf && filePreview.url" :src="filePreview.url" :title="filePreview.name" class="size-full border-0" data-testid="file-preview-pdf" />
               <ArchiveTypeIcon v-else :type="form.type" />
             </div>
             <p v-if="filePreview" class="mt-3 text-xs text-ink-muted" dir="ltr" data-testid="file-meta">{{ filePreview.name }} · {{ formatSize(filePreview.size) }}<template v-if="filePreview.dims"> · {{ filePreview.dims }}</template></p>

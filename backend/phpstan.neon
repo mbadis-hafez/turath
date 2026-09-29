@@ -9,3 +9,5 @@ parameters:
     # larastan's constructor-less model reflection skips; parse the method AST
     # instead so cast types (Carbon, custom casts) are visible to analysis.
     parseModelCastsMethod: true
+    stubFiles:
+        - stubs/tesseract-ocr.stub

@@ -36,7 +36,7 @@ function bundle(patch: Partial<ArchiveEdit> = {}): ArchiveEdit {
     people_names: [], keywords: [], source_name: null, rights_holder: { ar: null, en: null }, rights_status: "unknown", license: null,
     digitized_at: null,
     verification_reference: null, access_level: "registered", publication_status: "draft", under_review: false, updated_at: null,
-    file: { id: 1, name: "a.tif", mime_type: "image/tiff", size_bytes: 2048, width_px: 4200, height_px: 3100, is_image: false, url: "/f" },
+    file: { id: 1, name: "a.tif", mime_type: "image/tiff", size_bytes: 2048, width_px: 4200, height_px: 3100, is_image: false, url: "/f", ocr_status: null, ocr_progress_pct: null },
     checklist: [
       { key: "title_ar", met: true }, { key: "type_and_file", met: true }, { key: "date", met: false },
       { key: "rights_holder_license", met: false }, { key: "people_names", met: false },

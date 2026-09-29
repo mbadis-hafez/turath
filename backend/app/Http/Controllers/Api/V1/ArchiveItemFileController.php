@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Jobs\ProcessFileOcrJob;
 use App\Models\ArchiveItem;
 use App\Models\File;
 use App\Support\ArchiveAccessResolver;
@@ -37,7 +38,7 @@ class ArchiveItemFileController
 
         $this->removeOriginal($archiveItem);
 
-        $archiveItem->files()->create([
+        $file = $archiveItem->files()->create([
             'role' => 'original',
             'disk' => 'local',
             'path' => $upload->store('archive-files'),
@@ -50,6 +51,10 @@ class ArchiveItemFileController
             'uploaded_by_user_id' => $request->user()?->id,
         ]);
         $archiveItem->touch();
+
+        if ($file->isOcrCandidate()) {
+            ProcessFileOcrJob::dispatch($file->id);
+        }
 
         return response()->json(['data' => self::present($archiveItem->refresh())], 201);
     }
@@ -86,6 +91,8 @@ class ArchiveItemFileController
             'height_px' => $file->height_px,
             'is_image' => str_starts_with($file->mime_type, 'image/'),
             'url' => "/api/v1/archive-items/{$item->id}/files/{$file->id}/download",
+            'ocr_status' => $file->ocr_status?->value,
+            'ocr_progress_pct' => $file->ocr_progress_pct,
         ];
     }
 }
