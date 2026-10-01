@@ -91,23 +91,29 @@ const ALL_PERMISSIONS = ["proposals.submit", "activity.view", "artists.manage", 
 const tools = (w: Awaited<ReturnType<typeof mountAt>>) => w.get("[data-testid=tools-menu]");
 
 describe("AppLayout main menu (signed in)", () => {
-  it("shows the public sections and the dashboard in the bar, with the staff tools behind one Workspace button", async () => {
+  it("puts the public sections behind a Browse button and the dashboard in the bar, with the staff tools behind one Workspace button", async () => {
     signIn(["artists.manage", "archive.manage", "materials.review"]);
     const wrapper = await mountAt("/en");
 
     const bar = nav(wrapper).findAll(":scope > a").map((a) => a.attributes("data-testid"));
-    expect(bar).toEqual(["nav-artists", "nav-artworks", "nav-archive", "nav-events", "nav-themes", "nav-dashboard"]);
+    expect(bar).toEqual(["nav-dashboard"]);
+    expect(nav(wrapper).get("[data-testid=browse-toggle]").text()).toContain("Browse");
     expect(nav(wrapper).get("[data-testid=tools-toggle]").text()).toContain("Workspace");
+
+    await nav(wrapper).get("[data-testid=browse-toggle]").trigger("click");
+    const browse = wrapper.get("[data-testid=browse-menu]");
+    expect(browse.findAll("a").map((a) => a.attributes("data-testid"))).toEqual(["nav-artists", "nav-artworks", "nav-archive", "nav-events", "nav-themes"]);
     // A manager's Archive is the working registry, not the public page.
-    expect(link(wrapper, "archive").attributes("href")).toBe("/en/admin/archive");
+    expect(browse.get("[data-testid=nav-archive]").attributes("href")).toBe("/en/admin/archive");
   });
 
   it("keeps the top bar short however many permissions the user has", async () => {
     signIn(ALL_PERMISSIONS);
     const wrapper = await mountAt("/en");
 
-    // Five sections, the dashboard and one Workspace button: it fits, instead of thirteen links in a row.
-    expect(nav(wrapper).findAll(":scope > a")).toHaveLength(6);
+    // Just the dashboard inline, plus one Browse button and one Workspace button: it fits, instead of thirteen links in a row.
+    expect(nav(wrapper).findAll(":scope > a")).toHaveLength(1);
+    expect(nav(wrapper).findAll("[data-testid=browse-toggle]")).toHaveLength(1);
     expect(nav(wrapper).findAll("[data-testid=tools-toggle]")).toHaveLength(1);
   });
 
@@ -173,6 +179,39 @@ describe("AppLayout main menu (signed in)", () => {
     expect(elsewhere.get("[data-testid=tools-toggle]").classes()).not.toContain("text-accent");
   });
 
+  it("closes the Browse menu on Escape, on a click elsewhere, and after choosing a section", async () => {
+    signIn(ALL_PERMISSIONS);
+    const wrapper = await mountAt("/en");
+    const open = async () => {
+      if (!wrapper.find("[data-testid=browse-menu]").exists()) await wrapper.get("[data-testid=browse-toggle]").trigger("click");
+      expect(wrapper.find("[data-testid=browse-menu]").exists()).toBe(true);
+    };
+
+    await open();
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    await flushPromises();
+    expect(wrapper.find("[data-testid=browse-menu]").exists()).toBe(false);
+
+    await open();
+    document.body.click();
+    await flushPromises();
+    expect(wrapper.find("[data-testid=browse-menu]").exists()).toBe(false);
+
+    await open();
+    await wrapper.get("[data-testid=browse-menu]").get("[data-testid=nav-archive]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-testid=browse-menu]").exists()).toBe(false);
+  });
+
+  it("marks the Browse button as current while you are on a public section", async () => {
+    signIn(ALL_PERMISSIONS);
+    const onPublic = await mountAt("/en/artists");
+    expect(onPublic.get("[data-testid=browse-toggle]").classes()).toContain("text-accent");
+
+    const elsewhere = await mountAt("/en/dashboard");
+    expect(elsewhere.get("[data-testid=browse-toggle]").classes()).not.toContain("text-accent");
+  });
+
   it("gives a contributor their one tool as a plain link, not a menu of one", async () => {
     signIn(["proposals.submit"]);
     const wrapper = await mountAt("/en");
@@ -180,6 +219,8 @@ describe("AppLayout main menu (signed in)", () => {
     expect(nav(wrapper).find("[data-testid=tools-toggle]").exists()).toBe(false);
     expect(link(wrapper, "proposals").text()).toBe("My suggestions");
     expect(link(wrapper, "dashboard").attributes("href")).toBe("/en/dashboard");
+
+    await nav(wrapper).get("[data-testid=browse-toggle]").trigger("click");
     expect(link(wrapper, "archive").attributes("href")).toBe("/en/archive");
   });
 
@@ -191,12 +232,16 @@ describe("AppLayout main menu (signed in)", () => {
     expect(nav(wrapper).find("[data-testid=tools-toggle]").exists()).toBe(false);
   });
 
-  it("gives a signed-in user with no tools just the sections and their dashboard", async () => {
+  it("gives a signed-in user with no tools just the Browse menu and their dashboard", async () => {
     signIn([]);
     const wrapper = await mountAt("/en");
 
-    expect(nav(wrapper).findAll("a").map((a) => a.attributes("data-testid"))).toEqual(["nav-artists", "nav-artworks", "nav-archive", "nav-events", "nav-themes", "nav-dashboard"]);
+    expect(nav(wrapper).findAll(":scope > a").map((a) => a.attributes("data-testid"))).toEqual(["nav-dashboard"]);
+    expect(nav(wrapper).get("[data-testid=browse-toggle]")).toBeTruthy();
     expect(nav(wrapper).find("[data-testid=tools-toggle]").exists()).toBe(false);
+
+    await nav(wrapper).get("[data-testid=browse-toggle]").trigger("click");
+    expect(wrapper.get("[data-testid=browse-menu]").findAll("a").map((a) => a.attributes("data-testid"))).toEqual(["nav-artists", "nav-artworks", "nav-archive", "nav-events", "nav-themes"]);
   });
 
   it("says 'my dashboard' in Arabic, as in the design (لوحتي)", async () => {
