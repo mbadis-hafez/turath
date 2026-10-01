@@ -106,6 +106,8 @@ class ArtworkImageController
         $data = $request->validate([
             'rights_status' => ['sometimes', Rule::in(ArtworkImage::RIGHTS)],
             'is_final' => ['sometimes', 'boolean'],
+            'view_role' => ['sometimes', 'nullable', Rule::in(ArtworkImage::VIEW_ROLES)],
+            'is_public' => ['sometimes', 'boolean'],
             'edit_summary' => ['nullable', 'string', 'max:255'],
         ]);
         $file = $artwork->images()->findOrFail($image);
@@ -114,7 +116,7 @@ class ArtworkImageController
             if (($data['is_final'] ?? false) === true) {
                 $artwork->images()->where('id', '!=', $file->id)->where('is_final', true)->get()->each->update(['is_final' => false]);
             }
-            $file->update(array_intersect_key($data, array_flip(['rights_status', 'is_final'])));
+            $file->update(array_intersect_key($data, array_flip(['rights_status', 'is_final', 'view_role', 'is_public'])));
         });
 
         return response()->json(['data' => self::present($artwork->refresh())]);
@@ -156,6 +158,8 @@ class ArtworkImageController
             'size_bytes' => $i->size_bytes,
             'rights_status' => $i->rights_status,
             'is_final' => $i->is_final,
+            'view_role' => $i->view_role,
+            'is_public' => $i->is_public,
         ])->values()->all();
     }
 }

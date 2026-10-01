@@ -30,7 +30,7 @@ let nextId = 1;
 const images = computed<ArtworkImage[]>(() =>
   pending.value.map((p) => ({
     id: p.id, url: p.url, filename: p.file.name, width_px: null, height_px: null, size_bytes: p.file.size,
-    rights_status: p.rights, is_final: p.isFinal,
+    rights_status: p.rights, is_final: p.isFinal, view_role: null, is_public: true,
   })),
 );
 

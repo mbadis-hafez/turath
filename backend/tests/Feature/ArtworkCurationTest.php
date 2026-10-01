@@ -153,6 +153,28 @@ it('filters the internal registry and blocks non-editors', function () {
     $this->actingAs(makeUser('reader'))->getJson('/api/v1/admin/artworks')->assertForbidden();
 });
 
+it('sorts the internal registry and reports each row\'s image count', function () {
+    $editor = editorUser();
+    $a = Artwork::factory()->create(['title_ar' => 'ب', 'creation_year_from' => 1990]);
+    $b = Artwork::factory()->create(['title_ar' => 'أ', 'creation_year_from' => 2000]);
+    foreach (range(1, 2) as $i) {
+        ArtworkImage::create([
+            'artwork_id' => $a->id, 'path' => "artwork-images/test-{$i}.jpg", 'mime_type' => 'image/jpeg',
+            'size_bytes' => 100, 'sha256' => hash('sha256', "img{$i}"),
+        ]);
+    }
+
+    $byTitle = $this->actingAs($editor)->getJson('/api/v1/admin/artworks?sort=title')->assertOk()->json('data');
+    expect(collect($byTitle)->pluck('id')->all())->toBe([$b->id, $a->id]);
+
+    $byYear = $this->actingAs($editor)->getJson('/api/v1/admin/artworks?sort=year')->assertOk()->json('data');
+    expect(collect($byYear)->pluck('id')->all())->toBe([$b->id, $a->id]);
+
+    $rows = $this->actingAs($editor)->getJson('/api/v1/admin/artworks')->assertOk()->json('data');
+    expect(collect($rows)->firstWhere('id', $a->id)['image_count'])->toBe(2)
+        ->and(collect($rows)->firstWhere('id', $b->id)['image_count'])->toBe(0);
+});
+
 it('returns the artwork curation bundle with checklist and pipeline for editors only', function () {
     $artwork = Artwork::factory()->create(['height_cm' => null, 'width_cm' => null]);
 

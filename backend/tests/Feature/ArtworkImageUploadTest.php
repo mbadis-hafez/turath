@@ -165,6 +165,35 @@ it('still accepts the legacy single-file field with the unchanged data shape', f
         ->and($response->json('data.0.rights_status'))->toBe('licensed');
 });
 
+it('tags an image with a view role and toggles its public visibility, defaulting to public with no role', function () {
+    $editor = editorUser();
+    $artwork = Artwork::factory()->create();
+
+    $image = $this->actingAs($editor)
+        ->post("/api/v1/artworks/{$artwork->id}/images", ['image' => UploadedFile::fake()->image('a.jpg', 50, 50)], ['Accept' => 'application/json'])
+        ->assertCreated()->json('data.0');
+    expect($image['view_role'])->toBeNull()->and($image['is_public'])->toBeTrue();
+
+    $response = $this->actingAs($editor)
+        ->patchJson("/api/v1/artworks/{$artwork->id}/images/{$image['id']}", ['view_role' => 'signature', 'is_public' => false])
+        ->assertOk();
+
+    expect($response->json('data.0.view_role'))->toBe('signature')
+        ->and($response->json('data.0.is_public'))->toBeFalse();
+});
+
+it('rejects an unknown view role', function () {
+    $editor = editorUser();
+    $artwork = Artwork::factory()->create();
+    $image = $this->actingAs($editor)
+        ->post("/api/v1/artworks/{$artwork->id}/images", ['image' => UploadedFile::fake()->image('a.jpg', 50, 50)], ['Accept' => 'application/json'])
+        ->json('data.0');
+
+    $this->actingAs($editor)
+        ->patchJson("/api/v1/artworks/{$artwork->id}/images/{$image['id']}", ['view_role' => 'bogus'])
+        ->assertStatus(422);
+});
+
 it('rejects a request that sends both images[] and image', function () {
     $editor = editorUser();
     $artwork = Artwork::factory()->create();

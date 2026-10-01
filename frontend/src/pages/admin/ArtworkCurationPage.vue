@@ -262,6 +262,9 @@ const stageClass = (s: PipelineStatus) =>
           </p>
         </div>
         <div class="flex items-center gap-2">
+          <RouterLink :to="localePath('admin.artworks.detail', { id })" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft" data-testid="view-link">
+            {{ t("curation.artworkDetail.view") }}
+          </RouterLink>
           <button type="button" data-testid="save-button" class="rounded-md border border-ink px-4 py-2 text-sm font-medium text-ink hover:bg-neutral-soft disabled:opacity-50" :disabled="saving || draftLocked" @click="save">
             {{ saving ? t("curation.detail.saving") : t("curation.detail.save") }}
           </button>

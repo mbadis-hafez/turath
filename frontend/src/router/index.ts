@@ -231,6 +231,12 @@ const routes: RouteRecordRaw[] = [
     meta: { titleKey: "curation.artworkRegistry.title", requiresAuth: true, requiresPermission: "artworks.manage" },
   },
   {
+    path: "/:locale/admin/artworks/:id(\\d+)/view",
+    name: "admin.artworks.detail",
+    component: () => import("@/pages/admin/ArtworkDetailPage.vue"),
+    meta: { titleKey: "curation.artworkRegistry.title", requiresAuth: true, requiresPermission: "artworks.manage" },
+  },
+  {
     path: "/:locale/admin/events",
     name: "admin.events",
     component: () => import("@/pages/admin/EventsRegistryPage.vue"),

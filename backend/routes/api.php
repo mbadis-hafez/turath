@@ -63,6 +63,7 @@ use App\Http\Controllers\Api\V1\ArtistVariantUpdateController;
 use App\Http\Controllers\Api\V1\ArtistVerifyController;
 use App\Http\Controllers\Api\V1\ArtworkApproveController;
 use App\Http\Controllers\Api\V1\ArtworkArchiveItemsController;
+use App\Http\Controllers\Api\V1\ArtworkBulkController;
 use App\Http\Controllers\Api\V1\ArtworkCurationShowController;
 use App\Http\Controllers\Api\V1\ArtworkDestroyController;
 use App\Http\Controllers\Api\V1\ArtworkImageController;
@@ -324,6 +325,7 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware('can:artworks.manage')->group(function () {
             Route::get('admin/artworks', AdminArtworkIndexController::class);
+            Route::post('admin/artworks/bulk', ArtworkBulkController::class);
             Route::get('admin/holders', AdminHolderIndexController::class);
             Route::patch('artworks/{artwork}/themes', [ThemeController::class, 'syncArtwork'])->whereNumber('artwork');
             Route::post('artworks/{artwork}/images', [ArtworkImageController::class, 'store'])->whereNumber('artwork');
