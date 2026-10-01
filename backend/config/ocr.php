@@ -149,4 +149,42 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Evaluation and training data
+    |--------------------------------------------------------------------------
+    |
+    | Reviewer decisions are collected as examples (Dataset\ReviewExampleRecorder).
+    | Each archive item belongs to one split, assigned once from a keyed hash so
+    | the same item always lands in the same split, and locked when first
+    | exported. Exports are files that leave the app's access control, so by
+    | privacy rule 10 only items at these access levels are ever written to one.
+    | No model is trained from any of this yet.
+    |
+    */
+
+    'dataset' => [
+        'evaluation_percent' => (int) env('OCR_DATASET_EVALUATION_PERCENT', 20),
+        // Changing it reassigns every document not yet assigned — set it once.
+        'split_salt' => env('OCR_DATASET_SPLIT_SALT', 'bidayat-ocr-dataset-v1'),
+        'exportable_access_levels' => array_values(array_filter(explode(',', (string) env('OCR_DATASET_EXPORTABLE_ACCESS_LEVELS', 'public,registered,researcher')))),
+        'export_path' => env('OCR_DATASET_EXPORT_PATH', storage_path('app/ocr-dataset')),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Benchmark suite
+    |--------------------------------------------------------------------------
+    |
+    | Local documents with known answers (see Benchmark\BenchmarkManifest). The
+    | default location is under storage/app, which git ignores: benchmark
+    | documents with personal data (the authorization letter) stay local.
+    |
+    */
+
+    'benchmark' => [
+        'manifest' => env('OCR_BENCHMARK_MANIFEST', storage_path('app/ocr-benchmark/manifest.json')),
+        'report_path' => env('OCR_BENCHMARK_REPORT_PATH', storage_path('app/ocr-benchmark/reports')),
+    ],
+
 ];

@@ -52,4 +52,10 @@ class OcrHandwritingSuggestion extends Model
     {
         return $this->belongsTo(FileOcrRegion::class, 'region_id');
     }
+
+    protected static function booted(): void
+    {
+        // Decisions become evaluation/training examples (Dataset\ReviewExampleRecorder).
+        static::observe(Observers\RecordsOcrReviewDecisions::class);
+    }
 }

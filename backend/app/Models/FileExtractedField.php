@@ -76,4 +76,10 @@ class FileExtractedField extends Model
     {
         return $this->verified_value ?? $this->extracted_value;
     }
+
+    protected static function booted(): void
+    {
+        // Decisions become evaluation/training examples (Dataset\ReviewExampleRecorder).
+        static::observe(Observers\RecordsOcrReviewDecisions::class);
+    }
 }

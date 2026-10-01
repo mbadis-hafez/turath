@@ -59,4 +59,10 @@ class FileOcrFormField extends Model
     {
         return $this->belongsTo(User::class, 'transcribed_by_user_id');
     }
+
+    protected static function booted(): void
+    {
+        // Decisions become evaluation/training examples (Dataset\ReviewExampleRecorder).
+        static::observe(Observers\RecordsOcrReviewDecisions::class);
+    }
 }

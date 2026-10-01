@@ -62,4 +62,10 @@ class FileEntityMatch extends Model
     {
         return $this->belongsTo(FileExtractedField::class, 'extracted_field_id');
     }
+
+    protected static function booted(): void
+    {
+        // Decisions become evaluation/training examples (Dataset\ReviewExampleRecorder).
+        static::observe(Observers\RecordsOcrReviewDecisions::class);
+    }
 }
