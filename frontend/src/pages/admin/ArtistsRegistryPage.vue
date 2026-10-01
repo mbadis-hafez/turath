@@ -87,6 +87,7 @@ function onMerged(): void {
 
 const toggle = (on: boolean) =>
   on ? "border-danger bg-danger-soft text-danger" : "border-line bg-surface text-ink";
+const iconBtn = "rounded-md border border-line p-1.5 text-ink-muted hover:bg-neutral-soft hover:text-ink";
 </script>
 
 <template>
@@ -190,21 +191,25 @@ const toggle = (on: boolean) =>
                     </span>
                   </td>
                   <td class="px-3 py-3">
-                    <div class="flex items-center gap-2 text-xs font-medium" data-testid="artist-actions">
-                      <RouterLink :to="localePath('artists.show', { slug: a.slug })" class="text-ink hover:text-accent" data-testid="artist-view">
-                        {{ t("curation.registry.actions.view") }}
+                    <div class="flex items-center gap-1.5" data-testid="artist-actions">
+                      <RouterLink :to="localePath('artists.show', { slug: a.slug })" :class="iconBtn" :aria-label="t('curation.registry.actions.view')" data-testid="artist-view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                       </RouterLink>
-                      <RouterLink :to="localePath('admin.artists.show', { id: a.id })" class="text-accent hover:underline" data-testid="artist-edit">
-                        {{ t("curation.registry.actions.edit") }}
+                      <RouterLink :to="localePath('admin.artists.show', { id: a.id })" :class="iconBtn" :aria-label="t('curation.registry.actions.edit')" data-testid="artist-edit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
                       </RouterLink>
                       <button
-                        v-if="canDelete(a)"
                         type="button"
-                        class="text-danger hover:underline"
+                        :class="[iconBtn, 'hover:text-danger disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-ink-muted']"
+                        :aria-label="t('curation.registry.actions.delete')"
+                        :disabled="!canDelete(a)"
+                        :title="canDelete(a) ? undefined : t('curation.registry.deleteUnavailable')"
                         data-testid="artist-delete"
                         @click="deletingRow = { id: a.id, name: pick(a.name)?.text ?? a.slug }; deleteDialogOpen = true"
                       >
-                        {{ t("curation.registry.actions.delete") }}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4">
+                          <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
                       </button>
                     </div>
                   </td>

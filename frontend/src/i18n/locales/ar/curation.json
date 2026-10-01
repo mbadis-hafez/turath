@@ -28,6 +28,7 @@
     "deleteTitle": "حذف هذا الفنان؟",
     "deleteBody": "سيُحذف «{name}» من السجل. ويمكن للمدير استعادته لاحقًا.",
     "deleteError": "تعذر حذف الفنان. حاول مرة أخرى.",
+    "deleteUnavailable": "حذف فنان منشور متاح للمدير فقط.",
     "gaps": "{count} نواقص",
     "noGaps": "مكتمل",
     "materials": "{count} مواد",

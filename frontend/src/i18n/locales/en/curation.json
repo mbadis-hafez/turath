@@ -28,6 +28,7 @@
     "deleteTitle": "Delete this artist?",
     "deleteBody": "\"{name}\" will be removed from the registry. An administrator can restore it later.",
     "deleteError": "Couldn't delete the artist. Please try again.",
+    "deleteUnavailable": "Only an administrator can delete a published artist.",
     "gaps": "{count} gaps",
     "noGaps": "Complete",
     "materials": "{count} materials",
