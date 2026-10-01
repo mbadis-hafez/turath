@@ -1,8 +1,12 @@
 <?php
 
+use App\Jobs\CorrectOcrJob;
+use App\Jobs\ExtractOcrFieldsJob;
+use App\Jobs\MatchEntitiesJob;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)->in('Feature', 'Unit');
@@ -32,6 +36,28 @@ function makeUser(?string $role = null): User
 function editorUser(): User
 {
     return makeUser('editor');
+}
+
+/**
+ * Runs the OCR pipeline stages that were queued (the queue is faked in every
+ * test — see TestCase), the way a worker would, until none are left. OCR
+ * recognition itself is left out: it needs real engines, so tests call it
+ * directly with fakes.
+ *
+ * @param  list<class-string>  $stages
+ */
+function runQueuedOcrStages(array $stages = [ExtractOcrFieldsJob::class, MatchEntitiesJob::class, CorrectOcrJob::class]): void
+{
+    $ran = [];
+    do {
+        $pending = collect($stages)
+            ->flatMap(fn (string $class) => Queue::pushed($class))
+            ->reject(fn (object $job) => in_array(spl_object_id($job), $ran, true));
+        foreach ($pending as $job) {
+            $ran[] = spl_object_id($job);
+            app()->call([$job, 'handle']);
+        }
+    } while ($pending->isNotEmpty());
 }
 
 function reviewerUser(): User

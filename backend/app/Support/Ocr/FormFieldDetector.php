@@ -11,6 +11,11 @@ use App\Enums\OcrRegionType;
  * below within a small distance. A label with no candidate nearby produces a
  * field with no value region at all rather than a guessed one — that's the
  * "no machine extraction, needs manual entry" case surfaced in the review UI.
+ *
+ * A value region carrying a possible correction mark always needs manual
+ * transcription: its OCR reading (if printed) is kept only as the raw text a
+ * reviewer compares against, since it runs the crossed-out and replacement
+ * values together — the reviewer decides which one the author meant.
  */
 class FormFieldDetector
 {
@@ -21,8 +26,8 @@ class FormFieldDetector
     private const EXCLUDED_VALUE_TYPES = [OcrRegionType::FormLabel, OcrRegionType::Logo, OcrRegionType::Photograph, OcrRegionType::Noise, OcrRegionType::Footer];
 
     /**
-     * @param  array<int, array{id: int, region_type: OcrRegionType, bbox: array{x: int, y: int, width: int, height: int}, source_text: ?string}>  $regions  all regions detected on one page, already persisted (carrying DB ids)
-     * @return array<int, array{field_label: string, label_region_id: int, value_region_id: ?int, value_type: ?string, machine_value: ?string, requires_manual_transcription: bool}>
+     * @param  array<int, array{id: int, region_type: OcrRegionType, bbox: array{x: int, y: int, width: int, height: int}, source_text: ?string, has_correction_mark?: bool}>  $regions  all regions detected on one page, already persisted (carrying DB ids)
+     * @return array<int, array{field_label: string, label_region_id: int, value_region_id: ?int, value_type: ?string, machine_value: ?string, requires_manual_transcription: bool, has_correction_mark: bool}>
      */
     public function pair(array $regions): array
     {
@@ -47,19 +52,22 @@ class FormFieldDetector
                     'value_type' => null,
                     'machine_value' => null,
                     'requires_manual_transcription' => true,
+                    'has_correction_mark' => false,
                 ];
 
                 continue;
             }
 
             $claimed[$value['id']] = true;
+            $marked = $value['has_correction_mark'] ?? false;
             $fields[] = [
                 'field_label' => $fieldLabel,
                 'label_region_id' => $label['id'],
                 'value_region_id' => $value['id'],
                 'value_type' => $value['region_type']->value,
                 'machine_value' => $value['region_type']->ocrAllowed() ? $value['source_text'] : null,
-                'requires_manual_transcription' => ! $value['region_type']->ocrAllowed(),
+                'requires_manual_transcription' => $marked || ! $value['region_type']->ocrAllowed(),
+                'has_correction_mark' => $marked,
             ];
         }
 
@@ -67,10 +75,10 @@ class FormFieldDetector
     }
 
     /**
-     * @param  array{id: int, region_type: OcrRegionType, bbox: array{x: int, y: int, width: int, height: int}, source_text: ?string}  $label
-     * @param  array<int, array{id: int, region_type: OcrRegionType, bbox: array{x: int, y: int, width: int, height: int}, source_text: ?string}>  $candidates
+     * @param  array{id: int, region_type: OcrRegionType, bbox: array{x: int, y: int, width: int, height: int}, source_text: ?string, has_correction_mark?: bool}  $label
+     * @param  array<int, array{id: int, region_type: OcrRegionType, bbox: array{x: int, y: int, width: int, height: int}, source_text: ?string, has_correction_mark?: bool}>  $candidates
      * @param  array<int, bool>  $claimed
-     * @return array{id: int, region_type: OcrRegionType, bbox: array{x: int, y: int, width: int, height: int}, source_text: ?string}|null
+     * @return array{id: int, region_type: OcrRegionType, bbox: array{x: int, y: int, width: int, height: int}, source_text: ?string, has_correction_mark?: bool}|null
      */
     private function nearestCandidate(array $label, array $candidates, array $claimed): ?array
     {

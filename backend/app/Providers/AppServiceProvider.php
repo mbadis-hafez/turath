@@ -2,10 +2,14 @@
 
 namespace App\Providers;
 
+use App\Support\Ocr\Correction\CorrectionProviderFactory;
+use App\Support\Ocr\Correction\OcrCorrectionProvider;
+use App\Support\Ocr\CorrectionMarkDetector;
+use App\Support\Ocr\GdCorrectionMarkDetector;
 use App\Support\Ocr\GdNonTextRegionDetector;
 use App\Support\Ocr\HandwritingOcrProvider;
+use App\Support\Ocr\HandwritingProviderFactory;
 use App\Support\Ocr\NonTextRegionDetector;
-use App\Support\Ocr\NullHandwritingOcrProvider;
 use App\Support\Ocr\OcrEngine;
 use App\Support\Ocr\PageLayoutAnalyzer;
 use App\Support\Ocr\PdfPageRasterizer;
@@ -30,8 +34,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PdfPageRasterizer::class, PopplerPdfPageRasterizer::class);
         $this->app->bind(PageLayoutAnalyzer::class, TesseractPageLayoutAnalyzer::class);
         $this->app->bind(NonTextRegionDetector::class, GdNonTextRegionDetector::class);
-        // No self-hosted handwriting model is wired up yet; see KrakenHandwritingOcrProvider's docblock.
-        $this->app->bind(HandwritingOcrProvider::class, NullHandwritingOcrProvider::class);
+        $this->app->bind(CorrectionMarkDetector::class, GdCorrectionMarkDetector::class);
+        // Off unless config/ocr.php enables one: handwriting is then transcribed by hand.
+        $this->app->bind(HandwritingOcrProvider::class, fn () => HandwritingProviderFactory::make((array) config('ocr.handwriting')));
+        // Off unless config/ocr.php enables a provider; see OcrCorrectionService.
+        $this->app->bind(OcrCorrectionProvider::class, fn () => CorrectionProviderFactory::make((array) config('ocr.correction')));
     }
 
     /**

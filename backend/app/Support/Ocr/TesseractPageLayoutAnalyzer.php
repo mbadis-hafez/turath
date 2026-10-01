@@ -33,6 +33,9 @@ class TesseractPageLayoutAnalyzer implements PageLayoutAnalyzer
 
     private const COL_TEXT = 11;
 
+    /** LRM, RLM, Arabic letter mark, and the bidi embedding/override/isolate controls. */
+    private const BIDI_CONTROLS = '/[\x{200E}\x{200F}\x{061C}\x{202A}-\x{202E}\x{2066}-\x{2069}]/u';
+
     public function analyze(string $imagePath): array
     {
         try {
@@ -63,7 +66,9 @@ class TesseractPageLayoutAnalyzer implements PageLayoutAnalyzer
             if ((int) $cols[self::COL_LEVEL] !== self::WORD_LEVEL) {
                 continue;
             }
-            $text = trim($cols[self::COL_TEXT] ?? '');
+            // Tesseract's Arabic output carries invisible bidi marks — on the benchmark letter "الفنان/ة:"
+            // came back as "الفنان/ة:\u{200E}", which hid the trailing colon from the label rule.
+            $text = trim((string) preg_replace(self::BIDI_CONTROLS, '', $cols[self::COL_TEXT] ?? ''));
             $conf = (float) ($cols[self::COL_CONF] ?? -1);
             if ($text === '' || $conf < 0) {
                 continue;

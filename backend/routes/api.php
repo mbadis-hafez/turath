@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\OcrStage;
 use App\Http\Controllers\Api\V1\ActivityFeedController;
 use App\Http\Controllers\Api\V1\AdminArchiveItemIndexController;
 use App\Http\Controllers\Api\V1\AdminArtistIndexController;
@@ -21,10 +22,16 @@ use App\Http\Controllers\Api\V1\ArchiveItemBulkController;
 use App\Http\Controllers\Api\V1\ArchiveItemDestroyController;
 use App\Http\Controllers\Api\V1\ArchiveItemEditController;
 use App\Http\Controllers\Api\V1\ArchiveItemFileController;
+use App\Http\Controllers\Api\V1\ArchiveItemFileOcrArtistContactController;
 use App\Http\Controllers\Api\V1\ArchiveItemFileOcrController;
+use App\Http\Controllers\Api\V1\ArchiveItemFileOcrDateController;
 use App\Http\Controllers\Api\V1\ArchiveItemFileOcrFieldController;
 use App\Http\Controllers\Api\V1\ArchiveItemFileOcrFormFieldController;
+use App\Http\Controllers\Api\V1\ArchiveItemFileOcrHandwritingController;
+use App\Http\Controllers\Api\V1\ArchiveItemFileOcrMatchController;
+use App\Http\Controllers\Api\V1\ArchiveItemFileOcrPageController;
 use App\Http\Controllers\Api\V1\ArchiveItemFileOcrRegionController;
+use App\Http\Controllers\Api\V1\ArchiveItemFileOcrRegionReviewController;
 use App\Http\Controllers\Api\V1\ArchiveItemIndexController;
 use App\Http\Controllers\Api\V1\ArchiveItemLinkDestroyController;
 use App\Http\Controllers\Api\V1\ArchiveItemLinkStoreController;
@@ -288,12 +295,31 @@ Route::prefix('v1')->group(function () {
             Route::delete('archive-items/{archiveItem}/file', [ArchiveItemFileController::class, 'destroy'])->whereNumber('archiveItem');
             Route::get('archive-items/{archiveItem}/file/ocr', [ArchiveItemFileOcrController::class, 'show'])->whereNumber('archiveItem');
             Route::post('archive-items/{archiveItem}/file/ocr/run', [ArchiveItemFileOcrController::class, 'run'])->whereNumber('archiveItem');
+            Route::post('archive-items/{archiveItem}/file/ocr/stages/{stage}/run', [ArchiveItemFileOcrController::class, 'runStage'])
+                ->whereNumber('archiveItem')->whereIn('stage', array_column(OcrStage::cases(), 'value'));
+            Route::put('archive-items/{archiveItem}/file/ocr/document-type', [ArchiveItemFileOcrController::class, 'setDocumentType'])->whereNumber('archiveItem');
+            Route::post('archive-items/{archiveItem}/file/ocr/dates/{date}/accept', [ArchiveItemFileOcrDateController::class, 'accept'])->whereNumber(['archiveItem', 'date']);
+            Route::post('archive-items/{archiveItem}/file/ocr/dates/{date}/reject', [ArchiveItemFileOcrDateController::class, 'reject'])->whereNumber(['archiveItem', 'date']);
+            Route::post('archive-items/{archiveItem}/file/ocr/matches/{match}/confirm', [ArchiveItemFileOcrMatchController::class, 'confirm'])->whereNumber(['archiveItem', 'match']);
+            Route::post('archive-items/{archiveItem}/file/ocr/matches/{match}/no-match', [ArchiveItemFileOcrMatchController::class, 'noMatch'])->whereNumber(['archiveItem', 'match']);
+            Route::post('archive-items/{archiveItem}/file/ocr/matches/{match}/reset', [ArchiveItemFileOcrMatchController::class, 'reset'])->whereNumber(['archiveItem', 'match']);
+            Route::get('archive-items/{archiveItem}/file/ocr/matches/{match}/search', [ArchiveItemFileOcrMatchController::class, 'search'])->whereNumber(['archiveItem', 'match']);
             Route::post('archive-items/{archiveItem}/file/ocr/fields/accept-high-confidence', [ArchiveItemFileOcrFieldController::class, 'acceptHighConfidence'])->whereNumber('archiveItem');
             Route::post('archive-items/{archiveItem}/file/ocr/fields/{field}/accept', [ArchiveItemFileOcrFieldController::class, 'accept'])->whereNumber(['archiveItem', 'field']);
             Route::post('archive-items/{archiveItem}/file/ocr/fields/{field}/reject', [ArchiveItemFileOcrFieldController::class, 'reject'])->whereNumber(['archiveItem', 'field']);
+            Route::post('archive-items/{archiveItem}/file/ocr/fields/{field}/uncertain', [ArchiveItemFileOcrFieldController::class, 'uncertain'])->whereNumber(['archiveItem', 'field']);
             Route::patch('archive-items/{archiveItem}/file/ocr/fields/{field}', [ArchiveItemFileOcrFieldController::class, 'update'])->whereNumber(['archiveItem', 'field']);
             Route::get('archive-items/{archiveItem}/file/ocr/regions/{region}/crop', [ArchiveItemFileOcrRegionController::class, 'crop'])->whereNumber(['archiveItem', 'region']);
+            Route::get('archive-items/{archiveItem}/file/ocr/pages/{page}/image', [ArchiveItemFileOcrPageController::class, 'image'])->whereNumber(['archiveItem', 'page']);
+            Route::post('archive-items/{archiveItem}/file/ocr/regions/{region}/transcribe', [ArchiveItemFileOcrRegionReviewController::class, 'transcribe'])->whereNumber(['archiveItem', 'region']);
+            Route::post('archive-items/{archiveItem}/file/ocr/regions/{region}/dismiss', [ArchiveItemFileOcrRegionReviewController::class, 'dismiss'])->whereNumber(['archiveItem', 'region']);
+            Route::post('archive-items/{archiveItem}/file/ocr/regions/{region}/restore', [ArchiveItemFileOcrRegionReviewController::class, 'restore'])->whereNumber(['archiveItem', 'region']);
             Route::post('archive-items/{archiveItem}/file/ocr/form-fields/{formField}/transcribe', [ArchiveItemFileOcrFormFieldController::class, 'transcribe'])->whereNumber(['archiveItem', 'formField']);
+            Route::post('archive-items/{archiveItem}/file/ocr/regions/{region}/handwriting-suggestion', [ArchiveItemFileOcrHandwritingController::class, 'suggest'])->whereNumber(['archiveItem', 'region']);
+            Route::post('archive-items/{archiveItem}/file/ocr/handwriting-suggestions/{suggestion}/review', [ArchiveItemFileOcrHandwritingController::class, 'review'])->whereNumber(['archiveItem', 'suggestion']);
+            Route::get('archive-items/{archiveItem}/file/ocr/artist-contact', [ArchiveItemFileOcrArtistContactController::class, 'show'])->whereNumber('archiveItem');
+            Route::put('archive-items/{archiveItem}/file/ocr/artist-contact/artist', [ArchiveItemFileOcrArtistContactController::class, 'confirmArtist'])->whereNumber('archiveItem');
+            Route::post('archive-items/{archiveItem}/file/ocr/artist-contact/propose', [ArchiveItemFileOcrArtistContactController::class, 'propose'])->whereNumber('archiveItem');
         });
 
         Route::middleware('can:artworks.manage')->group(function () {

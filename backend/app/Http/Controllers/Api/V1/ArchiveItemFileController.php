@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Jobs\ProcessFileOcrJob;
 use App\Models\ArchiveItem;
 use App\Models\File;
 use App\Support\ArchiveAccessResolver;
+use App\Support\Ocr\Pipeline\OcrPipeline;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -26,7 +26,7 @@ class ArchiveItemFileController
         return Storage::disk($record->disk)->response($record->path, $record->original_filename);
     }
 
-    public function store(Request $request, ArchiveItem $archiveItem): JsonResponse
+    public function store(Request $request, ArchiveItem $archiveItem, OcrPipeline $pipeline): JsonResponse
     {
         $request->validate([
             'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,tif,tiff,pdf,doc,docx,mp3,wav,mp4,mov', 'max:102400'],
@@ -52,9 +52,7 @@ class ArchiveItemFileController
         ]);
         $archiveItem->touch();
 
-        if ($file->isOcrCandidate()) {
-            ProcessFileOcrJob::dispatch($file->id);
-        }
+        $pipeline->start($file); // a no-op for files OCR can't read
 
         return response()->json(['data' => self::present($archiveItem->refresh())], 201);
     }

@@ -23,6 +23,7 @@ class FileOcrFormField extends Model
     {
         return [
             'requires_manual_transcription' => 'boolean',
+            'has_correction_mark' => 'boolean',
             'transcribed_at' => 'datetime',
         ];
     }

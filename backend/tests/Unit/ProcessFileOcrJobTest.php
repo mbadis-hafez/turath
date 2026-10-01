@@ -2,6 +2,7 @@
 
 use App\Enums\ExtractedFieldStatus;
 use App\Enums\FileOcrStatus;
+use App\Jobs\ExtractOcrFieldsJob;
 use App\Jobs\ProcessFileOcrJob;
 use App\Models\File;
 use App\Models\FileExtractedField;
@@ -10,6 +11,7 @@ use App\Support\Ocr\OcrEngine;
 use App\Support\Ocr\OcrEngineException;
 use App\Support\Ocr\PageLayoutAnalyzer;
 use App\Support\Ocr\PdfPageRasterizer;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
 /** Deterministic stand-in for the real Tesseract engine, keyed by (imagePath, language). */
@@ -53,9 +55,11 @@ class FakeNonTextRegionDetector implements NonTextRegionDetector
     }
 }
 
+/** Recognition with the fakes above, then the stages it queues (extraction), as a worker would run them. */
 function runOcrJob(File $file, OcrEngine $engine, PdfPageRasterizer $rasterizer = new FakePdfPageRasterizer([])): void
 {
     (new ProcessFileOcrJob($file->id))->handle($engine, $rasterizer, new FakePageLayoutAnalyzer, new FakeNonTextRegionDetector);
+    runQueuedOcrStages();
 }
 
 it('OCRs an image in both languages, saves text per language, and completes', function () {
@@ -138,11 +142,16 @@ it('marks the file failed and does not crash the queue when the OCR engine throw
         }
     };
 
-    expect(fn () => runOcrJob($file, $engine))->toThrow(OcrEngineException::class);
+    // The job fails itself (landing in failed_jobs) rather than throwing, and isn't retried: tries = 1.
+    $job = (new ProcessFileOcrJob($file->id))->withFakeQueueInteractions();
+    $job->handle($engine, new FakePdfPageRasterizer([]), new FakePageLayoutAnalyzer, new FakeNonTextRegionDetector);
 
+    $job->assertFailedWith(OcrEngineException::class);
     $file->refresh();
     expect($file->ocr_status)->toBe(FileOcrStatus::Failed)
-        ->and($file->ocr_failure_reason)->toContain('tesseract binary not found');
+        ->and($file->ocr_failure_reason)->toContain('tesseract binary not found')
+        ->and($file->ocrStageRuns()->sole()->status)->toBe('failed');
+    Queue::assertNotPushed(ExtractOcrFieldsJob::class);
 });
 
 it('skips files that are not OCR candidates, like video', function () {

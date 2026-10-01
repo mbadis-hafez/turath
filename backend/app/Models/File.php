@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class File extends Model
@@ -35,6 +36,7 @@ class File extends Model
             'ocr_completed_at' => 'datetime',
             'ocr_language_confidence' => 'array',
             'document_type' => DocumentType::class,
+            'document_type_set_at' => 'datetime',
         ];
     }
 
@@ -92,6 +94,22 @@ class File extends Model
     public function extractedDates(): HasMany
     {
         return $this->hasMany(FileExtractedDate::class);
+    }
+
+    /**
+     * @return HasMany<FileOcrStageRun, $this>
+     */
+    public function ocrStageRuns(): HasMany
+    {
+        return $this->hasMany(FileOcrStageRun::class);
+    }
+
+    /**
+     * @return HasOne<FileOcrContactProposal, $this>
+     */
+    public function ocrContactProposal(): HasOne
+    {
+        return $this->hasOne(FileOcrContactProposal::class);
     }
 
     /** OCR only makes sense for images and PDFs — not video, audio, or opaque office formats. */

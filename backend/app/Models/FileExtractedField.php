@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DocumentType;
 use App\Enums\ExtractedFieldStatus;
 use App\Enums\ExtractionMethod;
 use Illuminate\Database\Eloquent\Model;
@@ -9,9 +10,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * One candidate field value, machine-extracted from a file's OCR text. Stays a
- * suggestion — see docs/privacy-rules.md:10 — until a reviewer accepts it, at
- * which point its value is merged into the archive item's record (directly,
- * or into the reviewer's editorial draft) and this row is stamped accepted.
+ * suggestion — see docs/privacy-rules.md:10 — until a reviewer accepts it.
+ * extracted_value is what the machine read and is never overwritten;
+ * verified_value is what a reviewer edited or confirmed. Where the field
+ * belongs to an archive-item field, accepting merges verified_value into the
+ * record (directly, or into the reviewer's editorial draft); document-type
+ * fields bound for other records are only verified here — see
+ * App\Support\Ocr\Extraction\FieldDefinition for the routes.
  */
 class FileExtractedField extends Model
 {
@@ -29,6 +34,8 @@ class FileExtractedField extends Model
             'status' => ExtractedFieldStatus::class,
             'reviewed_at' => 'datetime',
             'extraction_method' => ExtractionMethod::class,
+            'document_type' => DocumentType::class,
+            'ordinal' => 'integer',
         ];
     }
 
@@ -54,5 +61,19 @@ class FileExtractedField extends Model
     public function region(): BelongsTo
     {
         return $this->belongsTo(FileOcrRegion::class, 'region_id');
+    }
+
+    /**
+     * @return BelongsTo<FileOcrFormField, $this>
+     */
+    public function formField(): BelongsTo
+    {
+        return $this->belongsTo(FileOcrFormField::class, 'form_field_id');
+    }
+
+    /** The value a reviewer would accept: their edit if they made one, otherwise what the machine read. */
+    public function currentValue(): ?string
+    {
+        return $this->verified_value ?? $this->extracted_value;
     }
 }

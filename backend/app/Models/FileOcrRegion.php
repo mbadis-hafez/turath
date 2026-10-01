@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\OcrRegionType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * One geometric region detected on one OCR'd page, classified before any OCR
@@ -30,6 +31,9 @@ class FileOcrRegion extends Model
             'ocr_allowed' => 'boolean',
             'ai_correction_allowed' => 'boolean',
             'requires_human_review' => 'boolean',
+            'has_correction_mark' => 'boolean',
+            'correction_marks' => 'array',
+            'review_dismissed_at' => 'datetime',
         ];
     }
 
@@ -39,5 +43,16 @@ class FileOcrRegion extends Model
     public function file(): BelongsTo
     {
         return $this->belongsTo(File::class);
+    }
+
+    /**
+     * The AI-corrected layers of this region's OCR text, one per model/prompt
+     * version it was corrected with. source_text itself is never modified.
+     *
+     * @return HasMany<FileOcrRegionCorrection, $this>
+     */
+    public function corrections(): HasMany
+    {
+        return $this->hasMany(FileOcrRegionCorrection::class, 'region_id');
     }
 }

@@ -29,6 +29,7 @@ class EditProposal extends Model
         return [
             'field_diffs' => 'array',
             'payload' => 'array',
+            'base_fingerprints' => 'array',
             'proposed_citations' => 'array',
             'reviewed_at' => 'datetime',
             'is_creation' => 'boolean',
@@ -75,5 +76,10 @@ class EditProposal extends Model
     public function fieldKeys(): array
     {
         return array_keys($this->field_diffs ?? []);
+    }
+
+    protected static function booted(): void
+    {
+        static::observe(Observers\EditProposalObserver::class);
     }
 }

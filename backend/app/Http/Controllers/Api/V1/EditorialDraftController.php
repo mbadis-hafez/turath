@@ -6,9 +6,11 @@ use App\Enums\ProposalStatus;
 use App\Enums\ReviewType;
 use App\Models\EditProposal;
 use App\Support\Completeness\CitableTypeResolver;
+use App\Support\Ocr\ArtistContactProposalPresenter;
 use App\Support\Proposals\CreationReviewService;
 use App\Support\Proposals\EditorialDraftService;
 use App\Support\Proposals\ProposalDiffBuilder;
+use App\Support\Proposals\ProposalService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -85,12 +87,24 @@ class EditorialDraftController
         return response()->json(['data' => ProposalController::present($submitted->fresh(), $record)]);
     }
 
-    /** GET proposals/{proposal}/diff — per-section diff of an editorial draft against the live record. */
+    /**
+     * GET proposals/{proposal}/diff — per-section diff of an editorial draft against the live record,
+     * any drift the reviewer would have to confirm (so it shows before they approve, not after),
+     * and the documents a value was read from, when it was proposed from one.
+     */
     public function diff(Request $request, EditProposal $proposal): JsonResponse
     {
         abort_if($proposal->proposed_by_user_id !== $request->user()->id && ! $this->mayReview($request, $proposal), 403);
 
-        return response()->json(['data' => ProposalDiffBuilder::build($proposal)]);
+        $record = $proposal->citable_type::query()->find($proposal->citable_id);
+
+        return response()->json(['data' => [
+            ...ProposalDiffBuilder::build($proposal),
+            'conflicts' => $record !== null && $proposal->status === ProposalStatus::Pending->value
+                ? (new ProposalService)->conflicts($proposal, $record)
+                : [],
+            'evidence' => (new ArtistContactProposalPresenter)->evidence($proposal, $request->user()),
+        ]]);
     }
 
     /** POST proposals/{proposal}/request-changes — reviewer sends a pending draft back to its editor. */

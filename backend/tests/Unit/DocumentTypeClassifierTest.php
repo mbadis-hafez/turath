@@ -28,7 +28,7 @@ it('falls back to unknown rather than guessing when too few keywords match', fun
 });
 
 it('exposes a different field schema per document type', function () {
-    expect(array_keys(DocumentType::ArtistAuthorization->fieldSchema()))->toContain('artist_email')
+    expect(array_keys(DocumentType::ArtistAuthorization->fieldSchema()))->toContain('email')
         ->and(array_keys(DocumentType::ArtworkConditionReport->fieldSchema()))->toContain('dimensions')
         ->and(DocumentType::Unknown->fieldSchema())->toBe([]);
 });
