@@ -85,31 +85,7 @@ describe("ArtworkCard", () => {
     expect(wrapper.get("a").attributes("href")).toBe("/en/artworks/42");
   });
 
-  it.each(["attributed", "disputed", "unattributed"] as const)(
-    "shows the attribution badge for %s works",
-    (certainty) => {
-      const wrapper = mountWithPlugins(ArtworkCard, {
-        locale: "ar",
-        router,
-        props: { artwork: makeArtwork({ attribution_certainty: certainty }) },
-      });
-      expect(wrapper.get("h3 + span, h3 ~ span").text()).toBeTruthy();
-      expect(wrapper.text()).not.toContain("دون عنوان");
-    },
-  );
-
-  it("hides the attribution badge for confirmed works", () => {
-    const wrapper = mountWithPlugins(ArtworkCard, {
-      locale: "ar",
-      router,
-      props: { artwork: makeArtwork({ attribution_certainty: "confirmed" }) },
-    });
-    expect(wrapper.text()).not.toContain("نسب احتمالي");
-    expect(wrapper.text()).not.toContain("نسب محل خلاف");
-    expect(wrapper.text()).not.toContain("فنان غير معروف");
-  });
-
-  it("renders artist, year, medium and category", () => {
+  it("renders artist, year and medium", () => {
     const wrapper = mountWithPlugins(ArtworkCard, {
       locale: "en",
       router,
@@ -118,7 +94,6 @@ describe("ArtworkCard", () => {
     expect(wrapper.text()).toContain("Inji Efflatoun");
     expect(wrapper.text()).toContain("1960");
     expect(wrapper.text()).toContain("Oil on canvas");
-    expect(wrapper.text()).toContain("Painting");
   });
 
   it("omits the artist line when artist is null", () => {
@@ -130,13 +105,30 @@ describe("ArtworkCard", () => {
     expect(wrapper.text()).not.toContain("Inji Efflatoun");
   });
 
-  it("shows the image when one is public, and the category placeholder icon when there isn't", () => {
+  it("flags an approximate year, but not an exact one", () => {
+    const exact = mountWithPlugins(ArtworkCard, {
+      locale: "en",
+      router,
+      props: { artwork: makeArtwork() },
+    });
+    expect(exact.find("[data-testid=approx-year-badge]").exists()).toBe(false);
+
+    const approx = mountWithPlugins(ArtworkCard, {
+      locale: "en",
+      router,
+      props: { artwork: makeArtwork({ creation: { display: null, year_from: 1980, year_to: null, calendar: "gregorian", certainty: "circa" } }) },
+    });
+    expect(approx.get("[data-testid=approx-year-badge]").text()).toBe("Approximate year");
+  });
+
+  it("shows the image when one is public, and a no-image note when there isn't", () => {
     const withImage = mountWithPlugins(ArtworkCard, {
       locale: "en",
       router,
       props: { artwork: makeArtwork({ image_url: "/api/v1/artworks/42/images/1/file" }) },
     });
     expect(withImage.get("[data-testid=artwork-image]").attributes("src")).toBe("/api/v1/artworks/42/images/1/file");
+    expect(withImage.find("[data-testid=artwork-no-image]").exists()).toBe(false);
 
     const withoutImage = mountWithPlugins(ArtworkCard, {
       locale: "en",
@@ -144,6 +136,6 @@ describe("ArtworkCard", () => {
       props: { artwork: makeArtwork({ image_url: null }) },
     });
     expect(withoutImage.find("[data-testid=artwork-image]").exists()).toBe(false);
-    expect(withoutImage.find("svg").exists()).toBe(true);
+    expect(withoutImage.get("[data-testid=artwork-no-image]").text()).toBe("No image available for this work");
   });
 });

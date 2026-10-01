@@ -7,6 +7,27 @@
   "allCategories": "All categories",
   "yearFrom": "From year",
   "yearTo": "To year",
+  "summary": "0 artworks | {count} artwork | {count} artworks | {count} artworks | {count} artworks | {count} artworks",
+  "intro": "Artworks drawn from archive material — photographs, articles, catalogues. Each page gathers what the sources say about it, who holds it, and where it was shown.",
+  "noImage": "No image available for this work",
+  "approxYear": "Approximate year",
+  "browse": {
+    "filter": "Filter",
+    "clear": "Clear",
+    "groups": {
+      "category": "Type",
+      "period": "Period"
+    },
+    "sort": "Sort",
+    "sortOptions": {
+      "-created_at": "Newest first",
+      "created_at": "Oldest first",
+      "title_ar": "Title (Arabic)",
+      "title_en": "Title (English)",
+      "creation_year_from": "Year, earliest first",
+      "-creation_year_from": "Year, latest first"
+    }
+  },
   "category": {
     "painting": "Painting",
     "drawing": "Drawing",
