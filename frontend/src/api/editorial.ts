@@ -1,6 +1,6 @@
 import { request } from "@/api/http";
 import type { Proposal, RecordType } from "@/types/proposal";
-import type { SectionDiff } from "@/types/proposalDiff";
+import type { ProposalDiffResponse } from "@/types/proposalDiff";
 
 /** The current user's open draft proposal for a record, or null when none exists. */
 export function getDraft(type: RecordType, id: number, signal?: AbortSignal): Promise<{ data: Proposal | null }> {
@@ -28,7 +28,7 @@ export function submitCreationReview(type: RecordType, id: number): Promise<{ da
 }
 
 /** Per-section diff of a sectioned (editorial draft) proposal, for reviewers. */
-export function getProposalDiff(id: string, signal?: AbortSignal): Promise<{ data: { sections: SectionDiff[] } }> {
+export function getProposalDiff(id: string, signal?: AbortSignal): Promise<{ data: ProposalDiffResponse }> {
   return request({ method: "GET", url: `/api/v1/proposals/${id}/diff`, signal });
 }
 

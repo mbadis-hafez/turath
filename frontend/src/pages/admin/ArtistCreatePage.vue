@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 
 import {
@@ -21,7 +21,9 @@ import { useAuthStore } from "@/stores/auth";
 import { ApiError } from "@/types/api";
 import type { AuthLetterStatus, OwnerType, PortraitRights, PreAgreementStatus, StaffOption } from "@/types/artistCuration";
 import type { ProfileCompletenessPreviewRequest, ProfileCompletenessSummary } from "@/types/completeness";
+import { prefillFromQuery } from "@/utils/prefill";
 
+const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 const { localePath } = useLocalePath();
@@ -40,6 +42,13 @@ const form = reactive({
   owner_type: "" as OwnerType | "", ref_supervisor_note: "",
   authorization_letter_status: "not_started" as AuthLetterStatus, owner_pre_agreement_status: "not_started" as PreAgreementStatus,
 });
+
+// A name read from a document (the OCR review's "Create"): a starting point, checked before saving.
+const prefill = prefillFromQuery(route.query.prefill);
+if (prefill) {
+  form.name_ar = prefill.ar;
+  form.name_en = prefill.en;
+}
 
 const profile = useArtistProfileForm();
 const portraitFile = ref<File | null>(null);

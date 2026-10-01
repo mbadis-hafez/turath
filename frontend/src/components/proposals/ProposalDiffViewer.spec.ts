@@ -6,6 +6,7 @@ import { createMemoryHistory, createRouter } from "vue-router";
 import ProposalDiffViewer from "@/components/proposals/ProposalDiffViewer.vue";
 import { mountWithPlugins } from "@/test/utils";
 import { ApiError } from "@/types/api";
+import type { ContactProposalValue } from "@/types/ocr";
 import type { Proposal, Revision } from "@/types/proposal";
 import type { SectionDiff } from "@/types/proposalDiff";
 
@@ -247,5 +248,52 @@ describe("ProposalDiffViewer", () => {
     expect(wrapper.findAll("[data-testid=field-diff]")).toHaveLength(1);
     expect(wrapper.find("[data-testid=section-diff]").exists()).toBe(false);
     expect(wrapper.text()).toContain("Old bio.");
+  });
+
+  it("shows the document behind a proposed contact value, linked for a reviewer who may open it", async () => {
+    const value: ContactProposalValue = {
+      id: 1, field: "phone", action: "new_contact", target_contact_id: null, proposed_value: "0500000001",
+      current_value: null, current_value_shown: false, replaces_existing: false, status: "pending", superseded_reason: null, edit_proposal_id: "p1",
+      source: { file_id: 9, page: 2, region_id: 44, bbox: null, label: "رقم الجوال", has_crop: true },
+      extraction_method: "ocr_derived", confidence: 74, machine_suggestion: null, has_correction_mark: true, edited_by_proposer: false,
+      proposed_by: { id: 3, name: "Nora" }, proposed_at: "2026-09-30T10:05:00Z", reviewed_by: null, reviewed_at: null, review_note: null,
+    };
+    editorial.getProposalDiff.mockResolvedValueOnce({ data: { sections, conflicts: [], evidence: [
+      { file_id: 9, archive_item: { id: 31, legacy_ref: "AR900", title: { ar: null, en: "Letter" } }, can_open_document: true, values: [value] },
+    ] } });
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: "/:locale/admin/artists/:id", name: "admin.artists.show", component: { template: "<div />" } },
+        { path: "/:locale/admin/archive/:id", name: "admin.archive.show", component: { template: "<div />" } },
+      ],
+    });
+    await router.push("/en/admin/artists/7");
+    const wrapper = mountWithPlugins(ProposalDiffViewer, {
+      locale: "en", router, props: { proposal: proposal({ payload: { curation: { contacts: [] } } }), canReview: true, currentUserId: 1 },
+    });
+    await flushPromises();
+
+    const link = wrapper.get("[data-testid=proposal-evidence-link]");
+    expect(link.attributes("href")).toBe("/en/admin/archive/31");
+    expect(link.text()).toBe("AR900 — Letter");
+    expect(wrapper.get("[data-testid=proposal-evidence-provenance]").text()).toBe("Page 2 · “رقم الجوال” · OCR · OCR confidence 74%");
+    expect(wrapper.get("[data-testid=proposal-evidence-crop]").attributes("src")).toContain("/archive-items/31/file/ocr/regions/44/crop");
+    expect(wrapper.find("[data-testid=proposal-evidence-correction-mark]").exists()).toBe(true);
+  });
+
+  it("warns before approving that the artist's contacts changed since the draft was written", async () => {
+    editorial.getProposalDiff.mockResolvedValueOnce({ data: { sections, evidence: null, conflicts: [
+      { field: "contacts", collection: true, proposed_against: null, current: null, proposed_value: null },
+    ] } });
+    const wrapper = mount({ proposal: proposal({ payload: { curation: { contacts: [] } } }), canReview: true, currentUserId: 1 });
+    await flushPromises();
+
+    expect(wrapper.get("[data-testid=conflict-item]").text()).toContain("The artist's contacts changed after this was written");
+    expect(wrapper.find("[data-testid=approve]").exists()).toBe(false);
+
+    await wrapper.get("[data-testid=approve-confirm]").trigger("click");
+    await flushPromises();
+    expect(api.approveProposal).toHaveBeenLastCalledWith("p1", { review_note: undefined, confirm_conflict: true });
   });
 });

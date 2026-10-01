@@ -12,8 +12,13 @@ import Spinner from "@/components/common/Spinner.vue";
 import Tabs, { type TabItem } from "@/components/common/Tabs.vue";
 import ArchiveDeleteDialog from "@/components/curation/ArchiveDeleteDialog.vue";
 import ArchiveTypeIcon from "@/components/curation/ArchiveTypeIcon.vue";
+import OcrDatesReviewTable from "@/components/curation/OcrDatesReviewTable.vue";
+import OcrDocumentTypeCard from "@/components/curation/OcrDocumentTypeCard.vue";
 import OcrFieldsReviewTable from "@/components/curation/OcrFieldsReviewTable.vue";
+import OcrArtistContactPanel from "@/components/curation/OcrArtistContactPanel.vue";
 import OcrFormFieldsReviewTable from "@/components/curation/OcrFormFieldsReviewTable.vue";
+import OcrSetAsideRegions from "@/components/curation/OcrSetAsideRegions.vue";
+import OcrSourceViewer, { type OcrSourceFocus } from "@/components/curation/OcrSourceViewer.vue";
 import OcrStatusCard from "@/components/curation/OcrStatusCard.vue";
 import OcrTextPanel from "@/components/curation/OcrTextPanel.vue";
 // pdf.js is a heavy dependency (~300KB) that most archive items never need — load it
@@ -42,7 +47,9 @@ const id = computed(() => Number(route.params.id));
 
 const {
   bundle: ocrBundle, actionError: ocrActionError, pendingCount: ocrPendingCount, averageConfidence: ocrAverageConfidence,
-  accept: acceptField, reject: rejectField, edit: editField, acceptHighConfidence, runOcr, transcribeFormField,
+  accept: acceptField, reject: rejectField, edit: editField, acceptHighConfidence, runOcr, runStage: runOcrStage, transcribeFormField, requestSuggestion, rejectSuggestion,
+  setDocumentType: setOcrDocumentType, reviewDate: reviewOcrDate, confirmMatch: confirmOcrMatch, decideMatch: decideOcrMatch, linkMatch: linkOcrMatch,
+  markUncertain: markFieldUncertain, transcribeRegion: transcribeOcrRegion, setRegionDismissed: setOcrRegionDismissed,
 } = useFileOcr(id);
 
 const item = ref<ArchiveEdit | null>(null);
@@ -136,6 +143,10 @@ async function copyLink(): Promise<void> {
 const hasOcr = computed(() => ocrBundle.value !== null && ocrBundle.value.status !== null);
 // Defensive against an older cached bundle shape that predates form_fields — same reasoning as hasOcrText below.
 const ocrFormFields = computed(() => ocrBundle.value?.form_fields ?? []);
+const ocrDates = computed(() => ocrBundle.value?.dates ?? []);
+const isAuthorizationLetter = computed(() => ocrBundle.value?.document_type === "artist_authorization");
+/** Changes on every transcription, so the contact panel's pre-fill follows the form fields. */
+const ocrTranscriptionKey = computed(() => ocrFormFields.value.map((f) => `${f.id}:${f.transcribed_at ?? ""}`).join("|"));
 const hasOcrText = computed(() => ocrBundle.value !== null && (ocrBundle.value.texts.ar.length > 0 || ocrBundle.value.texts.en.length > 0));
 const canRunOcr = computed(() => ocrBundle.value !== null && ocrBundle.value.status === null && (filePreview.value?.isPdf || filePreview.value?.isImage) === true);
 const ocrPageCount = computed(() => {
@@ -143,6 +154,23 @@ const ocrPageCount = computed(() => {
   if (!b) return 0;
   return Math.max(b.texts.ar.length, b.texts.en.length);
 });
+
+/** The page and region the reviewer last asked to see a value on. */
+const sourceFocus = ref<OcrSourceFocus | null>(null);
+const canShowSource = computed(() => filePreview.value?.isPdf === true || filePreview.value?.isImage === true);
+const sourceViewer = ref<HTMLElement | null>(null);
+function showSource(focus: OcrSourceFocus): void {
+  sourceFocus.value = focus;
+  // Beside the list on wide screens; above it on narrow ones, so bring it into view.
+  sourceViewer.value?.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+}
+/** A date or form field knows its region (and maybe page); the box comes from the bundle's regions. */
+function showRegion(regionId: number | null, label: string, page?: number): void {
+  const region = regionId === null ? undefined : ocrBundle.value?.regions.find((r) => r.id === regionId);
+  const onPage = region?.page_number ?? page;
+  if (onPage === undefined) return;
+  showSource({ page: onPage, bbox: region?.bbox ?? null, label });
+}
 
 const sideBySide = ref(true);
 const viewerTab = ref<"document" | "text">("document");
@@ -267,7 +295,13 @@ watch(activeTab, (tab) => {
             </ul>
           </section>
 
-          <OcrStatusCard v-if="hasOcr && ocrBundle" :bundle="ocrBundle" :pending-count="ocrPendingCount" :average-confidence="ocrAverageConfidence" :can-rerun="canManage" @view-fields="viewExtractedFields" @rerun="runOcr()" />
+          <template v-if="hasOcr && ocrBundle">
+            <OcrStatusCard
+              :bundle="ocrBundle" :pending-count="ocrPendingCount" :average-confidence="ocrAverageConfidence" :can-rerun="canManage"
+              @view-fields="viewExtractedFields" @rerun="runOcr()" @rerun-stage="runOcrStage"
+            />
+            <p v-if="ocrActionError" class="text-sm text-danger" role="alert" data-testid="ocr-status-action-error">{{ ocrActionError }}</p>
+          </template>
           <section v-else-if="canRunOcr" class="rounded-lg border border-line p-4" data-testid="ocr-run-card">
             <h2 class="text-xs font-semibold uppercase tracking-wide text-ink-muted">{{ t("archive.ocr.title") }}</h2>
             <p class="mt-2 text-sm text-ink-muted">{{ t("archive.ocr.notProcessed") }}</p>
@@ -378,26 +412,80 @@ watch(activeTab, (tab) => {
           </template>
 
           <template v-if="hasOcr && ocrBundle" #aiExtraction>
-            <div class="space-y-6">
+            <div class="grid gap-6" :class="canShowSource ? 'lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]' : ''">
+            <div ref="sourceViewer" class="lg:order-2">
+              <OcrSourceViewer
+                v-if="canShowSource"
+                class="lg:sticky lg:top-4"
+                :archive-item-id="item.id"
+                :page-count="Math.max(1, ocrPageCount)"
+                :regions="ocrBundle.regions ?? []"
+                :focus="sourceFocus"
+              />
+            </div>
+            <div class="space-y-6 lg:order-1">
               <p class="text-sm text-ink-muted" data-testid="ocr-summary">{{ t("archive.ocr.extractedFrom", { fields: ocrBundle.fields.length, pages: ocrPageCount }) }}</p>
+              <OcrDocumentTypeCard
+                v-if="ocrBundle.document_type !== null"
+                :document-type="ocrBundle.document_type"
+                :source="ocrBundle.document_type_source ?? null"
+                :schema="ocrBundle.schema ?? []"
+                :can-review="canManage"
+                @set-type="setOcrDocumentType"
+              />
               <div v-if="ocrBundle.fields.length > 0">
                 <p v-if="ocrActionError" class="mb-2 text-sm text-danger" role="alert">{{ ocrActionError }}</p>
                 <OcrFieldsReviewTable
                   :fields="ocrBundle.fields"
                   :can-review="canManage"
+                  :archive-item-id="item.id"
                   @accept="acceptField"
                   @reject="rejectField"
                   @edit="editField"
+                  @uncertain="markFieldUncertain"
+                  @transcribe-form-field="transcribeFormField"
                   @accept-high-confidence="acceptHighConfidence()"
+                  @confirm-match="confirmOcrMatch"
+                  @link-match="linkOcrMatch"
+                  @decide-match="decideOcrMatch"
+                  @show-source="showSource"
                 />
               </div>
+              <OcrDatesReviewTable
+                v-if="ocrDates.length > 0"
+                :dates="ocrDates"
+                :schema="ocrBundle.schema ?? []"
+                :can-review="canManage"
+                @review="reviewOcrDate"
+                @show-source="(regionId, page, label) => showRegion(regionId, label, page)"
+              />
               <OcrFormFieldsReviewTable
                 v-if="ocrFormFields.length > 0"
                 :archive-item-id="item.id"
                 :form-fields="ocrFormFields"
                 :can-review="canManage"
+                :handwriting-available="ocrBundle.handwriting?.available ?? false"
                 @transcribe="transcribeFormField"
+                @request-suggestion="requestSuggestion"
+                @reject-suggestion="rejectSuggestion"
+                @show-source="(regionId, label) => showRegion(regionId, label)"
               />
+              <OcrSetAsideRegions
+                :archive-item-id="item.id"
+                :regions="ocrBundle.set_aside_regions ?? []"
+                :schema="ocrBundle.schema ?? []"
+                :fields="ocrBundle.fields"
+                :can-review="canManage"
+                @transcribe="transcribeOcrRegion"
+                @dismiss="setOcrRegionDismissed"
+                @show-source="showSource"
+              />
+              <OcrArtistContactPanel
+                v-if="isAuthorizationLetter && canManage"
+                :archive-item-id="item.id"
+                :refresh-key="ocrTranscriptionKey"
+              />
+            </div>
             </div>
           </template>
 

@@ -205,4 +205,12 @@ describe("EventEditPage (add)", () => {
     expect(wrapper.find("[data-testid=partial-failure]").exists()).toBe(true);
     expect(router.currentRoute.value.path).toBe("/en/admin/events/new");
   });
+
+  it("starts a new event from a title read off a document, saving nothing until the curator does", async () => {
+    const wrapper = await mountAt("/en/admin/events/new?prefill=Visual%20Arts%20Exhibition");
+
+    expect((wrapper.get("[data-testid=title-en]").element as HTMLInputElement).value).toBe("Visual Arts Exhibition");
+    expect((wrapper.get("[data-testid=title-ar]").element as HTMLInputElement).value).toBe("");
+    expect(api.createEvent).not.toHaveBeenCalled();
+  });
 });

@@ -138,5 +138,15 @@
       "notes_ar": "Notes (Arabic)",
       "notes_en": "Notes (English)"
     }
+  },
+  "conflictCollection": "The artist's {collection} changed after this was written. Approving replaces them with the list in this proposal — check the diff for anything it would undo.",
+  "collections": {
+    "contacts": "contacts"
+  },
+  "evidence": {
+    "title": "Where these values came from",
+    "explainer": "Read from a scanned document and confirmed against it by the proposer. Check each against the scan before approving.",
+    "readFrom": "Document:",
+    "untitled": "Untitled material"
   }
 }

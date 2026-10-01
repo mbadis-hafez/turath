@@ -235,7 +235,8 @@
       "pending": "بانتظار المراجعة",
       "edited": "مُعدَّل",
       "accepted": "مقبول",
-      "rejected": "مرفوض"
+      "rejected": "مرفوض",
+      "uncertain": "غير مؤكد"
     },
     "accept": "قبول",
     "edit": "تعديل",
@@ -268,7 +269,317 @@
       "needsTranscription": "يحتاج نسخًا يدويًا",
       "noSourceRegion": "لم يتم رصد منطقة مصدر لهذا الحقل — أدخل القيمة من المستند.",
       "transcribePlaceholder": "اكتب ما تراه في المصدر…",
-      "transcribeSubmit": "حفظ"
+      "transcribeSubmit": "حفظ",
+      "correctionMark": "تصحيح محتمل",
+      "correctionMarkHelp": "يبدو أن جزءاً من هذه القيمة مشطوب أو مُصحَّح. قارنها بالصورة المقتطعة واكتب القيمة التي قصدها الكاتب. لم يُختر أي شيء تلقائياً.",
+      "rawReading": "القراءة الآلية، بما فيها أي نص مشطوب:",
+      "suggestionTitle": "اقتراح آلي",
+      "suggestionMeta": "{provider} · الثقة {confidence}",
+      "suggestionWarning": "قراءة آلية للخط اليدوي. كثيراً ما تكون خاطئة، ونسبة الثقة ليست دليلاً موثوقاً. طابق كل حرف مع الصورة المقتطعة.",
+      "useSuggestion": "استخدمه نقطة بداية",
+      "rejectSuggestion": "رفض",
+      "requestSuggestion": "اطلب اقتراحاً آلياً",
+      "suggestionEmpty": "تعذّر على قارئ الخط اليدوي قراءة هذه الصورة.",
+      "suggestionRejected": "رُفض الاقتراح الآلي."
+    },
+    "artistContact": {
+      "title": "بيانات تواصل الفنان من هذا الخطاب",
+      "explainer": "صُنّفت هذه الوثيقة خطاب تفويض من فنان. لا يغيّر أي شيء هنا سجل الفنان مباشرة: تؤكد أنت الفنان وبيانات التواصل، ثم يعتمد مراجع آخر التعديل في قائمة مراجعة أمين الأرشيف.",
+      "identityTitle": "١. من الفنان صاحب هذا الخطاب؟",
+      "nameOnDocument": "الاسم في الوثيقة: {name}",
+      "searchPlaceholder": "ابحث بتهجئة أخرى…",
+      "search": "بحث",
+      "noCandidates": "لم يُعثر على فنان مطابق. جرّب تهجئة أخرى.",
+      "strength": {
+        "high": "تطابق قوي",
+        "medium": "تطابق محتمل",
+        "low": "تطابق ضعيف"
+      },
+      "basis": {
+        "exact_name": "الاسم نفسه",
+        "exact_variant": "يطابق صيغة اسم مسجلة",
+        "shared_name_parts": "يشترك في أجزاء من الاسم",
+        "linked_to_archive_item": "مرتبط بهذه المادة مسبقاً"
+      },
+      "confirmArtist": "تأكيد هذا الفنان",
+      "confirmed": "تم التأكيد: {name}",
+      "confirmedLocked": "تم التأكيد: {name}. لا يمكن تغييره ما دام مقترح التواصل مفتوحاً.",
+      "contactTitle": "٢. بيانات التواصل",
+      "contactExplainer": "طابق كل قيمة مع الوثيقة الممسوحة قبل الإرسال. يمكن كتابة القيم التي لم يستخرجها المسح.",
+      "fields": {
+        "email": "البريد الإلكتروني",
+        "phone": "الجوال",
+        "address": "العنوان"
+      },
+      "source": {
+        "transcribed": "من النسخ اليدوي لحقل «{label}»",
+        "printed": "مقروء من نص مطبوع في «{label}»",
+        "needsTranscription": "لم يُنسخ «{label}» بعد. انسخه أعلاه، أو اكتب القيمة هنا.",
+        "notDetected": "لم يُكتشف في المسح. اكتبه من الوثيقة."
+      },
+      "target": "التطبيق على",
+      "addNew": "إضافة جهة تواصل جديدة",
+      "updateExisting": "تحديث {name}",
+      "note": "ملاحظة للمراجع (اختياري)",
+      "propose": "إرسال للمراجعة",
+      "approvalNote": "لا يتغير سجل الفنان إلا بعد أن يعتمد مراجع آخر هذا المقترح في قائمة مراجعة أمين الأرشيف.",
+      "cannotPropose": "ليست لديك صلاحية تقديم المقترحات.",
+      "changesRequested": "طلب المراجع تعديلات: {note}",
+      "proposalTitle": "٣. المراجعة",
+      "awaitingReview": "بانتظار الاعتماد في قائمة مراجعة أمين الأرشيف.",
+      "applied": "اعتُمد وطُبّق على جهات تواصل الفنان.",
+      "rejected": "مرفوض: {note}. يمكنك تصحيح القيم وإرسالها مجدداً.",
+      "values": {
+        "status": {
+          "pending": "بانتظار الاعتماد",
+          "changes_requested": "طُلبت تعديلات",
+          "approved": "معتمد",
+          "rejected": "مرفوض",
+          "superseded": "مُستبدَل"
+        },
+        "supersededReason": {
+          "newer_proposal": "حلّ محله اقتراح أحدث من هذه الوثيقة.",
+          "draft_rewritten": "أُعيدت كتابة المسودة التي تحمله من صفحة الفنان.",
+          "other_proposal_approved": "اعتُمد تعديل آخر على هذا الفنان قبله."
+        },
+        "proposed": "المقترح:",
+        "newContact": "يضيف جهة اتصال جديدة.",
+        "current": "الحالي: {value}",
+        "currentHidden": "القيمة الحالية لا يراها إلا من يحق له الاطلاع على جهات اتصال الفنانين.",
+        "currentNotKept": "لا تُحفظ القيمة التي استُبدلت بعد البت في الاقتراح.",
+        "replacesExisting": "الاعتماد يستبدل القيمة المسجلة حاليًا لجهة الاتصال.",
+        "typedByProposer": "أدخلها مقدّم الاقتراح يدويًا",
+        "confidence": "ثقة التعرف الضوئي {value}٪",
+        "machineRead": "اقترحها {model} ({confidence}) وقبلها مراجع",
+        "correctionMark": "تظهر في الوثيقة علامة تصحيح محتملة هنا — راجع المسح الضوئي.",
+        "cropAlt": "مقتطف {field} من الوثيقة الممسوحة",
+        "proposedBy": "اقترحه {name}، {when}",
+        "reviewedBy": "راجعه {name}، {when}",
+        "reviewNote": "ملاحظة المراجع: {note}"
+      }
+    },
+    "stages": {
+      "title": "مراحل المعالجة",
+      "names": {
+        "recognize": "التعرف على النص",
+        "extract": "استخراج الحقول",
+        "match": "مطابقة السجلات",
+        "correct": "التصحيح بالذكاء الاصطناعي"
+      },
+      "status": {
+        "notRun": "لم تُشغَّل بعد",
+        "pending": "بانتظار ما قبلها",
+        "queued": "في الانتظار",
+        "running": "قيد التشغيل",
+        "succeeded": "تمت",
+        "skipped": "تم تخطيها",
+        "failed": "فشلت",
+        "stale": "متوقفة — أعد تشغيلها"
+      },
+      "reasons": {
+        "up_to_date": "محدّثة",
+        "upstream_failed": "لم تُشغَّل — فشلت مرحلة سابقة",
+        "retrying": "إعادة المحاولة بعد خطأ ({attempts} محاولات حتى الآن)",
+        "disabled": "متوقف",
+        "no_provider_configured": "متوقف — لا يوجد مزوّد مُعدّ",
+        "external_provider_not_allowed": "متوقف — المزوّدون الخارجيون غير مسموح بهم",
+        "access_level_not_allowed": "لم يُرسل — مستوى الوصول مقيّد",
+        "provider_misconfigured": "إعداد المزوّد غير صحيح — راجع سجلات الخادم",
+        "nothing_to_match": "لا يوجد ما يُطابَق"
+      },
+      "correctSummary": "{calls} استدعاءات للذكاء الاصطناعي · {cached} أُعيد استخدامها",
+      "rerun": "إعادة التشغيل"
+    },
+    "verify": "تأكيد",
+    "needsTranscription": "يحتاج إلى نسخ يدوي — راجع حقول النموذج أدناه",
+    "machineReading": "القراءة الآلية: {value}",
+    "route": {
+      "record": "يُطبَّق على هذا العنصر",
+      "entity": "يُؤكَّد هنا، ويُطبَّق بعد تأكيد {record}",
+      "artist_contact": "تُراجع في لوحة بيانات تواصل الفنان",
+      "evidence": "يُحفظ كدليل"
+    },
+    "targetRecord": {
+      "artist": "سجل الفنان",
+      "artwork": "سجل العمل الفني",
+      "event": "سجل المعرض",
+      "holder": "سجل الجهة",
+      "source": "سجل المصدر",
+      "other": "السجل المرتبط"
+    },
+    "provenance": {
+      "page": "صفحة {page}",
+      "formField": "من حقل نموذج",
+      "method": {
+        "ocr_derived": "قراءة آلية",
+        "ai_corrected": "مصحح بالذكاء الاصطناعي",
+        "ai_inferred": "مستنتج بالذكاء الاصطناعي",
+        "manually_transcribed": "نسخه مراجع",
+        "human_verified": "مؤكَّد بشريًا"
+      }
+    },
+    "documentType": {
+      "title": "نوع الوثيقة",
+      "types": {
+        "artist_authorization": "خطاب تفويض فنان",
+        "artwork_condition_report": "تقرير حالة عمل فني",
+        "artist_biography": "سيرة ذاتية لفنان",
+        "exhibition_document": "وثيقة معرض",
+        "unknown": "غير معروف"
+      },
+      "source": {
+        "reviewer": "اختاره مراجع",
+        "classifier": "حُدِّد آليًا"
+      },
+      "change": "تغيير نوع الوثيقة",
+      "reset": "التحديد الآلي",
+      "found": "عُثر على {found} من {total} حقول متوقعة",
+      "notFound": "لم يُعثر على: {fields}"
+    },
+    "dates": {
+      "title": "التواريخ",
+      "help": "يُحفظ كل تاريخ كما كُتب وبتقويمه الأصلي، دون تحويل.",
+      "role": {
+        "document_issue_date": "تاريخ الإصدار",
+        "publication_date": "تاريخ النشر",
+        "event_date": "تاريخ الفعالية",
+        "artwork_date": "تاريخ العمل",
+        "birth_date": "تاريخ الميلاد",
+        "death_date": "تاريخ الوفاة",
+        "signature_date": "تاريخ التوقيع",
+        "other": "دور غير معروف"
+      },
+      "calendar": {
+        "hijri": "هجري",
+        "gregorian": "ميلادي",
+        "unknown": "تقويم غير معروف"
+      },
+      "printedRegion": "من نص مطبوع",
+      "pageTextOnly": "من نص الصفحة فقط — قد يكون خط يد"
+    },
+    "match": {
+      "title": {
+        "artist": "سجلات فنانين محتملة",
+        "artwork": "سجلات أعمال فنية محتملة",
+        "event": "سجلات معارض محتملة",
+        "holder": "سجلات جهات محتملة",
+        "source": "سجلات مصادر محتملة",
+        "place": "أماكن مستخدمة في السجلات"
+      },
+      "scoreNote": "الدرجة تقارن النص فقط — الدرجة العالية ليست دليلًا على أنه السجل نفسه.",
+      "strength": {
+        "high": "قوي",
+        "medium": "محتمل",
+        "low": "ضعيف"
+      },
+      "basis": {
+        "exact_name": "الاسم نفسه",
+        "exact_variant": "مطابق لصيغة مسجلة",
+        "shared_name_parts": "يشترك في أجزاء من الاسم",
+        "linked_to_archive_item": "مرتبط بهذا العنصر",
+        "exact_reference": "رقم الجرد نفسه",
+        "exact_title": "العنوان نفسه",
+        "similar_title": "عنوان مشابه",
+        "same_artist": "الفنان نفسه",
+        "same_height": "الارتفاع نفسه",
+        "same_width": "العرض نفسه",
+        "same_year": "السنة نفسها",
+        "same_city": "المدينة نفسها",
+        "name_within_text": "الاسم الكامل وارد في النص",
+        "same_publisher": "الناشر نفسه",
+        "exact_place": "المكان نفسه",
+        "place_within_text": "المكان وارد في النص"
+      },
+      "thisOne": "هذا هو",
+      "noneOfThese": "لا شيء مما سبق",
+      "undo": "تراجع",
+      "confirmed": "تم التأكيد:",
+      "noneRight": "لم يجد المراجع أيًا من الاقتراحات صحيحًا.",
+      "noCandidates": "لا توجد سجلات مطابقة.",
+      "missing": "السجل لم يعد موجودًا",
+      "findAnother": "البحث عن سجل آخر",
+      "create": {
+        "artist": "إنشاء فنان جديد",
+        "artwork": "إنشاء عمل فني جديد",
+        "event": "إنشاء معرض أو فعالية جديدة"
+      },
+      "searchPlaceholder": "ابحث بالاسم أو العنوان…",
+      "search": "بحث",
+      "searchEmpty": "لم يُعثر على سجل.",
+      "link": "ربط"
+    },
+    "markUncertain": "تعليم كغير مؤكد",
+    "uncertainPlaceholder": "لماذا تعذّر التأكد منها؟ (اختياري)",
+    "typedByReviewer": "أدخلها مراجع",
+    "source": {
+      "title": "الوثيقة المصدر",
+      "showAll": "إظهار كل المناطق",
+      "showOnPage": "عرض في الصفحة",
+      "showing": "المعروض: {label}",
+      "unavailable": "صورة الصفحة غير متاحة.",
+      "pageAlt": "الصفحة {page} كما قرأها التعرف الضوئي",
+      "regionTypes": {
+        "printed_text": "نص مطبوع",
+        "handwriting": "خط يد",
+        "logo": "شعار",
+        "photograph": "صورة",
+        "signature": "توقيع",
+        "form_label": "عنوان حقل",
+        "form_value": "قيمة حقل",
+        "footer": "تذييل",
+        "noise": "تشويش",
+        "unknown": "غير مصنّف"
+      },
+      "legend": {
+        "printed": "نص مطبوع",
+        "handwriting": "خط يد",
+        "signature": "توقيع",
+        "correction": "تصحيح محتمل"
+      }
+    },
+    "evidence": {
+      "showRegion": "عرض في الصفحة {page}",
+      "showPage": "عرض الصفحة {page}",
+      "ocrRead": "قراءة التعرف الضوئي:",
+      "noOcr": "لا قراءة آلية: أدخلها مراجع من المسح الضوئي.",
+      "aiSuggests": "يقترح التصحيح الآلي:",
+      "useSuggestion": "التعديل بهذا",
+      "changeTypes": {
+        "ocr_misrecognition": "حرف مقروء خطأ",
+        "orthographic_normalization": "إملاء",
+        "word_spacing": "مسافات",
+        "punctuation": "ترقيم",
+        "bidi_cleanup": "اتجاه النص",
+        "other": "أخرى"
+      },
+      "aiUnusable": "تعذّر استخدام التصحيح الآلي لهذا السطر.",
+      "aiNoChange": "لا يغيّر التصحيح الآلي شيئًا في هذه القيمة.",
+      "aiNameReading": "قراءة الذكاء الاصطناعي للاسم «{ocr}»: {candidate} — قارنها بالمرشحين، وليست تصحيحًا.",
+      "promptVersion": "إصدار التعليمات {version}",
+      "recordNow": "في السجل حاليًا: «{value}». القبول يستبدلها.",
+      "recordSame": "مطابقة لما في السجل.",
+      "doubts": {
+        "lowConfidence": "ثقة التعرف الضوئي منخفضة ({value}٪).",
+        "correctionMark": "قد يكون في هذا السطر شطب.",
+        "aiFlagged": "نبّه التصحيح الآلي إلى أن هذا السطر يحتاج مراجعة بشرية.",
+        "aiInferred": "استنتجها الذكاء الاصطناعي ولم تُقرأ من الصفحة.",
+        "wholePage": "قُرئت من نص الصفحة كاملًا دون منطقة محددة."
+      },
+      "uncertain": "وُسمت بأنها غير مؤكدة.",
+      "uncertainNote": "غير مؤكدة: {note}"
+    },
+    "setAside": {
+      "title": "أسطر جُنّبت لمراجعتك",
+      "explainer": "لم يقرأ التعرف الضوئي هذه الأسطر وحده: تصحيح محتمل، أو خط يد بلا عنوان بجانبه. اقرأ المسح الضوئي، واختر الحقل الذي يملؤه السطر، واكتب ما فيه — أو أشر إلى أنه لا شيء يؤخذ منه.",
+      "correctionMark": "يبدو أن في هذا السطر شطبًا. لا يُختار شيء نيابةً عنك: اكتب القيمة التي تقصدها الوثيقة.",
+      "untrustedReading": "قراءة التعرف الضوئي (غير موثوقة):",
+      "typedInto": "أُدخل في {field}: {value}",
+      "chooseField": "الحقل…",
+      "typePlaceholder": "ما يقوله السطر",
+      "add": "إضافة القيمة",
+      "dismiss": "لا شيء يؤخذ منه",
+      "dismissedCount": "{count} سطر جُنّب بلا قيمة.",
+      "restore": "استعادة الصفحة {page}"
     }
   },
   "tabs": {
