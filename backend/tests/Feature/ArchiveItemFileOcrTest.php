@@ -125,8 +125,10 @@ it('edits a suggested value without accepting it', function () {
     $file = File::factory()->create(['archive_item_id' => $item->id]);
     $field = FileExtractedField::create(['file_id' => $file->id, 'field_key' => 'title_en', 'extracted_value' => 'OCR title', 'confidence' => 90, 'status' => ExtractedFieldStatus::Pending->value]);
 
+    // The reviewer's wording is kept beside what the machine read, never over it.
     $this->actingAs($editor)->patchJson("/api/v1/archive-items/{$item->id}/file/ocr/fields/{$field->id}", ['extracted_value' => 'Corrected title'])
-        ->assertOk()->assertJsonPath('data.status', 'edited')->assertJsonPath('data.extracted_value', 'Corrected title');
+        ->assertOk()->assertJsonPath('data.status', 'edited')
+        ->assertJsonPath('data.verified_value', 'Corrected title')->assertJsonPath('data.extracted_value', 'OCR title');
 
     expect(EditProposal::where('citable_type', ArchiveItem::class)->where('citable_id', $item->id)->exists())->toBeFalse();
 });

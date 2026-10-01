@@ -98,11 +98,19 @@ const toolLinks = computed<NavLink[]>(() => toolGroups.value.flatMap((group) => 
 /** One tool is just a link; several are a Workspace menu. */
 const showToolsMenu = computed(() => toolLinks.value.length >= 2);
 
-/** The top bar: public sections, then the signed-in user's own page, then (if there is only one) their one tool. */
+/**
+ * Signed-in users already have their own tools in the bar; the public
+ * sections would otherwise push the total past seven items, so they move
+ * behind a Browse menu instead of sitting inline (visitors still see them
+ * inline — there's nothing else competing for the space).
+ */
+const showBrowseMenu = computed(() => auth.isAuthenticated);
+
+/** The top bar: public sections (visitors only), the signed-in user's own page, then (if there is only one) their one tool. */
 const barLinks = computed<NavLink[]>(() => {
   if (!auth.isAuthenticated) return publicLinks.value;
   const own: NavLink[] = [{ key: "dashboard", label: t("nav.dashboard"), to: dashboardLink.value }];
-  return [...publicLinks.value, ...own, ...(showToolsMenu.value ? [] : toolLinks.value)];
+  return [...own, ...(showToolsMenu.value ? [] : toolLinks.value)];
 });
 
 /** The current page, or anything beneath it (an artist's page keeps "Artists" lit). */
@@ -117,6 +125,9 @@ const linkClass = (link: NavLink): string =>
     : `${link.muted ? "text-ink-muted hover:text-ink" : "text-ink hover:text-accent"} transition-colors`;
 
 const menuOpen = ref(false);
+const browseOpen = ref(false);
+const browseRoot = ref<HTMLElement | null>(null);
+const browseCurrent = computed(() => publicLinks.value.some(isCurrent));
 const toolsOpen = ref(false);
 const toolsRoot = ref<HTMLElement | null>(null);
 const toolsCurrent = computed(() => toolLinks.value.some(isCurrent));
@@ -125,16 +136,19 @@ const userRoot = ref<HTMLElement | null>(null);
 
 watch(() => route.fullPath, () => {
   menuOpen.value = false;
+  browseOpen.value = false;
   toolsOpen.value = false;
   userOpen.value = false;
 });
 function closeOnEscape(e: KeyboardEvent): void {
   if (e.key !== "Escape") return;
   menuOpen.value = false;
+  browseOpen.value = false;
   toolsOpen.value = false;
   userOpen.value = false;
 }
 function closeOnOutsideClick(e: MouseEvent): void {
+  if (browseOpen.value && browseRoot.value && !browseRoot.value.contains(e.target as Node)) browseOpen.value = false;
   if (toolsOpen.value && toolsRoot.value && !toolsRoot.value.contains(e.target as Node)) toolsOpen.value = false;
   if (userOpen.value && userRoot.value && !userRoot.value.contains(e.target as Node)) userOpen.value = false;
 }
@@ -184,6 +198,25 @@ async function logout(): Promise<void> {
           <img src="/logo.png" :alt="$t('home.heading')" class="h-12 w-auto" width="113" height="48" />
         </RouterLink>
         <nav aria-label="Main" class="hidden items-center gap-7 text-sm font-medium md:flex" data-testid="main-nav">
+          <div v-if="showBrowseMenu" ref="browseRoot" class="relative">
+            <button
+              type="button"
+              class="flex items-center gap-1.5 transition-colors"
+              :class="browseCurrent ? 'text-accent underline decoration-accent decoration-2 underline-offset-8' : 'text-ink hover:text-accent'"
+              :aria-expanded="browseOpen"
+              aria-controls="browse-menu"
+              data-testid="browse-toggle"
+              @click="browseOpen = !browseOpen"
+            >
+              {{ $t("nav.browse") }}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-3.5 transition-transform" :class="browseOpen ? 'rotate-180' : ''"><path d="m6 9 6 6 6-6" /></svg>
+            </button>
+            <ul v-if="browseOpen" id="browse-menu" class="absolute start-0 top-full z-40 mt-3 w-56 border-2 border-ink bg-paper py-2 shadow-sm" data-testid="browse-menu">
+              <li v-for="link in publicLinks" :key="link.key">
+                <RouterLink :to="link.to" class="block px-5 py-2.5" :class="linkClass({ ...link, muted: !isCurrent(link) })" :aria-current="isCurrent(link) ? 'page' : undefined" :data-testid="`nav-${link.key}`">{{ link.label }}</RouterLink>
+              </li>
+            </ul>
+          </div>
           <RouterLink
             v-for="link in barLinks"
             :key="link.key"
@@ -282,7 +315,15 @@ async function logout(): Promise<void> {
         </div>
       </div>
       <nav v-if="menuOpen" id="mobile-menu" aria-label="Main" class="border-t border-line px-6 py-4 md:hidden" data-testid="mobile-menu">
-        <ul class="flex flex-col">
+        <template v-if="showBrowseMenu">
+          <p class="pb-0.5 text-xs font-semibold text-ink-muted" data-testid="mobile-browse-heading">{{ $t("nav.browse") }}</p>
+          <ul class="flex flex-col">
+            <li v-for="link in publicLinks" :key="link.key" class="border-b border-line last:border-b-0">
+              <RouterLink :to="link.to" class="block py-3 text-base font-medium" :class="linkClass(link)" :aria-current="isCurrent(link) ? 'page' : undefined">{{ link.label }}</RouterLink>
+            </li>
+          </ul>
+        </template>
+        <ul class="flex flex-col" :class="showBrowseMenu ? 'mt-4 border-t-2 border-ink pt-1' : ''">
           <li v-for="link in barLinks" :key="link.key" class="border-b border-line last:border-b-0">
             <RouterLink :to="link.to" class="block py-3 text-base font-medium" :class="linkClass(link)" :aria-current="isCurrent(link) ? 'page' : undefined">{{ link.label }}</RouterLink>
           </li>

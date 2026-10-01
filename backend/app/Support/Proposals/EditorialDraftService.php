@@ -85,6 +85,8 @@ class EditorialDraftService
 
         $attributes = [
             'payload' => $payload,
+            // What the payload's collections were written against — see CollectionFingerprints.
+            'base_fingerprints' => CollectionFingerprints::forDraft($record, $mapped),
             'rationale' => $rationale ?? '',
             'review_type' => $reviewType->value,
         ];

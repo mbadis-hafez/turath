@@ -2,7 +2,7 @@ import { request } from "@/api/http";
 import type { PaginationMeta } from "@/types/api";
 import type { Localized } from "@/types/artistCuration";
 import type {
-  AdminArtworkRow, AdminArtworksQuery, ArtworkCuration, ArtworkImage, ArtworkImageUploadResult, ImageRights, PipelineStatus,
+  AdminArtworkRow, AdminArtworksQuery, ArtworkBulkResult, ArtworkCuration, ArtworkImage, ArtworkImageUploadResult, ArtworkImageViewRole, ArtworkStatus, ImageRights, PipelineStatus,
 } from "@/types/artworkCuration";
 
 export async function listAdminArtworks(
@@ -47,6 +47,18 @@ export function createArtwork(payload: Record<string, unknown>): Promise<{ data:
   return request({ method: "POST", url: "/api/v1/artworks", data: payload });
 }
 
+export function deleteArtwork(id: number): Promise<void> {
+  return request({ method: "DELETE", url: `/api/v1/artworks/${id}` });
+}
+
+export function bulkArtworks(payload: {
+  ids: number[];
+  action: "set_status" | "delete";
+  status?: ArtworkStatus;
+}): Promise<{ data: ArtworkBulkResult }> {
+  return request({ method: "POST", url: "/api/v1/admin/artworks/bulk", data: payload });
+}
+
 export function mergeArtworks(payload: {
   survivor_id: number;
   duplicate_id: number;
@@ -69,7 +81,7 @@ export function uploadArtworkImages(
 export function updateArtworkImage(
   id: number,
   imageId: number,
-  patch: { rights_status?: ImageRights; is_final?: boolean },
+  patch: { rights_status?: ImageRights; is_final?: boolean; view_role?: ArtworkImageViewRole | null; is_public?: boolean },
 ): Promise<{ data: ArtworkImage[] }> {
   return request({ method: "PATCH", url: `/api/v1/artworks/${id}/images/${imageId}`, data: patch });
 }

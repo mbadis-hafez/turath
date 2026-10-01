@@ -72,7 +72,7 @@ describe("ArtistsRegistryPage", () => {
     const wrapper = await mountPage();
 
     expect(wrapper.get("[data-testid=artist-view]").attributes("href")).toContain("/artists/ahmad");
-    expect(wrapper.get("[data-testid=artist-delete]").text()).toBe("Delete");
+    expect(wrapper.get("[data-testid=artist-delete]").attributes("aria-label")).toBe("Delete");
 
     await wrapper.get("[data-testid=artist-delete]").trigger("click");
     await flushPromises();
@@ -83,7 +83,7 @@ describe("ArtistsRegistryPage", () => {
     expect(api.listAdminArtists).toHaveBeenCalledTimes(2);
   });
 
-  it("hides delete on a published artist for a non-admin", async () => {
+  it("disables delete on a published artist for a non-admin, with an explanatory tooltip", async () => {
     api.listAdminArtists.mockResolvedValue({
       data: [row({ publication_status: "published" })],
       meta: { current_page: 1, last_page: 1, per_page: 24, total: 1 },
@@ -91,6 +91,8 @@ describe("ArtistsRegistryPage", () => {
     const wrapper = await mountPage();
 
     expect(wrapper.find("[data-testid=artist-view]").exists()).toBe(true);
-    expect(wrapper.find("[data-testid=artist-delete]").exists()).toBe(false);
+    const deleteButton = wrapper.get("[data-testid=artist-delete]");
+    expect(deleteButton.attributes("disabled")).toBeDefined();
+    expect(deleteButton.attributes("title")).toContain("administrator");
   });
 });

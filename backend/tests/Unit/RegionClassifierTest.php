@@ -129,10 +129,10 @@ it('splits a same-line "label: value" block, discovered by running against a rea
 });
 
 it('does not trust a moderate-confidence value split off a label line as printed — the exact miss found against a real handwritten phone number', function () {
-    // Real case: "رقم الجوال: 0505918277" (a handwritten phone number) OCR'd by tesseract at confidence 62 —
-    // above the normal 60 "printed" threshold, but "027/8277" is not a plausible reading of a real phone number.
+    // Real case: "رقم الجوال: 05XXXXXXXX" (a handwritten phone number) OCR'd by tesseract at confidence 62 —
+    // above the normal 60 "printed" threshold, but "031/4410" is not a plausible reading of a real phone number.
     // A value this short-and-answer-shaped needs a stricter bar than a full sentence of body text.
-    $regions = classifyPage([wordBlock([['رقم', 90], ['الجوال:', 88], ['027/8277', 62]])]);
+    $regions = classifyPage([wordBlock([['رقم', 90], ['الجوال:', 88], ['031/4410', 62]])]);
 
     $byType = collect($regions)->keyBy(fn ($r) => $r['region_type']->value);
     expect($byType->has('form_label'))->toBeTrue()

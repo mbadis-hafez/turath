@@ -63,6 +63,7 @@ beforeEach(() => {
     routes: [
       { path: "/:locale/admin/artworks", name: "admin.artworks", component: { template: "<div />" } },
       { path: "/:locale/admin/artworks/:id", name: "admin.artworks.show", component: ArtworkCurationPage },
+      { path: "/:locale/admin/artworks/:id/view", name: "admin.artworks.detail", component: { template: "<div />" } },
     ],
   });
 });

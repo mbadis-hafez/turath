@@ -46,11 +46,11 @@ function previewSummary(body: ProfileCompletenessPreviewRequest): ProfileComplet
 
 let router: Router;
 
-async function mountPage() {
+async function mountPage(path = "/en/admin/artists/new") {
   const pinia = createPinia();
   setActivePinia(pinia);
   useAuthStore().$patch({ user: { id: 1, name: "E", email: "e@x", roles: ["editor"], permissions: ["artists.manage"] } as never, initialized: true });
-  await router.push("/en/admin/artists/new");
+  await router.push(path);
   const wrapper = mountWithPlugins(ArtistCreatePage, { locale: "en", router, pinia });
   await flushPromises();
   return wrapper;
@@ -194,5 +194,13 @@ describe("ArtistCreatePage", () => {
     expect(api.updateArtistCuration).not.toHaveBeenCalled();
     expect(router.currentRoute.value.path).toBe("/en/admin/artists/new");
     expect(wrapper.text()).toContain("bad");
+  });
+
+  it("starts from a name read off a document, in the box for its script, saving nothing by itself", async () => {
+    const wrapper = await mountPage(`/en/admin/artists/new?prefill=${encodeURIComponent("سارة الراشد")}`);
+
+    expect((wrapper.get("input[lang=ar]").element as HTMLInputElement).value).toBe("سارة الراشد");
+    expect((wrapper.get("input[lang=en]").element as HTMLInputElement).value).toBe("");
+    expect(api.createArtist).not.toHaveBeenCalled();
   });
 });

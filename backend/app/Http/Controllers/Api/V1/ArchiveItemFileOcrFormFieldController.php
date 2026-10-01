@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\OcrStage;
 use App\Models\ArchiveItem;
 use App\Models\FileOcrFormField;
+use App\Support\Ocr\HandwritingSuggestionService;
+use App\Support\Ocr\Pipeline\OcrPipeline;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -12,13 +15,13 @@ use Illuminate\Http\Request;
  * (handwriting, a signature, anything unclassified). This never runs through
  * ExtractedFieldPayloadMapper or touches the archive item — a reviewer reading
  * a cropped source image and typing what it says is not the same kind of fact
- * as an OCR/AI-derived value, and isn't wired into that apply path in this
- * slice. See DocumentType::fieldSchema() for how a future extractor would
- * eventually turn a resolved form field into a proposed record update.
+ * as an OCR/AI-derived value. It does re-run extraction, so the transcription
+ * becomes the value of the document field it belongs to (marked manually
+ * transcribed), still to be reviewed along that field's own route.
  */
 class ArchiveItemFileOcrFormFieldController
 {
-    public function transcribe(Request $request, ArchiveItem $archiveItem, FileOcrFormField $formField): JsonResponse
+    public function transcribe(Request $request, ArchiveItem $archiveItem, FileOcrFormField $formField, HandwritingSuggestionService $suggestions, OcrPipeline $pipeline): JsonResponse
     {
         abort_unless($formField->file->archive_item_id === $archiveItem->id, 404);
 
@@ -29,6 +32,9 @@ class ArchiveItemFileOcrFormFieldController
             'transcribed_by_user_id' => $request->user()->id,
             'transcribed_at' => now(),
         ]);
+        // A pending machine suggestion for this crop is settled by what the reviewer actually typed.
+        $suggestions->recordTranscription($formField, $data['value'], $request->user());
+        $pipeline->start($formField->file, OcrStage::Extract);
 
         return response()->json(['data' => [
             'id' => $formField->id,

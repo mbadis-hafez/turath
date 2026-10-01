@@ -15,6 +15,12 @@ class ArtworkImage extends Model
 
     public const CLEAR_RIGHTS = ['licensed', 'public_domain'];
 
+    /** Every assignable shot type, including ones not required for approval. */
+    public const VIEW_ROLES = ['front', 'signature', 'surface_detail', 'frame', 'verso', 'archive_context', 'edited_for_publish', 'other'];
+
+    /** The shots curators must capture before an artwork can be approved. */
+    public const REQUIRED_VIEW_ROLES = ['front', 'signature', 'frame', 'verso', 'edited_for_publish'];
+
     /** @var array<int, string> */
     public $guarded = [];
 
@@ -23,7 +29,7 @@ class ArtworkImage extends Model
      */
     protected function casts(): array
     {
-        return ['is_final' => 'boolean', 'size_bytes' => 'integer', 'width_px' => 'integer', 'height_px' => 'integer'];
+        return ['is_final' => 'boolean', 'is_public' => 'boolean', 'size_bytes' => 'integer', 'width_px' => 'integer', 'height_px' => 'integer'];
     }
 
     /**
@@ -61,6 +67,8 @@ class ArtworkImage extends Model
             'rights_status' => ['ar' => 'حالة الحقوق', 'en' => 'Rights status'],
             'is_final' => ['ar' => 'الصورة النهائية', 'en' => 'Final image'],
             'original_filename' => ['ar' => 'اسم الملف الأصلي', 'en' => 'Original filename'],
+            'view_role' => ['ar' => 'نوع اللقطة', 'en' => 'Shot type'],
+            'is_public' => ['ar' => 'تظهر في الصفحة العامة', 'en' => 'Shown on public page'],
         ];
     }
 

@@ -18,10 +18,12 @@ it('bundles regions, form fields, dates, and document type alongside texts and f
         'bbox' => ['x' => 10, 'y' => 20, 'width' => 100, 'height' => 30], 'confidence' => 22,
         'ocr_allowed' => false, 'ai_correction_allowed' => false, 'requires_human_review' => true,
         'review_reason' => 'Handwritten content requires manual transcription.',
+        'has_correction_mark' => true,
+        'correction_marks' => [['kind' => 'scribble', 'bbox' => ['x' => 12, 'y' => 22, 'width' => 30, 'height' => 20]]],
     ]);
     FileOcrFormField::create([
         'file_id' => $file->id, 'field_label' => 'اسم الفنان/ة', 'value_region_id' => $region->id,
-        'value_type' => 'handwriting', 'requires_manual_transcription' => true,
+        'value_type' => 'handwriting', 'requires_manual_transcription' => true, 'has_correction_mark' => true,
     ]);
     FileExtractedDate::create([
         'file_id' => $file->id, 'value' => '02/08/1445', 'calendar' => DateCalendar::Hijri->value,
@@ -35,7 +37,10 @@ it('bundles regions, form fields, dates, and document type alongside texts and f
         ->assertJsonPath('data.regions.0.ocr_allowed', false)
         ->assertJsonPath('data.regions.0.requires_human_review', true)
         ->assertJsonPath('data.form_fields.0.field_label', 'اسم الفنان/ة')
+        ->assertJsonPath('data.regions.0.has_correction_mark', true)
+        ->assertJsonPath('data.regions.0.correction_marks.0.kind', 'scribble')
         ->assertJsonPath('data.form_fields.0.requires_manual_transcription', true)
+        ->assertJsonPath('data.form_fields.0.has_correction_mark', true)
         ->assertJsonPath('data.dates.0.value', '02/08/1445')
         ->assertJsonPath('data.dates.0.calendar', 'hijri');
 });

@@ -235,7 +235,8 @@
       "pending": "Pending",
       "edited": "Edited",
       "accepted": "Accepted",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "uncertain": "Uncertain"
     },
     "accept": "Accept",
     "edit": "Edit",
@@ -268,7 +269,317 @@
       "needsTranscription": "Needs manual transcription",
       "noSourceRegion": "No source region was detected for this field — enter the value from the document.",
       "transcribePlaceholder": "Type what the source shows…",
-      "transcribeSubmit": "Save"
+      "transcribeSubmit": "Save",
+      "correctionMark": "Possible correction",
+      "correctionMarkHelp": "Part of this value looks crossed out or corrected. Compare it with the crop and type the value the author intended. Nothing has been chosen automatically.",
+      "rawReading": "Machine reading, including any crossed-out text:",
+      "suggestionTitle": "Machine suggestion",
+      "suggestionMeta": "{provider} · confidence {confidence}",
+      "suggestionWarning": "A machine reading of the handwriting. It is often wrong, and its confidence is not a reliable guide. Check every character against the crop.",
+      "useSuggestion": "Use as a starting point",
+      "rejectSuggestion": "Reject",
+      "requestSuggestion": "Ask for a machine suggestion",
+      "suggestionEmpty": "The handwriting reader could not read this crop.",
+      "suggestionRejected": "The machine suggestion was rejected."
+    },
+    "artistContact": {
+      "title": "Artist contact from this letter",
+      "explainer": "This document was classified as an artist authorization letter. Nothing here changes the artist record directly: you confirm the artist and the contact details, and a different reviewer approves the change in the archivist review queue.",
+      "identityTitle": "1. Which artist is this letter from?",
+      "nameOnDocument": "Name on the document: {name}",
+      "searchPlaceholder": "Search by another spelling…",
+      "search": "Search",
+      "noCandidates": "No matching artist found. Try another spelling.",
+      "strength": {
+        "high": "Strong match",
+        "medium": "Possible match",
+        "low": "Weak match"
+      },
+      "basis": {
+        "exact_name": "Same name",
+        "exact_variant": "Same as a recorded name variant",
+        "shared_name_parts": "Shares name parts",
+        "linked_to_archive_item": "Already linked to this material"
+      },
+      "confirmArtist": "Confirm this artist",
+      "confirmed": "Confirmed: {name}",
+      "confirmedLocked": "Confirmed: {name}. This can't change while the contact proposal is open.",
+      "contactTitle": "2. Contact details",
+      "contactExplainer": "Check each value against the scanned document before sending. Values the scan didn't yield can be typed in.",
+      "fields": {
+        "email": "Email",
+        "phone": "Phone",
+        "address": "Address"
+      },
+      "source": {
+        "transcribed": "From the transcription of \"{label}\"",
+        "printed": "Read from printed text at \"{label}\"",
+        "needsTranscription": "\"{label}\" hasn't been transcribed yet. Transcribe it above, or type the value here.",
+        "notDetected": "Not detected on the scan. Type it in from the document."
+      },
+      "target": "Apply to",
+      "addNew": "Add as a new contact",
+      "updateExisting": "Update {name}",
+      "note": "Note for the reviewer (optional)",
+      "propose": "Send for review",
+      "approvalNote": "The artist record changes only after another reviewer approves this in the archivist review queue.",
+      "cannotPropose": "You don't have permission to submit proposals.",
+      "changesRequested": "The reviewer asked for changes: {note}",
+      "proposalTitle": "3. Review",
+      "awaitingReview": "Waiting for approval in the archivist review queue.",
+      "applied": "Approved and applied to the artist's contacts.",
+      "rejected": "Rejected: {note}. You can correct the values and send again.",
+      "values": {
+        "status": {
+          "pending": "Awaiting approval",
+          "changes_requested": "Changes requested",
+          "approved": "Approved",
+          "rejected": "Rejected",
+          "superseded": "Superseded"
+        },
+        "supersededReason": {
+          "newer_proposal": "Replaced by a later proposal from this document.",
+          "draft_rewritten": "The draft carrying it was rewritten on the artist page.",
+          "other_proposal_approved": "Another change to this artist was approved first."
+        },
+        "proposed": "Proposed:",
+        "newContact": "Adds a new contact.",
+        "current": "Currently: {value}",
+        "currentHidden": "The current value is visible only to people who can see artist contacts.",
+        "currentNotKept": "The value it replaced isn't kept once decided.",
+        "replacesExisting": "Approving replaces the value the contact holds now.",
+        "typedByProposer": "typed in by the proposer",
+        "confidence": "OCR confidence {value}%",
+        "machineRead": "suggested by {model} ({confidence}), accepted by a reviewer",
+        "correctionMark": "The document shows a possible correction here — check the scan.",
+        "cropAlt": "Scan of the {field} on the document",
+        "proposedBy": "Proposed by {name}, {when}",
+        "reviewedBy": "Reviewed by {name}, {when}",
+        "reviewNote": "Reviewer's note: {note}"
+      }
+    },
+    "stages": {
+      "title": "Processing stages",
+      "names": {
+        "recognize": "Text recognition",
+        "extract": "Field extraction",
+        "match": "Record matching",
+        "correct": "AI correction"
+      },
+      "status": {
+        "notRun": "Not run yet",
+        "pending": "Waiting",
+        "queued": "Queued",
+        "running": "Running",
+        "succeeded": "Done",
+        "skipped": "Skipped",
+        "failed": "Failed",
+        "stale": "Stalled — run it again"
+      },
+      "reasons": {
+        "up_to_date": "Up to date",
+        "upstream_failed": "Not run — an earlier stage failed",
+        "retrying": "Retrying after an error ({attempts} attempts so far)",
+        "disabled": "Off",
+        "no_provider_configured": "Off — no provider configured",
+        "external_provider_not_allowed": "Off — external providers not allowed",
+        "access_level_not_allowed": "Not sent — access level too restricted",
+        "provider_misconfigured": "Provider misconfigured — see the server logs",
+        "nothing_to_match": "Nothing to match"
+      },
+      "correctSummary": "{calls} AI calls · {cached} reused",
+      "rerun": "Re-run"
+    },
+    "verify": "Verify",
+    "needsTranscription": "Needs transcription — see the form fields below",
+    "machineReading": "Machine reading: {value}",
+    "route": {
+      "record": "Applies to this item",
+      "entity": "Verified here; applied once the {record} is confirmed",
+      "artist_contact": "Reviewed in the artist contact panel",
+      "evidence": "Kept as evidence"
+    },
+    "targetRecord": {
+      "artist": "artist record",
+      "artwork": "artwork record",
+      "event": "exhibition record",
+      "holder": "institution record",
+      "source": "source record",
+      "other": "linked record"
+    },
+    "provenance": {
+      "page": "Page {page}",
+      "formField": "from a form field",
+      "method": {
+        "ocr_derived": "OCR",
+        "ai_corrected": "AI-corrected",
+        "ai_inferred": "AI-inferred",
+        "manually_transcribed": "transcribed by a reviewer",
+        "human_verified": "human-verified"
+      }
+    },
+    "documentType": {
+      "title": "Document type",
+      "types": {
+        "artist_authorization": "Artist authorization letter",
+        "artwork_condition_report": "Artwork condition report",
+        "artist_biography": "Artist biography",
+        "exhibition_document": "Exhibition document",
+        "unknown": "Unknown"
+      },
+      "source": {
+        "reviewer": "Chosen by a reviewer",
+        "classifier": "Detected automatically"
+      },
+      "change": "Change document type",
+      "reset": "Detect automatically",
+      "found": "{found} of {total} expected fields found",
+      "notFound": "Not found: {fields}"
+    },
+    "dates": {
+      "title": "Dates",
+      "help": "Each date is kept as written, in its own calendar — never converted.",
+      "role": {
+        "document_issue_date": "Issue date",
+        "publication_date": "Publication date",
+        "event_date": "Event date",
+        "artwork_date": "Artwork date",
+        "birth_date": "Birth date",
+        "death_date": "Death date",
+        "signature_date": "Signature date",
+        "other": "Role unknown"
+      },
+      "calendar": {
+        "hijri": "Hijri",
+        "gregorian": "Gregorian",
+        "unknown": "Calendar unknown"
+      },
+      "printedRegion": "from printed text",
+      "pageTextOnly": "page text only — may be handwriting"
+    },
+    "match": {
+      "title": {
+        "artist": "Possible artist records",
+        "artwork": "Possible artwork records",
+        "event": "Possible exhibition records",
+        "holder": "Possible institution records",
+        "source": "Possible source records",
+        "place": "Places already used in records"
+      },
+      "scoreNote": "Scores compare the text only — a high score is not proof that it is the same record.",
+      "strength": {
+        "high": "Strong",
+        "medium": "Possible",
+        "low": "Weak"
+      },
+      "basis": {
+        "exact_name": "same name",
+        "exact_variant": "same as a recorded variant",
+        "shared_name_parts": "shares name parts",
+        "linked_to_archive_item": "linked to this item",
+        "exact_reference": "same inventory reference",
+        "exact_title": "same title",
+        "similar_title": "similar title",
+        "same_artist": "same artist",
+        "same_height": "same height",
+        "same_width": "same width",
+        "same_year": "same year",
+        "same_city": "same city",
+        "name_within_text": "full name appears in the text",
+        "same_publisher": "same publisher",
+        "exact_place": "same place",
+        "place_within_text": "place appears in the text"
+      },
+      "thisOne": "This one",
+      "noneOfThese": "None of these",
+      "undo": "Undo",
+      "confirmed": "Confirmed:",
+      "noneRight": "A reviewer found none of the suggestions right.",
+      "noCandidates": "No matching records.",
+      "missing": "Record no longer exists",
+      "findAnother": "Find another record",
+      "create": {
+        "artist": "Create a new artist",
+        "artwork": "Create a new artwork",
+        "event": "Create a new exhibition or event"
+      },
+      "searchPlaceholder": "Search by name or title…",
+      "search": "Search",
+      "searchEmpty": "No record found.",
+      "link": "Link"
+    },
+    "markUncertain": "Mark uncertain",
+    "uncertainPlaceholder": "Why can't it be confirmed? (optional)",
+    "typedByReviewer": "Typed by a reviewer",
+    "source": {
+      "title": "Source document",
+      "showAll": "Show all regions",
+      "showOnPage": "Show on page",
+      "showing": "Showing: {label}",
+      "unavailable": "The page image isn't available.",
+      "pageAlt": "Page {page} as read by OCR",
+      "regionTypes": {
+        "printed_text": "Printed text",
+        "handwriting": "Handwriting",
+        "logo": "Logo",
+        "photograph": "Photograph",
+        "signature": "Signature",
+        "form_label": "Form label",
+        "form_value": "Form value",
+        "footer": "Footer",
+        "noise": "Noise",
+        "unknown": "Unclassified"
+      },
+      "legend": {
+        "printed": "Printed text",
+        "handwriting": "Handwriting",
+        "signature": "Signature",
+        "correction": "Possible correction"
+      }
+    },
+    "evidence": {
+      "showRegion": "Show on page {page}",
+      "showPage": "Show page {page}",
+      "ocrRead": "OCR read:",
+      "noOcr": "Nothing machine-read: typed from the scan by a reviewer.",
+      "aiSuggests": "AI correction suggests:",
+      "useSuggestion": "Edit with this",
+      "changeTypes": {
+        "ocr_misrecognition": "misread character",
+        "orthographic_normalization": "spelling",
+        "word_spacing": "spacing",
+        "punctuation": "punctuation",
+        "bidi_cleanup": "text direction",
+        "other": "other"
+      },
+      "aiUnusable": "The AI correction of this line couldn't be used.",
+      "aiNoChange": "The AI correction changes nothing in this value.",
+      "aiNameReading": "AI's reading of the name “{ocr}”: {candidate} — check it against the candidates, not as a correction.",
+      "promptVersion": "prompt {version}",
+      "recordNow": "On the record now: “{value}”. Accepting replaces it.",
+      "recordSame": "Same as on the record.",
+      "doubts": {
+        "lowConfidence": "Low OCR confidence ({value}%).",
+        "correctionMark": "Something on this line may be crossed out.",
+        "aiFlagged": "The AI correction flagged this line for a person.",
+        "aiInferred": "Inferred by AI, not read from the page.",
+        "wholePage": "Read from the page's text as a whole — no particular region."
+      },
+      "uncertain": "Marked uncertain.",
+      "uncertainNote": "Marked uncertain: {note}"
+    },
+    "setAside": {
+      "title": "Lines set aside for you",
+      "explainer": "OCR didn't read these by itself: a possible correction, or handwriting with no label beside it. Read the scan, choose the field the line fills and type what it says — or say there's nothing to take.",
+      "correctionMark": "Something on this line looks crossed out. Nothing is chosen for you: type the value the document intends.",
+      "untrustedReading": "OCR read (not trusted):",
+      "typedInto": "Typed into {field}: {value}",
+      "chooseField": "Field…",
+      "typePlaceholder": "What the line says",
+      "add": "Add value",
+      "dismiss": "Nothing to take",
+      "dismissedCount": "{count} set aside as nothing to take.",
+      "restore": "Restore page {page}"
     }
   },
   "tabs": {

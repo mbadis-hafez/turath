@@ -2,25 +2,21 @@
 
 namespace App\Jobs;
 
-use App\Enums\DateCalendar;
-use App\Enums\ExtractedDateType;
-use App\Enums\ExtractedFieldStatus;
-use App\Enums\ExtractionMethod;
-use App\Enums\FileOcrStatus;
+use App\Enums\OcrRegionType;
+use App\Enums\OcrStage;
+use App\Jobs\Concerns\RunsAsOcrStage;
 use App\Models\File;
-use App\Models\FileExtractedDate;
-use App\Models\FileExtractedField;
 use App\Models\FileExtractedText;
 use App\Models\FileOcrFormField;
 use App\Models\FileOcrRegion;
-use App\Support\Ocr\DateExtractor;
-use App\Support\Ocr\DocumentTypeClassifier;
-use App\Support\Ocr\FieldExtractionHeuristic;
+use App\Support\Ocr\CorrectionMarkDetector;
+use App\Support\Ocr\CorrectionMarkRouting;
 use App\Support\Ocr\FormFieldDetector;
 use App\Support\Ocr\NonTextRegionDetector;
 use App\Support\Ocr\OcrEngine;
 use App\Support\Ocr\PageLayoutAnalyzer;
 use App\Support\Ocr\PdfPageRasterizer;
+use App\Support\Ocr\Pipeline\StageOutcome;
 use App\Support\Ocr\RegionClassifier;
 use App\Support\Ocr\RegionCropper;
 use Illuminate\Bus\Queueable;
@@ -29,28 +25,51 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\File as Filesystem;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Throwable;
 
 /**
- * OCR's an archive item's file (image or PDF) in Arabic and English, classifies
- * every detected region on every page (printed text / handwriting / logo /
- * signature / etc — see RegionClassifier) before trusting any of its text,
- * pairs form labels with their values, extracts structured dates, guesses a
- * document type, then runs a first-pass field-extraction heuristic. Per
+ * The pipeline's recognize stage (see OcrPipeline). OCR's an archive item's
+ * file (image or PDF) in Arabic and English, classifies every detected region
+ * on every page (printed text / handwriting / logo / signature / etc — see
+ * RegionClassifier) before trusting any of its text, flags possible
+ * correction marks (crossed-out or struck-through text) for review, and pairs
+ * form labels with their values. Dates, candidate fields and the document
+ * type come after, in ExtractOcrFieldsJob, from the text stored here. Per
  * docs/privacy-rules.md:10, none of this ever touches the live record — it
  * only ever produces reviewable suggestions, which a human accepts, rejects,
  * or (for handwriting) manually transcribes through the OCR review endpoints.
  */
 class ProcessFileOcrJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, RunsAsOcrStage, SerializesModels;
+
+    /** Bump when a change to OCR, region classification, mark detection or form pairing should reprocess files already done. */
+    public const VERSION = 'recognize-v1';
 
     /** A permanently-broken file shouldn't be retried against a real tesseract binary indefinitely. */
     public int $tries = 1;
 
-    public function __construct(private readonly int $fileId) {}
+    public int $timeout = 1800;
+
+    public function __construct(private readonly int $fileId, ?string $runId = null)
+    {
+        $this->runId = $runId;
+        $this->timeout = (int) config('ocr.pipeline.timeouts.recognize', $this->timeout);
+        $this->onQueue(config('ocr.pipeline.queue'));
+    }
+
+    public static function stage(): OcrStage
+    {
+        return OcrStage::Recognize;
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function backoff(): array
+    {
+        return [];
+    }
 
     public function handle(
         OcrEngine $engine,
@@ -60,8 +79,7 @@ class ProcessFileOcrJob implements ShouldQueue
         ?RegionClassifier $regionClassifier = null,
         ?FormFieldDetector $formFieldDetector = null,
         ?RegionCropper $cropper = null,
-        ?DateExtractor $dateExtractor = null,
-        ?DocumentTypeClassifier $documentTypeClassifier = null,
+        ?CorrectionMarkDetector $markDetector = null,
     ): void {
         $file = File::find($this->fileId);
         if ($file === null || ! $file->isOcrCandidate()) {
@@ -73,10 +91,25 @@ class ProcessFileOcrJob implements ShouldQueue
         $regionClassifier ??= new RegionClassifier;
         $formFieldDetector ??= new FormFieldDetector;
         $cropper ??= new RegionCropper;
-        $dateExtractor ??= new DateExtractor;
-        $documentTypeClassifier ??= new DocumentTypeClassifier;
+        $markDetector ??= app(CorrectionMarkDetector::class);
 
-        $file->update(['ocr_status' => FileOcrStatus::Processing, 'ocr_progress_pct' => 0, 'ocr_failure_reason' => null]);
+        $this->runStage($file, fn (File $file) => $this->recognize(
+            $file, $engine, $rasterizer, $layoutAnalyzer, $nonTextDetector, $regionClassifier, $formFieldDetector, $cropper, $markDetector,
+        ));
+    }
+
+    private function recognize(
+        File $file,
+        OcrEngine $engine,
+        PdfPageRasterizer $rasterizer,
+        PageLayoutAnalyzer $layoutAnalyzer,
+        NonTextRegionDetector $nonTextDetector,
+        RegionClassifier $regionClassifier,
+        FormFieldDetector $formFieldDetector,
+        RegionCropper $cropper,
+        CorrectionMarkDetector $markDetector,
+    ): StageOutcome {
+        $file->update(['ocr_progress_pct' => 0]);
 
         $tempDir = storage_path("app/ocr-tmp/file-{$file->id}");
 
@@ -100,30 +133,30 @@ class ProcessFileOcrJob implements ShouldQueue
                     $file->update(['ocr_progress_pct' => (int) round($step / $totalSteps * 100)]);
                 }
             }
+            // Pages beyond this run's page count are left over from an earlier rendering; extraction must not see them.
+            $file->extractedTexts()->where('page_number', '>', $pageCount)->delete();
 
-            $this->classifyRegions($file, $pagePaths, $layoutAnalyzer, $nonTextDetector, $regionClassifier, $formFieldDetector, $cropper);
-            $this->saveDates($file, $dateExtractor->extract($pagesByLanguage));
-            $this->saveCandidateFields($file, (new FieldExtractionHeuristic)->extract($pagesByLanguage));
+            $this->classifyRegions($file, $pagePaths, $layoutAnalyzer, $nonTextDetector, $regionClassifier, $formFieldDetector, $cropper, $markDetector);
 
             $file->update([
-                'ocr_status' => FileOcrStatus::Completed,
                 'ocr_progress_pct' => 100,
-                'ocr_completed_at' => now(),
                 'ocr_language_confidence' => [
                     'ar' => $this->averageConfidence($pagesByLanguage['ar']),
                     'en' => $this->averageConfidence($pagesByLanguage['en']),
                 ],
-                'document_type' => $documentTypeClassifier->classify($pagesByLanguage)->value,
             ]);
-        } catch (Throwable $e) {
-            Log::error('Archive file OCR failed', ['file_id' => $file->id, 'error' => $e->getMessage()]);
-            $file->update(['ocr_status' => FileOcrStatus::Failed, 'ocr_failure_reason' => mb_substr($e->getMessage(), 0, 2000)]);
-            throw $e;
         } finally {
             if (Filesystem::isDirectory($tempDir)) {
                 Filesystem::deleteDirectory($tempDir);
             }
         }
+
+        return StageOutcome::succeeded([
+            'pages' => $pageCount,
+            'regions' => $file->ocrRegions()->count(),
+            'crops' => $file->ocrRegions()->whereNotNull('crop_path')->count(),
+            'form_fields' => $file->ocrFormFields()->count(),
+        ]);
     }
 
     /**
@@ -155,6 +188,7 @@ class ProcessFileOcrJob implements ShouldQueue
         RegionClassifier $regionClassifier,
         FormFieldDetector $formFieldDetector,
         RegionCropper $cropper,
+        CorrectionMarkDetector $markDetector,
     ): void {
         $resolvedLabels = $file->ocrFormFields()->whereNotNull('transcribed_at')->pluck('field_label')->all();
         $file->ocrRegions()->delete();
@@ -166,7 +200,7 @@ class ProcessFileOcrJob implements ShouldQueue
 
             $textBlocks = $layoutAnalyzer->analyze($path);
             $nonTextRegions = $nonTextDetector->detect($path, array_column($textBlocks, 'bbox'));
-            $classified = $regionClassifier->classify($textBlocks, $nonTextRegions, $pageSize);
+            $classified = $this->withCorrectionMarks($regionClassifier->classify($textBlocks, $nonTextRegions, $pageSize), $path, $markDetector);
 
             $persisted = [];
             foreach ($classified as $region) {
@@ -183,6 +217,8 @@ class ProcessFileOcrJob implements ShouldQueue
                     'ai_correction_allowed' => $region['ai_correction_allowed'],
                     'requires_human_review' => $region['requires_human_review'],
                     'review_reason' => $region['review_reason'],
+                    'has_correction_mark' => $region['has_correction_mark'],
+                    'correction_marks' => $region['correction_marks'],
                 ]);
 
                 if ($row->requires_human_review) {
@@ -190,11 +226,15 @@ class ProcessFileOcrJob implements ShouldQueue
                     if ($png !== null) {
                         $cropPath = "archive/ocr-crops/file-{$file->id}/page-{$pageNumber}/region-{$row->id}.png";
                         Storage::disk($file->disk)->put($cropPath, $png);
-                        $row->update(['crop_path' => $cropPath]);
+                        // The hash keys handwriting suggestions to crop content, so a re-run never re-sends the same crop.
+                        $row->update(['crop_path' => $cropPath, 'crop_sha256' => hash('sha256', $png)]);
                     }
                 }
 
-                $persisted[] = ['id' => $row->id, 'region_type' => $region['region_type'], 'bbox' => $region['bbox'], 'source_text' => $region['source_text']];
+                $persisted[] = [
+                    'id' => $row->id, 'region_type' => $region['region_type'], 'bbox' => $region['bbox'],
+                    'source_text' => $region['source_text'], 'has_correction_mark' => $region['has_correction_mark'],
+                ];
             }
 
             foreach ($formFieldDetector->pair($persisted) as $pair) {
@@ -209,9 +249,34 @@ class ProcessFileOcrJob implements ShouldQueue
                     'value_type' => $pair['value_type'],
                     'machine_value' => $pair['machine_value'],
                     'requires_manual_transcription' => $pair['requires_manual_transcription'],
+                    'has_correction_mark' => $pair['has_correction_mark'],
                 ]);
             }
         }
+    }
+
+    /**
+     * Runs correction-mark detection over the page's text-bearing regions and
+     * routes any marked region to review (see CorrectionMarkRouting). Must run
+     * before persisting, so a marked region is cropped for the reviewer.
+     *
+     * @param  array<int, array{region_type: OcrRegionType, language: ?string, bbox: array{x: int, y: int, width: int, height: int}, confidence: ?int, source_text: ?string, ocr_allowed: bool, ai_correction_allowed: bool, requires_human_review: bool, review_reason: ?string}>  $regions
+     * @return array<int, array{region_type: OcrRegionType, language: ?string, bbox: array{x: int, y: int, width: int, height: int}, confidence: ?int, source_text: ?string, ocr_allowed: bool, ai_correction_allowed: bool, requires_human_review: bool, review_reason: ?string, has_correction_mark: bool, correction_marks: array<int, array{kind: string, bbox: array{x: int, y: int, width: int, height: int}}>|null}>
+     */
+    private function withCorrectionMarks(array $regions, string $pagePath, CorrectionMarkDetector $markDetector): array
+    {
+        $inspect = [];
+        foreach ($regions as $i => $region) {
+            if (in_array($region['region_type'], CorrectionMarkRouting::INSPECTED_TYPES, true)) {
+                $inspect[$i] = $region['bbox'];
+            }
+        }
+        $marks = $inspect === [] ? [] : $markDetector->detect($pagePath, $inspect);
+
+        return array_map(
+            fn (int $i) => CorrectionMarkRouting::apply($regions[$i], $marks[$i] ?? []),
+            array_keys($regions),
+        );
     }
 
     /**
@@ -225,24 +290,6 @@ class ProcessFileOcrJob implements ShouldQueue
     }
 
     /**
-     * @param  array<int, array{value: string, calendar: DateCalendar, date_type: ExtractedDateType, source_page: ?int}>  $dates
-     */
-    private function saveDates(File $file, array $dates): void
-    {
-        $file->extractedDates()->delete();
-        foreach ($dates as $date) {
-            FileExtractedDate::create([
-                'file_id' => $file->id,
-                'value' => $date['value'],
-                'calendar' => $date['calendar']->value,
-                'date_type' => $date['date_type']->value,
-                'source_page' => $date['source_page'],
-                'source_method' => 'ocr',
-            ]);
-        }
-    }
-
-    /**
      * @param  array<int, array{text: string, confidence: int}>  $extracted
      */
     private function averageConfidence(array $extracted): ?int
@@ -253,32 +300,5 @@ class ProcessFileOcrJob implements ShouldQueue
         $confidences = array_column($extracted, 'confidence');
 
         return (int) round(array_sum($confidences) / count($confidences));
-    }
-
-    /**
-     * Reprocessing must not clobber fields a reviewer already accepted, rejected, or edited.
-     *
-     * @param  array<int, array{field_key: string, extracted_value: string, confidence: int, source_page: int|null}>  $candidates
-     */
-    private function saveCandidateFields(File $file, array $candidates): void
-    {
-        $reviewed = $file->extractedFields()->where('status', '!=', ExtractedFieldStatus::Pending->value)->pluck('field_key')->all();
-
-        $file->extractedFields()->where('status', ExtractedFieldStatus::Pending->value)->delete();
-
-        foreach ($candidates as $candidate) {
-            if (in_array($candidate['field_key'], $reviewed, true)) {
-                continue;
-            }
-            FileExtractedField::create([
-                'file_id' => $file->id,
-                'field_key' => $candidate['field_key'],
-                'extracted_value' => $candidate['extracted_value'],
-                'confidence' => $candidate['confidence'],
-                'source_page' => $candidate['source_page'],
-                'status' => ExtractedFieldStatus::Pending->value,
-                'extraction_method' => ExtractionMethod::OcrDerived->value,
-            ]);
-        }
     }
 }

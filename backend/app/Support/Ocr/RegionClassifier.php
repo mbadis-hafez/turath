@@ -23,7 +23,7 @@ use App\Enums\OcrRegionType;
  * changing the file_ocr_regions schema or its consumers.
  *
  * One case worth calling out, found by running this against a real scanned
- * form: a compact row ("رقم الجوال: 0505918277") is commonly read by
+ * form: a compact row ("رقم الجوال: 05XXXXXXXX") is commonly read by
  * tesseract as a single block/line, not two — label and handwritten value on
  * the same physical line. splitInlineLabelValue() detects a colon in the
  * first few words of a block and splits it into a label sub-block and a
@@ -159,8 +159,8 @@ class RegionClassifier
         // A value split off an inline "label: value" line is inherently answer-shaped (a name,
         // number, or address — typically one or two long tokens), so the normal "short token"
         // signal below doesn't fire for it even when it's garbled handwriting: a real miss found
-        // by running this against a scanned form was "رقم الجوال: 0505918277" (a handwritten
-        // phone number) OCR'd as "027/8277 ط ©" at confidence 62 — comfortably above the normal
+        // by running this against a scanned form was "رقم الجوال: 05XXXXXXXX" (a handwritten
+        // phone number) OCR'd as "031/4410 ط ©" at confidence 62 — comfortably above the normal
         // 60 threshold, and its average token length (~3.3) is too long to trip the short-token
         // check either, even though it's clearly not a real printed phone number. Split values
         // are held to a flat, stricter confidence bar instead.

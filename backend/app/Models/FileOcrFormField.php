@@ -23,6 +23,7 @@ class FileOcrFormField extends Model
     {
         return [
             'requires_manual_transcription' => 'boolean',
+            'has_correction_mark' => 'boolean',
             'transcribed_at' => 'datetime',
         ];
     }
@@ -57,5 +58,11 @@ class FileOcrFormField extends Model
     public function transcribedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'transcribed_by_user_id');
+    }
+
+    protected static function booted(): void
+    {
+        // Decisions become evaluation/training examples (Dataset\ReviewExampleRecorder).
+        static::observe(Observers\RecordsOcrReviewDecisions::class);
     }
 }

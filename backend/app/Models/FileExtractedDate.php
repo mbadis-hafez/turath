@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\DateCalendar;
 use App\Enums\ExtractedDateType;
+use App\Enums\ExtractedFieldStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -27,6 +28,9 @@ class FileExtractedDate extends Model
             'calendar' => DateCalendar::class,
             'date_type' => ExtractedDateType::class,
             'source_page' => 'integer',
+            'confidence' => 'integer',
+            'status' => ExtractedFieldStatus::class,
+            'reviewed_at' => 'datetime',
         ];
     }
 
@@ -44,5 +48,11 @@ class FileExtractedDate extends Model
     public function region(): BelongsTo
     {
         return $this->belongsTo(FileOcrRegion::class, 'region_id');
+    }
+
+    protected static function booted(): void
+    {
+        // Decisions become evaluation/training examples (Dataset\ReviewExampleRecorder).
+        static::observe(Observers\RecordsOcrReviewDecisions::class);
     }
 }

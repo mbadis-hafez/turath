@@ -15,6 +15,8 @@ export interface FieldDiff {
 
 export interface ProposalConflict {
   field: string;
+  /** A collection (e.g. contacts) that changed since the draft was written: no values, the section diff shows them. */
+  collection?: boolean;
   proposed_against: unknown;
   current: unknown;
   proposed_value: unknown;

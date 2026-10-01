@@ -5,18 +5,19 @@ import { useI18n } from "vue-i18n";
 import { getProposalDiff, requestChanges as requestProposalChanges } from "@/api/editorial";
 import { approveProposal, listRevisions, rejectProposal } from "@/api/proposals";
 import FieldDiffTable from "@/components/proposals/FieldDiffTable.vue";
+import ProposalDocumentEvidence from "@/components/proposals/ProposalDocumentEvidence.vue";
 import ProposalSectionDiffs from "@/components/proposals/ProposalSectionDiffs.vue";
 import { useLocalePath } from "@/composables/useLocalePath";
 import { ApiError } from "@/types/api";
 import type { Proposal, ProposalConflict, RecordType, Revision } from "@/types/proposal";
-import type { SectionDiff } from "@/types/proposalDiff";
+import type { ProposalDocumentEvidence as DocumentEvidence, SectionDiff } from "@/types/proposalDiff";
 import { formatDateTime } from "@/utils/format";
 import type { AppLocale } from "@/i18n";
 
 const props = defineProps<{ proposal: Proposal; canReview: boolean; currentUserId: number | null }>();
 const emit = defineEmits<{ reviewed: [] }>();
 
-const { t, locale } = useI18n();
+const { t, te, locale } = useI18n();
 const { localePath } = useLocalePath();
 
 /** Where this record's own curation/edit page lives — there is no diff for a
@@ -58,6 +59,8 @@ const isOwn = computed(() => props.proposal.proposed_by?.id != null && props.pro
 const isSectioned = computed(() => props.proposal.payload != null && Object.keys(props.proposal.payload).length > 0);
 
 const sections = ref<SectionDiff[] | null>(null);
+/** The documents a value was read from, when the draft was proposed from one. */
+const evidence = ref<DocumentEvidence[] | null>(null);
 const diffFailed = ref(false);
 let controller: AbortController | null = null;
 
@@ -72,6 +75,9 @@ async function loadDiff(): Promise<void> {
     const response = await getProposalDiff(props.proposal.id, self.signal);
     if (controller !== self) return;
     sections.value = response.data.sections;
+    evidence.value = response.data.evidence ?? null;
+    // Drift is known before approving, not only from a 409 afterwards.
+    if (isPending.value && (response.data.conflicts ?? []).length > 0) conflicts.value = response.data.conflicts;
   } catch {
     if (controller !== self) return;
     // Fall back to the flat field_diffs rendering the legacy flow uses.
@@ -204,8 +210,9 @@ const STATUS_CLASS: Record<string, string> = {
       <p class="font-semibold">{{ t("proposals.conflictTitle") }}</p>
       <p class="mt-1 text-pretty">{{ t("proposals.conflictBody") }}</p>
       <ul class="mt-2 list-disc ps-5">
-        <li v-for="c in conflicts" :key="c.field">
-          {{ c.field }} — {{ t("proposals.conflictAgainst", { assumed: String(c.proposed_against ?? "—"), current: String(c.current ?? "—") }) }}
+        <li v-for="c in conflicts" :key="c.field" data-testid="conflict-item">
+          <template v-if="c.collection">{{ t("proposals.conflictCollection", { collection: te(`proposals.collections.${c.field}`) ? t(`proposals.collections.${c.field}`) : c.field }) }}</template>
+          <template v-else>{{ c.field }} — {{ t("proposals.conflictAgainst", { assumed: String(c.proposed_against ?? "—"), current: String(c.current ?? "—") }) }}</template>
         </li>
       </ul>
     </div>
@@ -222,6 +229,7 @@ const STATUS_CLASS: Record<string, string> = {
       <p v-if="sections === null && !diffFailed" class="mt-4 text-xs text-ink-muted" data-testid="diff-loading">{{ t("proposals.diffLoading") }}</p>
       <ProposalSectionDiffs v-else-if="!diffFailed && sections !== null" class="mt-4" :sections="sections" />
       <FieldDiffTable v-else class="mt-4" :rows="rows" :labels="proposal.field_labels" />
+      <ProposalDocumentEvidence v-if="evidence && evidence.length > 0" :evidence="evidence" />
     </template>
     <FieldDiffTable v-else class="mt-4" :rows="rows" :labels="proposal.field_labels" />
 

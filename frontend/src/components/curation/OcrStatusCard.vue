@@ -2,7 +2,7 @@
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 
-import type { FileOcrBundle } from "@/types/ocr";
+import type { FileOcrBundle, OcrStageName, OcrStageRun } from "@/types/ocr";
 
 const props = defineProps<{
   bundle: FileOcrBundle;
@@ -10,8 +10,33 @@ const props = defineProps<{
   averageConfidence: number | null;
   canRerun: boolean;
 }>();
-const emit = defineEmits<{ "view-fields": []; rerun: [] }>();
-const { t } = useI18n();
+const emit = defineEmits<{ "view-fields": []; rerun: []; "rerun-stage": [stage: OcrStageName] }>();
+const { t, te } = useI18n();
+
+// Files processed before stage tracking have no stage rows; there is nothing useful to list for them.
+const stages = computed(() => (props.bundle.stages?.some((s) => s.status !== null) ? props.bundle.stages : []));
+
+function stageText(stage: OcrStageRun): string {
+  if (stage.stale) return t("archive.ocr.stages.status.stale");
+  if (stage.status === null) return t("archive.ocr.stages.status.notRun");
+  if (stage.reason !== null && te(`archive.ocr.stages.reasons.${stage.reason}`)) {
+    return t(`archive.ocr.stages.reasons.${stage.reason}`, { attempts: stage.attempts });
+  }
+  return t(`archive.ocr.stages.status.${stage.status}`);
+}
+
+function stageClass(stage: OcrStageRun): string {
+  if (stage.status === "failed") return "text-danger";
+  if (stage.stale || stage.reason === "retrying") return "text-warn";
+  return stage.status === "succeeded" || stage.reason === "up_to_date" ? "text-ink" : "text-ink-muted";
+}
+
+/** What the AI stage cost: calls paid for versus answers reused from the cache. */
+function correctionCost(stage: OcrStageRun): string | null {
+  const s = stage.summary;
+  if (stage.stage !== "correct" || s === null || typeof s.provider_calls !== "number" || typeof s.cache_hits !== "number") return null;
+  return t("archive.ocr.stages.correctSummary", { calls: s.provider_calls, cached: s.cache_hits });
+}
 
 const checklist = computed(() => [
   { key: "recognized", done: true },
@@ -88,5 +113,32 @@ const cardClass = computed(() => STATUS_CLASS[props.bundle.status ?? "pending"])
         {{ t("archive.ocr.rerunOcr") }}
       </button>
     </template>
+
+    <div v-if="stages.length > 0" class="mt-4 border-t border-line pt-3" data-testid="ocr-stages">
+      <h3 class="text-xs font-semibold uppercase tracking-wide text-ink-muted">{{ t("archive.ocr.stages.title") }}</h3>
+      <ul class="mt-2 space-y-2 text-sm">
+        <li v-for="stage in stages" :key="stage.stage" :data-testid="`ocr-stage-${stage.stage}`">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-ink">{{ t(`archive.ocr.stages.names.${stage.stage}`) }}</span>
+            <span class="flex items-center gap-2">
+              <span class="text-xs" :class="stageClass(stage)" data-testid="ocr-stage-status">{{ stageText(stage) }}</span>
+              <button
+                v-if="canRerun && stage.can_run"
+                type="button"
+                class="text-xs font-medium text-ink-muted underline hover:text-ink"
+                :data-testid="`ocr-stage-rerun-${stage.stage}`"
+                @click="emit('rerun-stage', stage.stage)"
+              >
+                {{ t("archive.ocr.stages.rerun") }}
+              </button>
+            </span>
+          </div>
+          <p v-if="correctionCost(stage)" class="text-xs tabular-nums text-ink-muted" data-testid="ocr-stage-cost">{{ correctionCost(stage) }}</p>
+          <p v-if="stage.error && (stage.status === 'failed' || stage.reason === 'retrying')" class="mt-0.5 break-words text-xs text-ink-muted" data-testid="ocr-stage-error">
+            {{ stage.error }}
+          </p>
+        </li>
+      </ul>
+    </div>
   </section>
 </template>

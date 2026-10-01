@@ -3,7 +3,10 @@ import type { PaginatedResponse, PaginationMeta } from "@/types/api";
 import type {
   AdminArchiveQuery, AdminArchiveRow, ArchiveEdit, ArchiveFacets, ArchiveEditFile, ArchiveItem, ArchiveQueryParams, BulkResult,
 } from "@/types/archive";
-import type { ExtractedField, FileOcrBundle, OcrFormField } from "@/types/ocr";
+import type {
+  ArtistContactProposalInput, DocumentType, EntityMatch, ExtractedDate, ExtractedField, FileOcrBundle, OcrArtistContactState, OcrFormField, OcrHandwritingSuggestion,
+  OcrStageName, OcrStageRun,
+} from "@/types/ocr";
 
 export function listArchiveItems(
   params: ArchiveQueryParams = {},
@@ -100,6 +103,36 @@ export function runArchiveItemFileOcr(archiveItemId: number): Promise<{ data: { 
   return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/run` });
 }
 
+/** A reviewer's document type (null hands it back to the classifier); extraction re-runs with it. */
+export function setOcrDocumentType(archiveItemId: number, documentType: DocumentType | null): Promise<{ data: { document_type: string | null; document_type_source: string; result: string } }> {
+  return request({ method: "PUT", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/document-type`, data: { document_type: documentType } });
+}
+
+/** A reviewer says which record an extracted name means: a record id, or a place's spelling. Changes no record. */
+export function confirmEntityMatch(archiveItemId: number, matchId: number, choice: { entity_id: number | string } | { key: string }): Promise<{ data: EntityMatch }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/matches/${matchId}/confirm`, data: choice });
+}
+
+/** The reviewer's own search for the record a name means, when it isn't among the candidates. */
+export function searchEntityMatch(
+  archiveItemId: number, matchId: number, q: string, signal?: AbortSignal,
+): Promise<{ data: { id: number | string; label: { ar: string; en: string }; detail: string | null }[] }> {
+  return request({ method: "GET", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/matches/${matchId}/search`, params: { q }, signal });
+}
+
+export function decideEntityMatch(archiveItemId: number, matchId: number, decision: "no-match" | "reset"): Promise<{ data: EntityMatch }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/matches/${matchId}/${decision}` });
+}
+
+export function reviewExtractedDate(archiveItemId: number, dateId: number, decision: "accept" | "reject"): Promise<{ data: ExtractedDate }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/dates/${dateId}/${decision}` });
+}
+
+/** Re-runs one pipeline stage; later stages follow only if its new output changes their input. */
+export function runArchiveItemFileOcrStage(archiveItemId: number, stage: OcrStageName): Promise<{ data: { status: string | null; result: string; stages: OcrStageRun[] } }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/stages/${stage}/run` });
+}
+
 export function acceptExtractedField(archiveItemId: number, fieldId: number): Promise<{ data: ExtractedField }> {
   return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/fields/${fieldId}/accept` });
 }
@@ -117,8 +150,56 @@ export function ocrRegionCropUrl(archiveItemId: number, regionId: number): strin
   return `${import.meta.env.VITE_API_BASE_URL ?? ""}/api/v1/archive-items/${archiveItemId}/file/ocr/regions/${regionId}/crop`;
 }
 
+/** A page as OCR rendered it — region boxes are in its pixels. Used directly as an <img> src. */
+export function ocrPageImageUrl(archiveItemId: number, page: number): string {
+  return `${import.meta.env.VITE_API_BASE_URL ?? ""}/api/v1/archive-items/${archiveItemId}/file/ocr/pages/${page}/image`;
+}
+
+export function markExtractedFieldUncertain(archiveItemId: number, fieldId: number, note: string | null): Promise<{ data: ExtractedField }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/fields/${fieldId}/uncertain`, data: { note } });
+}
+
+/** Types what a set-aside line says into a field the reviewer chose. */
+export function transcribeOcrRegion(archiveItemId: number, regionId: number, fieldKey: string, value: string): Promise<{ data: ExtractedField }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/regions/${regionId}/transcribe`, data: { field_key: fieldKey, value } });
+}
+
+export function setOcrRegionDismissed(archiveItemId: number, regionId: number, dismissed: boolean): Promise<{ data: { id: number; dismissed: boolean } }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/regions/${regionId}/${dismissed ? "dismiss" : "restore"}` });
+}
+
 export function transcribeOcrFormField(archiveItemId: number, formFieldId: number, value: string): Promise<{ data: OcrFormField }> {
   return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/form-fields/${formFieldId}/transcribe`, data: { value } });
+}
+
+export function requestHandwritingSuggestion(archiveItemId: number, regionId: number): Promise<{ data: OcrHandwritingSuggestion }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/regions/${regionId}/handwriting-suggestion` });
+}
+
+export function reviewHandwritingSuggestion(
+  archiveItemId: number,
+  suggestionId: number,
+  decision: "accepted" | "edited" | "rejected",
+  finalText?: string,
+): Promise<{ data: OcrHandwritingSuggestion }> {
+  return request({
+    method: "POST",
+    url: `/api/v1/archive-items/${archiveItemId}/file/ocr/handwriting-suggestions/${suggestionId}/review`,
+    data: finalText === undefined ? { decision } : { decision, final_text: finalText },
+  });
+}
+
+/** The authorization letter → ArtistContact flow; `name` searches candidates under a different spelling. */
+export function getOcrArtistContact(archiveItemId: number, name?: string, signal?: AbortSignal): Promise<{ data: OcrArtistContactState }> {
+  return request({ method: "GET", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/artist-contact`, params: name ? { name } : {}, signal });
+}
+
+export function confirmOcrArtist(archiveItemId: number, artistId: number): Promise<{ data: OcrArtistContactState }> {
+  return request({ method: "PUT", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/artist-contact/artist`, data: { artist_id: artistId } });
+}
+
+export function proposeOcrArtistContact(archiveItemId: number, input: ArtistContactProposalInput): Promise<{ data: OcrArtistContactState }> {
+  return request({ method: "POST", url: `/api/v1/archive-items/${archiveItemId}/file/ocr/artist-contact/propose`, data: input });
 }
 
 export function acceptHighConfidenceFields(archiveItemId: number, threshold?: number): Promise<{ data: { accepted: string[] } }> {

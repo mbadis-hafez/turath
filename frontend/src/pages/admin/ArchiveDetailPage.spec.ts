@@ -11,6 +11,8 @@ import type { ArchiveEdit } from "@/types/archive";
 const api = vi.hoisted(() => ({
   getAdminArchiveItem: vi.fn(), bulkArchive: vi.fn(),
   getArchiveItemFileOcr: vi.fn(), acceptExtractedField: vi.fn(), rejectExtractedField: vi.fn(), editExtractedField: vi.fn(), acceptHighConfidenceFields: vi.fn(), runArchiveItemFileOcr: vi.fn(),
+  ocrPageImageUrl: (itemId: number, page: number) => `/api/v1/archive-items/${itemId}/file/ocr/pages/${page}/image`,
+  ocrRegionCropUrl: (itemId: number, regionId: number) => `/api/v1/archive-items/${itemId}/file/ocr/regions/${regionId}/crop`,
 }));
 vi.mock("@/api/archive", () => api);
 
@@ -344,5 +346,27 @@ describe("ArchiveDetailPage", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("network down");
+  });
+
+  it("shows the page a value was read from, with its region outlined, beside the review list", async () => {
+    api.getArchiveItemFileOcr.mockResolvedValue({
+      data: {
+        status: "completed", progress_pct: 100, language_confidence: { ar: 80 }, failure_reason: null,
+        texts: { ar: [{ page: 1, text: "", confidence: 80, segments: [] }, { page: 2, text: "", confidence: 80, segments: [] }], en: [] },
+        regions: [], form_fields: [], dates: [],
+        fields: [{
+          id: 9, field_key: "title_ar", extracted_value: "افتتاح معرض", confidence: 92, source_page: 2, status: "pending", extraction_method: "ocr_derived",
+          source_region: { id: 4, page_number: 2, region_type: "printed_text", bbox: { x: 10, y: 20, width: 30, height: 40 }, confidence: 92, ocr_text: "افتتاح معرض", ocr_allowed: true, has_correction_mark: false, has_crop: false },
+        }],
+      },
+    });
+    const wrapper = await mountAt("/en/admin/archive/5/view");
+    await wrapper.get("#tab-aiExtraction").trigger("click");
+    expect(wrapper.get("[data-testid=ocr-source-page]").attributes("src")).toContain("/pages/1/image");
+
+    await wrapper.get("[data-testid=field-evidence-show-source]").trigger("click");
+
+    expect(wrapper.get("[data-testid=ocr-source-page]").attributes("src")).toContain("/pages/2/image");
+    expect(wrapper.get("[data-testid=ocr-source-focus-label]").text()).toContain("Title (Arabic)");
   });
 });

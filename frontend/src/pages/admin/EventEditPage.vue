@@ -23,6 +23,7 @@ import { ApiError } from "@/types/api";
 import type { Theme } from "@/types/artistCuration";
 import type { EventDraftPayload } from "@/types/proposal";
 import { EVENT_TYPES, PARTICIPANT_ROLES, type EventDetail, type EventStatus, type EventType, type ParticipantRole } from "@/types/event";
+import { prefillFromQuery } from "@/utils/prefill";
 
 const route = useRoute();
 const router = useRouter();
@@ -37,6 +38,12 @@ const id = computed(() => (route.params.id ? Number(route.params.id) : null));
 const isNew = computed(() => id.value === null);
 
 const { form, holder, participants, themeIds, start, load: loadForm, payload, participantsPayload, checklist: liveChecklist } = useEventForm();
+// A title read from a document (the OCR review's "Create"): a starting point, checked before saving.
+const prefill = isNew.value ? prefillFromQuery(route.query.prefill) : null;
+if (prefill) {
+  form.titleAr = prefill.ar;
+  form.titleEn = prefill.en;
+}
 
 // Editors (and admins, who also hold proposals.submit) work through the draft
 // pipeline on existing events: saves upsert a draft proposal instead of
@@ -338,7 +345,7 @@ const missing = (key: string) => (missingKeys.value.has(key) ? "!border-danger" 
             <div class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
               <label class="text-xs text-ink-muted sm:col-span-2">{{ t("events.edit.eventType") }}<select v-model="form.type" :class="input" data-testid="event-type"><option v-for="ty in EVENT_TYPES" :key="ty" :value="ty">{{ t(`events.types.${ty}`) }}</option></select></label>
               <label class="text-xs text-ink-muted">{{ t("events.edit.titleAr") }}<input v-model="form.titleAr" type="text" dir="rtl" :class="[input, missing('title')]" data-testid="title-ar" /></label>
-              <label class="text-xs text-ink-muted">{{ t("events.edit.titleEn") }}<input v-model="form.titleEn" type="text" dir="ltr" :class="input" /></label>
+              <label class="text-xs text-ink-muted">{{ t("events.edit.titleEn") }}<input v-model="form.titleEn" type="text" dir="ltr" :class="input" data-testid="title-en" /></label>
               <label class="text-xs text-ink-muted">{{ t("events.edit.descriptionAr") }}<textarea v-model="form.descriptionAr" rows="4" dir="rtl" :class="input" /></label>
               <label class="text-xs text-ink-muted">{{ t("events.edit.descriptionEn") }}<textarea v-model="form.descriptionEn" rows="4" dir="ltr" :class="input" /></label>
             </div>

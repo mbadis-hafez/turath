@@ -3,96 +3,138 @@
 namespace App\Support\Ocr;
 
 use Illuminate\Support\Facades\File as Filesystem;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 
 /**
- * Shells out to a self-hosted `kraken` binary running a model trained for
- * historic handwritten Arabic (e.g. the open-source model trained on the
- * Muharaf dataset — see the 2026-09-30 architecture discussion for why a
- * self-hosted model was chosen over a cloud vision API: no data leaves the
- * host, at the cost of running/maintaining the model yourself).
+ * A self-hosted kraken (https://kraken.re) recognizer — nothing leaves the
+ * host. Verified on 2026-09-30 against kraken 7.1.1 with the Muharaf
+ * recognition model (Zenodo 10.5281/zenodo.14295489, CC-BY-4.0, trained on
+ * 1,600+ historic handwritten Arabic pages):
  *
- * NOT bound by default (AppServiceProvider binds NullHandwritingOcrProvider).
- * To use this: install kraken + a compatible Arabic HTR model, set
- * KRAKEN_BINARY_PATH / KRAKEN_MODEL_PATH in .env, and rebind
- * HandwritingOcrProvider to this class.
+ *   kraken -i line1.png out1.xml [-i line2.png out2.xml …] -a ocr -s --reorder --base-dir R -m <model>
  *
- * The exact `kraken` CLI invocation below has NOT been exercised against a
- * real installation in this environment — verify the flags against your
- * installed kraken version before relying on this in production. Whatever it
- * returns is a suggestion only: callers must keep requires_human_review=true
- * and never treat this as a verified transcription.
+ * Why this invocation and not `segment -bl ocr`: kraken's baseline segmenter
+ * is trained on whole pages and, on crop-sized images of the benchmark
+ * letter, produced one-pixel "lines" and empty text. Crops are split into
+ * lines here (CropLineSplitter) and each is recognized with segmentation off
+ * (`-s`). `--base-dir R` is required for logical Arabic order: without it the
+ * model's output came back character-reversed.
+ *
+ * What to expect (benchmark, 2026-09-30): partial readings of Arabic names and
+ * places; nothing usable for Latin script (emails) or handwritten digits
+ * (phones, dates) — the Muharaf model is Arabic-only. Word confidence (ALTO
+ * WC) did not track correctness. Suggestions only, always.
  */
 class KrakenHandwritingOcrProvider implements HandwritingOcrProvider
 {
+    private ?string $modelChecksum = null;
+
     public function __construct(
+        private readonly string $modelPath,
         private readonly string $binaryPath = 'kraken',
-        private readonly ?string $modelPath = null,
+        private readonly string $baseDir = 'R',
+        private readonly int $timeoutSeconds = 120,
+        private readonly CropLineSplitter $splitter = new CropLineSplitter,
     ) {}
 
-    public function suggest(string $cropImagePath, string $language): ?array
+    public function name(): string
     {
-        if ($this->modelPath === null) {
-            return null;
+        return 'kraken';
+    }
+
+    public function model(): string
+    {
+        return basename($this->modelPath);
+    }
+
+    public function isExternal(): bool
+    {
+        return false;
+    }
+
+    public function suggest(string $cropImagePath, ?string $language): HandwritingSuggestion
+    {
+        $data = @file_get_contents($cropImagePath);
+        $image = $data === false ? false : @imagecreatefromstring($data);
+        if ($image === false) {
+            throw new HandwritingOcrException("Could not read crop image {$cropImagePath}.", false);
         }
 
-        $outputPath = tempnam(sys_get_temp_dir(), 'kraken-alto-').'.xml';
+        $workDir = sys_get_temp_dir().'/kraken-'.bin2hex(random_bytes(6));
+        Filesystem::ensureDirectoryExists($workDir);
 
         try {
-            $process = new Process([
-                $this->binaryPath, '-i', $cropImagePath, $outputPath,
-                '-a', 'segment', '-bl', 'ocr', '-m', $this->modelPath,
-            ]);
-            $process->setTimeout(60);
-            $process->run();
+            $args = [$this->binaryPath];
+            $outputs = [];
+            foreach ($this->splitter->split($image) as $i => $line) {
+                $in = "{$workDir}/line-{$i}.png";
+                imagepng($line, $in);
+                $outputs[$i] = "{$workDir}/line-{$i}.xml";
+                array_push($args, '-i', $in, $outputs[$i]);
+            }
+            array_push($args, '-a', 'ocr', '-s', '--reorder', '--base-dir', $this->baseDir, '-m', $this->modelPath);
 
-            if (! $process->isSuccessful() || ! Filesystem::exists($outputPath)) {
-                return null;
+            $process = new Process($args, timeout: $this->timeoutSeconds);
+            try {
+                $process->run();
+            } catch (ProcessTimedOutException $e) {
+                throw new HandwritingOcrException("kraken timed out after {$this->timeoutSeconds}s.", true, $e);
+            }
+            if (! $process->isSuccessful()) {
+                throw new HandwritingOcrException('kraken failed: '.mb_substr(trim($process->getErrorOutput()), 0, 500), false);
             }
 
-            return $this->parseAlto(Filesystem::get($outputPath));
-        } catch (\Throwable) {
-            // A handwriting suggestion is a nice-to-have, never a hard dependency — any failure here
-            // degrades to "no suggestion", the same as the null provider, not a pipeline failure.
-            return null;
+            $lines = [];
+            foreach ($outputs as $output) {
+                $lines[] = $this->parseAlto($output);
+            }
         } finally {
-            if (Filesystem::exists($outputPath)) {
-                Filesystem::delete($outputPath);
-            }
+            Filesystem::deleteDirectory($workDir);
         }
+
+        $words = array_merge(...array_column($lines, 'words'));
+        $confidences = array_values(array_filter(array_column($words, 'confidence'), fn ($c) => $c !== null));
+
+        return new HandwritingSuggestion(
+            text: trim(implode("\n", array_filter(array_column($lines, 'text'), fn (string $t) => $t !== ''))),
+            confidence: $confidences === [] ? null : round(array_sum($confidences) / count($confidences), 3),
+            modelVersion: $this->checksum(),
+            raw: ['engine' => 'kraken', 'base_dir' => $this->baseDir, 'lines' => $lines],
+        );
     }
 
     /**
-     * @return array{text: string, confidence: int}|null
+     * @return array{text: string, words: array<int, array{text: string, confidence: float|null}>}
      */
-    private function parseAlto(string $xml): ?array
+    private function parseAlto(string $path): array
     {
-        libxml_use_internal_errors(true);
-        $doc = simplexml_load_string($xml);
+        $xml = @file_get_contents($path);
+        $doc = $xml === false ? false : @simplexml_load_string($xml);
         if ($doc === false) {
-            return null;
+            throw new HandwritingOcrException("kraken wrote no readable output ({$path}).", false);
         }
 
         $words = [];
-        $confidences = [];
-        foreach ($doc->xpath('//*[local-name()="String"]') ?: [] as $stringNode) {
-            $content = (string) $stringNode['CONTENT'];
-            if ($content === '') {
+        foreach ($doc->xpath('//*[local-name()="String"]') ?: [] as $node) {
+            $text = trim((string) $node['CONTENT']);
+            if ($text === '') {
                 continue;
             }
-            $words[] = $content;
-            $wc = (string) $stringNode['WC'];
-            if ($wc !== '') {
-                $confidences[] = (float) $wc;
-            }
+            $wc = (string) $node['WC'];
+            $words[] = ['text' => $text, 'confidence' => $wc === '' ? null : (float) $wc];
         }
 
-        if ($words === []) {
-            return null;
+        return ['text' => implode(' ', array_column($words, 'text')), 'words' => $words];
+    }
+
+    /** A local model file has no version string; its checksum is its identity. */
+    private function checksum(): ?string
+    {
+        if ($this->modelChecksum === null && is_file($this->modelPath)) {
+            $this->modelChecksum = 'sha256:'.substr((string) hash_file('sha256', $this->modelPath), 0, 16);
         }
 
-        $confidence = $confidences === [] ? 50 : (int) round((array_sum($confidences) / count($confidences)) * 100);
-
-        return ['text' => implode(' ', $words), 'confidence' => $confidence];
+        return $this->modelChecksum;
     }
 }

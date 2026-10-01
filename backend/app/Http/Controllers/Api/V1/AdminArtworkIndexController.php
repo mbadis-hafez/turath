@@ -40,7 +40,14 @@ class AdminArtworkIndexController
             }
         }
 
-        $paginated = $query->orderByDesc('id')->paginate(min((int) $request->input('per_page', 24), 100));
+        match ($request->input('sort', 'newest')) {
+            'oldest' => $query->orderBy('id'),
+            'title' => $query->orderBy('title_ar'),
+            'year' => $query->orderByDesc('creation_year_from'),
+            default => $query->orderByDesc('id'),
+        };
+
+        $paginated = $query->paginate(min((int) $request->input('per_page', 24), 100));
 
         $completeness = RecordCompleteness::where('citable_type', Artwork::class)
             ->whereIn('citable_id', $paginated->pluck('id'))->get()->keyBy('citable_id');
@@ -54,13 +61,16 @@ class AdminArtworkIndexController
 
             return [
                 'id' => $a->id,
+                'legacy_ref' => $a->legacy_ref,
                 'title' => ['ar' => $a->title_ar, 'en' => $a->title_en],
                 'is_untitled' => $a->is_untitled,
+                'medium' => ['ar' => $a->medium_ar, 'en' => $a->medium_en],
                 'artist' => $a->artist ? ['id' => $a->artist->id, 'name' => ['ar' => $a->artist->name_ar, 'en' => $a->artist->name_en]] : null,
                 'holder_id' => $a->holder_id,
                 'thumbnail_url' => ($primary = ArtworkImageController::primary($a)) ? ArtworkImageController::urlFor($primary) : null,
                 'holder' => $a->holder ? ['id' => $a->holder->id, 'name' => ['ar' => $a->holder->name_ar, 'en' => $a->holder->name_en]] : null,
                 'year' => $a->creation_date_display ?? ($yearFrom !== null ? (string) $yearFrom : null),
+                'image_count' => $a->images->count(),
                 'flags' => array_values(array_filter([
                     $a->is_untitled ? 'untitled' : null,
                     $a->height_cm === null && $a->width_cm === null ? 'missing_dimensions' : null,

@@ -3,7 +3,7 @@ import { useRoute, useRouter, type LocationQueryRaw } from "vue-router";
 
 import { listAdminArtworks } from "@/api/artworkCuration";
 import type { PaginationMeta } from "@/types/api";
-import type { AdminArtworkRow, ArtworkStatus } from "@/types/artworkCuration";
+import type { AdminArtworkRow, AdminArtworkSort, ArtworkStatus } from "@/types/artworkCuration";
 
 export const ARTWORKS_DEBOUNCE_MS = 300;
 
@@ -14,6 +14,7 @@ export interface ArtworksRegistryQuery {
   pipelineGap: boolean;
   artistId: number | null;
   holderId: number | null;
+  sort: AdminArtworkSort;
   page: number;
 }
 
@@ -24,8 +25,11 @@ const posInt = (v: unknown): number | null => {
   return Number.isFinite(n) && n > 0 ? n : null;
 };
 
+const SORTS: AdminArtworkSort[] = ["newest", "oldest", "title", "year"];
+
 export function parseArtworksQuery(query: LocationQueryRaw): ArtworksRegistryQuery {
   const page = Number.parseInt(str(query.page), 10);
+  const sort = str(query.sort);
   return {
     q: str(query.q),
     status: str(query.status) as ArtworkStatus | "",
@@ -33,6 +37,7 @@ export function parseArtworksQuery(query: LocationQueryRaw): ArtworksRegistryQue
     pipelineGap: str(query.has_pipeline_gap) === "1",
     artistId: posInt(query.artist_id),
     holderId: posInt(query.holder_id),
+    sort: (SORTS as string[]).includes(sort) ? (sort as AdminArtworkSort) : "newest",
     page: Number.isFinite(page) && page > 0 ? page : 1,
   };
 }
@@ -63,6 +68,7 @@ export function useAdminArtworks() {
     if (next.pipelineGap) target.has_pipeline_gap = "1";
     if (next.artistId) target.artist_id = String(next.artistId);
     if (next.holderId) target.holder_id = String(next.holderId);
+    if (next.sort !== "newest") target.sort = next.sort;
     if (next.page > 1) target.page = String(next.page);
     void router.push({ query: target });
   }
@@ -92,6 +98,7 @@ export function useAdminArtworks() {
           has_pipeline_gap: q.pipelineGap ? 1 : undefined,
           artist_id: q.artistId ?? undefined,
           holder_id: q.holderId ?? undefined,
+          sort: q.sort !== "newest" ? q.sort : undefined,
           page: q.page,
         },
         self.signal,
@@ -123,6 +130,7 @@ export function useAdminArtworks() {
     setPipelineGap: (v: boolean) => push({ pipelineGap: v, page: 1 }),
     setArtist: (v: number | null) => push({ artistId: v, page: 1 }),
     setHolder: (v: number | null) => push({ holderId: v, page: 1 }),
+    setSort: (v: AdminArtworkSort) => push({ sort: v, page: 1 }),
     setPage: (page: number) => push({ page }),
     clear: () => void router.push({ query: {} }),
   };

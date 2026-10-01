@@ -71,7 +71,7 @@ class ProposalService
     }
 
     /**
-     * @return array<int, array{field: string, proposed_against: mixed, current: mixed, proposed_value: mixed}>
+     * @return array<int, array{field: string, collection?: bool, proposed_against: mixed, current: mixed, proposed_value: mixed}>
      */
     public function conflicts(EditProposal $proposal, Model $record): array
     {
@@ -85,6 +85,14 @@ class ProposalService
                     'current' => FieldValues::normalize($current),
                     'proposed_value' => $diff['proposed_value'] ?? null,
                 ];
+            }
+        }
+
+        // A collection the draft replaces wholesale changed since it was written:
+        // approving would revert that change. No values — the section diff shows them.
+        foreach ($proposal->base_fingerprints ?? [] as $collection => $fingerprint) {
+            if (CollectionFingerprints::current($record, $collection) !== $fingerprint) {
+                $out[] = ['field' => $collection, 'collection' => true, 'proposed_against' => null, 'current' => null, 'proposed_value' => null];
             }
         }
 
