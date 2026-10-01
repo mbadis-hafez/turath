@@ -29,6 +29,19 @@ const routes: RouteRecordRaw[] = [
     meta: { titleKey: "nav.login", guestOnly: true, bare: true },
   },
   {
+    path: "/:locale/forgot-password",
+    name: "forgot-password",
+    component: () => import("@/pages/ForgotPasswordPage.vue"),
+    meta: { titleKey: "auth.forgotPassword.title", guestOnly: true, bare: true },
+  },
+  {
+    // Linked from the reset email as ?token=…&email=… (PasswordResetMail).
+    path: "/:locale/reset-password",
+    name: "reset-password",
+    component: () => import("@/pages/ResetPasswordPage.vue"),
+    meta: { titleKey: "auth.resetPassword.title", guestOnly: true, bare: true },
+  },
+  {
     path: "/:locale/set-password",
     name: "set-password",
     component: () => import("@/pages/SetPasswordPage.vue"),

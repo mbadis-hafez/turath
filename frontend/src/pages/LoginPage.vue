@@ -15,7 +15,12 @@ const router = useRouter();
 const auth = useAuthStore();
 const { localePath } = useLocalePath();
 
-const form = reactive({ email: "", password: "" });
+// ResetPasswordPage lands here with ?reset=1&email=… after a successful reset.
+const form = reactive({
+  email: typeof route.query.email === "string" ? route.query.email : "",
+  password: "",
+});
+const passwordWasReset = route.query.reset === "1";
 const submitting = ref(false);
 const bannerError = ref<string | null>(null);
 const fieldErrors = reactive<Record<string, string[]>>({});
@@ -112,6 +117,14 @@ async function submit(): Promise<void> {
         >
           {{ bannerError }}
         </p>
+        <p
+          v-else-if="passwordWasReset"
+          class="mt-6 border-s-2 border-success bg-success-soft px-4 py-3 text-sm text-success"
+          role="status"
+          data-testid="password-reset-notice"
+        >
+          {{ t("auth.resetPassword.done") }}
+        </p>
 
         <form class="mt-10 space-y-8" novalidate @submit.prevent="submit">
           <div>
@@ -143,13 +156,13 @@ async function submit(): Promise<void> {
               <label for="password" class="text-sm text-ink-muted">
                 {{ t("auth.password") }}
               </label>
-              <a
-                href="#"
+              <RouterLink
+                :to="localePath('forgot-password', {}, form.email ? { email: form.email } : {})"
                 class="text-sm text-accent hover:text-accent-strong"
-                @click.prevent
+                data-testid="forgot-password-link"
               >
                 {{ t("auth.forgot") }}
-              </a>
+              </RouterLink>
             </div>
             <div class="relative">
               <input
