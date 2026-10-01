@@ -32,7 +32,8 @@ password `password` (only when `APP_ENV=local`).
 - `ForceJsonResponse` + `SetLocale` run on the whole `api` group; locale is
   `ar`/`en` from `Accept-Language` (default `ar`). Validation translations in
   `lang/ar`.
-- Rate limiters: `api` 120/min per IP, `login` 5/min per email+IP.
+- Rate limiters: `api` 120/min per IP, `login` 5/min per email+IP,
+  `password-reset` 5/min per email+IP plus 30/hour per IP.
 - Audit: models use the `App\Concerns\LogsChanges` trait (dirty-only diffs,
   timestamps stripped, `log_name` = table, optional `edit_summary` request
   input, causer = auth user or null). Read API behind `can:activity.view`
