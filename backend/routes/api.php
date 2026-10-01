@@ -76,8 +76,10 @@ use App\Http\Controllers\Api\V1\ArtworkShowController;
 use App\Http\Controllers\Api\V1\ArtworkStoreController;
 use App\Http\Controllers\Api\V1\ArtworkUpdateController;
 use App\Http\Controllers\Api\V1\Auth\ChangePasswordController;
+use App\Http\Controllers\Api\V1\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
+use App\Http\Controllers\Api\V1\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\V1\Auth\UserController;
 use App\Http\Controllers\Api\V1\CandidateArtworkDismissController;
 use App\Http\Controllers\Api\V1\CandidateArtworkIndexController;
@@ -132,6 +134,8 @@ Route::prefix('v1')->group(function () {
     Route::get('health', HealthController::class);
 
     Route::post('auth/login', LoginController::class)->middleware('throttle:login');
+    Route::post('auth/forgot-password', ForgotPasswordController::class)->middleware('throttle:password-reset');
+    Route::post('auth/reset-password', ResetPasswordController::class)->middleware('throttle:password-reset');
 
     // D149/D154: the one anonymous write in the API, with its own tight limiter.
     Route::post('material-submissions', [MaterialSubmissionController::class, 'store'])->middleware('throttle:submissions');
